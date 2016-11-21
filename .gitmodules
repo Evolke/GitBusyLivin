@@ -1,3 +1,3 @@
 [submodule "libqgit2"]
 	path = libqgit2
-	url = https://github.com/KDE/libqgit2.git
+	url = https://github.com/Evolke/libqgit2.git
