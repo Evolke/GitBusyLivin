@@ -3,20 +3,29 @@
 
 #include <QMainWindow>
 
-namespace Ui {
-class MainWindow;
-}
+QT_BEGIN_NAMESPACE
+class QAction;
+class QMenu;
+class QPlainTextEdit;
+class QSessionManager;
+QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private slots:
+    void about();
+    void clone();
+    void open();
+
 private:
-    Ui::MainWindow *ui;
+    void init();
+    void createActions();
 };
 
 #endif // MAINWINDOW_H
