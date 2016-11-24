@@ -1,3 +1,6 @@
 [submodule "libqgit2"]
 	path = libqgit2
 	url = https://github.com/Evolke/libqgit2.git
+[submodule "libgit2"]
+	path = libgit2
+	url = https://github.com/Evolke/libgit2.git
