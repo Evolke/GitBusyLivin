@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/git_busy_livin_icon.png</file>
+        <file>images/git_busy_livin_icon32.png</file>
+        <file>images/git_busy_livin_icon16.png</file>
+    </qresource>
+</RCC>
