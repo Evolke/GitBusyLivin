@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPointer>
+#include "gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -22,10 +24,14 @@ private slots:
     void about();
     void clone();
     void open();
+    void new_local_repo();
+    void new_network_repo();
 
 private:
     void init();
     void createActions();
+
+    QPointer<GBL_Repository> repo;
 };
 
 #endif // MAINWINDOW_H
