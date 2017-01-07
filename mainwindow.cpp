@@ -32,7 +32,7 @@ void MainWindow::clone()
 
 void MainWindow::new_local_repo()
 {
-    QString dirName = QFileDialog::getExistingDirectory(this);
+    QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),QString(), QFileDialog::ShowDirsOnly|QFileDialog::DontUseNativeDialog);
     if (!dirName.isEmpty())
     {
         if (repo == NULL)
@@ -40,13 +40,16 @@ void MainWindow::new_local_repo()
             repo = new GBL_Repository();
         }
 
-        repo->init(dirName);
+        if (!repo->init(dirName))
+        {
+            QMessageBox::warning(this, tr("Creation Error"), repo->get_error_msg());
+        }
     }
 }
 
 void MainWindow::new_network_repo()
 {
-    QString dirName = QFileDialog::getExistingDirectory(this);
+    QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),QString(), QFileDialog::ShowDirsOnly|QFileDialog::DontUseNativeDialog);
     if (!dirName.isEmpty())
     {
         if (repo == NULL)
@@ -81,6 +84,9 @@ void MainWindow::createActions()
     newMenu->addAction(tr("&Network Repository..."), this, &MainWindow::new_network_repo);
     fileMenu->addAction(tr("&Clone"), this, &MainWindow::clone);
     fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
+    QAction *quitAct = fileMenu->addAction(tr("&Quit"), this, &QWidget::close);
+    quitAct->setShortcuts(QKeySequence::Quit);
+    quitAct->setStatusTip(tr("Quit the application"));
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     QAction *aboutAct = helpMenu->addAction(tr("&About"), this, &MainWindow::about);

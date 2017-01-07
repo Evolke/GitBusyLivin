@@ -22,6 +22,8 @@ HEADERS  += mainwindow.h \
 RESOURCES += \
     gitbusylivin.qrc
 
+win32:INCLUDEPATH += "D:/projects/qt/GitBusyLivin/libgit2/include"
 unix:INCLUDEPATH += "/qt_projects/GitBusyLivin/libgit2/include"
 
+win32:LIBS += D:/projects/qt/GitBusyLivin/libs/git2.lib
 unix:LIBS += /qt_projects/GitBusyLivin/libs/libgit2.dylib
