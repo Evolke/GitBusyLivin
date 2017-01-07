@@ -5,15 +5,15 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    repo = NULL;
+    m_qpRepo = NULL;
     init();
 }
 
 MainWindow::~MainWindow()
 {
-    if (repo)
+    if (m_qpRepo)
     {
-        delete repo;
+        delete m_qpRepo;
     }
 
 }
@@ -32,32 +32,25 @@ void MainWindow::clone()
 
 void MainWindow::new_local_repo()
 {
-    QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),QString(), QFileDialog::ShowDirsOnly|QFileDialog::DontUseNativeDialog);
+    QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),QString(), QFileDialog::ShowDirsOnly);
     if (!dirName.isEmpty())
     {
-        if (repo == NULL)
+        if (!m_qpRepo->init(dirName))
         {
-            repo = new GBL_Repository();
-        }
-
-        if (!repo->init(dirName))
-        {
-            QMessageBox::warning(this, tr("Creation Error"), repo->get_error_msg());
+            QMessageBox::warning(this, tr("Creation Error"), m_qpRepo->get_error_msg());
         }
     }
 }
 
 void MainWindow::new_network_repo()
 {
-    QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),QString(), QFileDialog::ShowDirsOnly|QFileDialog::DontUseNativeDialog);
+    QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),QString(), QFileDialog::ShowDirsOnly);
     if (!dirName.isEmpty())
     {
-        if (repo == NULL)
+        if (!m_qpRepo->init(dirName, true))
         {
-            repo = new GBL_Repository();
+            QMessageBox::warning(this, tr("Creation Error"), m_qpRepo->get_error_msg());
         }
-
-        repo->init(dirName, true);
     }
 }
 
@@ -72,6 +65,7 @@ void MainWindow::open()
 
 void MainWindow::init()
 {
+    m_qpRepo = new GBL_Repository();
     createActions();
     setWindowTitle(tr("GitBusyLivin"));
 }

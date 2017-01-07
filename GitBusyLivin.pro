@@ -27,3 +27,5 @@ unix:INCLUDEPATH += "/qt_projects/GitBusyLivin/libgit2/include"
 
 win32:LIBS += D:/projects/qt/GitBusyLivin/libs/git2.lib
 unix:LIBS += /qt_projects/GitBusyLivin/libs/libgit2.dylib
+
+win32:RC_ICONS = images/GitBusyLivin.ico

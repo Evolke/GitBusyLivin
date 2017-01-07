@@ -31,7 +31,7 @@ private:
     void init();
     void createActions();
 
-    QPointer<GBL_Repository> repo;
+    QPointer<GBL_Repository> m_qpRepo;
 };
 
 #endif // MAINWINDOW_H

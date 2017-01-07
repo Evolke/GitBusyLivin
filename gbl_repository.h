@@ -22,8 +22,8 @@ public slots:
 private:
     void cleanup();
 
-    git_repository *repo;
-    int error_code;
+    git_repository *m_pRepo;
+    int m_iErrorCode;
 };
 
 #endif // GBL_REPOSITORY_H
