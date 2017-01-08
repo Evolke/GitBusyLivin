@@ -11,7 +11,6 @@ public:
     explicit QAboutDialog(QWidget *parent = 0, Qt::WindowFlags f = Qt::FramelessWindowHint|Qt::Dialog);
     ~QAboutDialog();
 
-    void render(QPainter *painter, const QPoint &targetOffset, const QRegion &sourceRegion, RenderFlags renderFlags);
 
 signals:
 
@@ -23,7 +22,7 @@ private slots:
 
 private:
     QPixmap *m_pix;
-    QColor *m_endClr;
+    int m_hue;
     int m_timer;
 };
 

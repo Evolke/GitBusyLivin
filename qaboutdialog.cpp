@@ -14,15 +14,14 @@ QAboutDialog::QAboutDialog(QWidget *parent, Qt::WindowFlags f) : QDialog(parent,
 
     m_pix = new QPixmap(QLatin1String(":/images/andy.png"));
     //setAutoFillBackground(false);
-    m_endClr = new QColor(100,100,100);
-    m_timer = startTimer(200);
+    m_hue = round(rand()%360);
+    m_timer = startTimer(400);
 }
 
 QAboutDialog::~QAboutDialog()
 {
     killTimer(m_timer);
     delete m_pix;
-    delete m_endClr;
 }
 
 void QAboutDialog::mousePressEvent(QMouseEvent *event)
@@ -39,8 +38,8 @@ void QAboutDialog::mouseReleaseEvent(QMouseEvent *event)
 void QAboutDialog::timerEvent(QTimerEvent *event)
 {
     Q_UNUSED(event);
-    QColor darker = m_endClr->darker(101);
-    m_endClr->setRgb(darker.red(),darker.green(),darker.blue());
+    m_hue += 5;
+    if (m_hue >= 360) {m_hue = 0; }
     repaint(0,0,width(),height());
 }
 
@@ -51,19 +50,19 @@ void QAboutDialog::paintEvent(QPaintEvent *event)
 
     QRectF frame(QPointF(0,0), geometry().size());
     qreal h = m_pix->height();
-    QPointF pixpos = frame.bottomLeft() - QPointF(0,h);
-    QFont f("Arial", 32, 700);
-    p.setFont(f);
-    p.setPen(QColor(0, 0, 0));
+    QPointF pixpos = frame.bottomLeft() - QPointF(-10,h);
 
     QLinearGradient linearGradient(0, 0, 0, height());
-    linearGradient.setColorAt(0.0, Qt::yellow);
-    linearGradient.setColorAt(1.0, *m_endClr);
+    linearGradient.setColorAt(0.0, QColor::fromHsl(m_hue,100,100));
+    linearGradient.setColorAt(1.0, QColor::fromHsl(m_hue,100,5));
     p.setBrush(linearGradient);
     p.drawRect(0, 0, width(), height());
     p.drawPixmap(pixpos, *m_pix);
+    QFont f("Arial", 28, 75);
+    p.setFont(f);
+    p.setPen(QColor(0, 0, 0));
     p.drawText(QPointF(20,50), QString("GitBusyLivin"));
-    p.setFont(QFont("Arial", 12));
+    p.setFont(QFont("Arial", 10));
     p.setPen(QColor(140,140,140));
     p.drawText(QPointF(20,70), tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
 }
