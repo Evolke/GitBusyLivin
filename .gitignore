@@ -1,1 +1,14 @@
 build-libqgit2-Desktop_Qt_5_7_1_clang_64bit-Default
+GitBusyLivin.iconset/icon_128x128.png
+GitBusyLivin.iconset/icon_128x128@2x.png
+GitBusyLivin.iconset/icon_16x16.png
+GitBusyLivin.iconset/icon_16x16@2x.png
+GitBusyLivin.iconset/icon_256x256.png
+GitBusyLivin.iconset/icon_256x256@2x.png
+GitBusyLivin.iconset/icon_32x32.png
+GitBusyLivin.iconset/icon_32x32@2x.png
+GitBusyLivin.iconset/icon_512x512.png
+GitBusyLivin.iconset/icon_512x512@2x.png
+libs/libgit2.0.25.0.dylib
+libs/libgit2.25.dylib
+libs/libgit2.dylib
