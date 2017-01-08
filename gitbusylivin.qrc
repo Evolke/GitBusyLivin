@@ -3,5 +3,6 @@
         <file>images/git_busy_livin_icon.png</file>
         <file>images/git_busy_livin_icon32.png</file>
         <file>images/git_busy_livin_icon16.png</file>
+        <file>images/andy.png</file>
     </qresource>
 </RCC>

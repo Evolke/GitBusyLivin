@@ -14,18 +14,24 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    gbl_repository.cpp
+    gbl_repository.cpp \
+    qaboutdialog.cpp
 
 HEADERS  += mainwindow.h \
-    gbl_repository.h
+    gbl_repository.h \
+    qaboutdialog.h
 
 RESOURCES += \
     gitbusylivin.qrc
 
 win32:INCLUDEPATH += "D:/projects/qt/GitBusyLivin/libgit2/include"
-unix:INCLUDEPATH += "/qt_projects/GitBusyLivin/libgit2/include"
+unix:INCLUDEPATH += "/projects/qt/GitBusyLivin/libgit2/include"
 
 win32:LIBS += D:/projects/qt/GitBusyLivin/libs/git2.lib
-unix:LIBS += /qt_projects/GitBusyLivin/libs/libgit2.dylib
+unix:LIBS += /projects/qt/GitBusyLivin/libs/libgit2.dylib
 
-win32:RC_ICONS = images/GitBusyLivin.ico
+RC_ICONS = images/gitbusylivin.ico
+ICON = images/gitbusylivin.icns
+
+DISTFILES += \
+    images/andy.png

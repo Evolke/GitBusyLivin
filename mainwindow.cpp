@@ -1,6 +1,7 @@
 #include <QtWidgets>
 
 #include "mainwindow.h"
+#include "qaboutdialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -20,8 +21,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::about()
 {
-   QMessageBox::about(this, tr("About GitBusyLivin"),
-            tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
+   /*QMessageBox::about(this, tr("About GitBusyLivin"),
+            tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));*/
+   QAboutDialog about(this);
+   about.exec();
 }
 
 void MainWindow::clone()
