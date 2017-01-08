@@ -12,3 +12,5 @@ GitBusyLivin.iconset/icon_512x512@2x.png
 libs/libgit2.0.25.0.dylib
 libs/libgit2.25.dylib
 libs/libgit2.dylib
+
+*.user
