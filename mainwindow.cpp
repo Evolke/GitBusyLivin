@@ -62,12 +62,19 @@ void MainWindow::open()
     QString dirName = QFileDialog::getExistingDirectory(this);
     if (!dirName.isEmpty())
     {
-        QMessageBox::information(this, tr("info"), dirName);
+        if (m_qpRepo->open(dirName))
+        {
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+        }
     }
 }
 
 void MainWindow::init()
 {
+    setMinimumSize(640,480);
     m_qpRepo = new GBL_Repository();
     createActions();
     setWindowTitle(tr("GitBusyLivin"));
