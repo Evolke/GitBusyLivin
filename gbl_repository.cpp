@@ -50,5 +50,6 @@ bool GBL_Repository::open(QString path)
     cleanup();
     const char* spath = path.toUtf8().constData();
     m_iErrorCode = git_repository_open(&m_pRepo, spath);
+
     return m_iErrorCode >= 0;
 }

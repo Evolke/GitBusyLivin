@@ -93,6 +93,6 @@ void MainWindow::createActions()
     quitAct->setStatusTip(tr("Quit the application"));
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
-    QAction *aboutAct = helpMenu->addAction(tr("&About"), this, &MainWindow::about);
+    helpMenu->addAction(tr("&About"), this, &MainWindow::about);
 
 }
