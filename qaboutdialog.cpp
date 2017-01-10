@@ -59,12 +59,17 @@ void QAboutDialog::paintEvent(QPaintEvent *event)
     //p.setBrush(linearGradient);
     p.fillRect(0, 0, width(), height(), linearGradient);
     p.drawPixmap(pixpos, *m_pix);
-    QFont f("Arial", 28, 75);
+    QFont f("Helvetica", 28, QFont::Bold);
     p.setFont(f);
     p.setPen(QColor(0, 0, 0));
-    p.drawText(QPointF(20,50), QString("GitBusyLivin"));
-    p.setFont(QFont("Arial", 12));
+    p.drawText(QPointF(20,40), QString("GitBusyLivin"));
+ #ifdef Q_OS_WIN
+    int size = 10;
+ #else
+    int size = 12;
+ #endif
+    p.setFont(QFont("Helvetica", size));
     p.setPen(QColor(140,140,140));
-    p.drawText(QPointF(20,70), tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
+    p.drawText(QRectF(20,45, width() - 20, 100), tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
 }
 

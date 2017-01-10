@@ -95,7 +95,12 @@ void MainWindow::createActions()
     newMenu->addAction(tr("&Network Repository..."), this, &MainWindow::new_network_repo);
     fileMenu->addAction(tr("&Clone"), this, &MainWindow::clone);
     fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
-    QAction *quitAct = fileMenu->addAction(tr("&Quit"), this, &QWidget::close);
+ #ifdef Q_OS_WIN
+    QString sQuit = tr("&Exit");
+ #else
+    QString sQuit = tr("&Quit");
+ #endif
+    QAction *quitAct = fileMenu->addAction(sQuit, this, &QWidget::close);
     quitAct->setShortcuts(QKeySequence::Quit);
     quitAct->setStatusTip(tr("Quit the application"));
 

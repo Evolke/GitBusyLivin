@@ -32,6 +32,3 @@ unix:LIBS += /projects/qt/GitBusyLivin/libs/libgit2.dylib
 
 RC_ICONS = images/gitbusylivin.ico
 ICON = images/gitbusylivin.icns
-
-DISTFILES += \
-    images/andy.png
