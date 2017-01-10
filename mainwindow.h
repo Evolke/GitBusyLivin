@@ -26,10 +26,13 @@ private slots:
     void open();
     void new_local_repo();
     void new_network_repo();
+    void closeEvent(QCloseEvent *event);
 
 private:
     void init();
     void createActions();
+    void readSettings();
+    void writeSettings();
 
     QPointer<GBL_Repository> m_qpRepo;
 };

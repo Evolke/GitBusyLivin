@@ -19,6 +19,13 @@ MainWindow::~MainWindow()
 
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    Q_UNUSED(event);
+
+    writeSettings();
+}
+
 void MainWindow::about()
 {
    /*QMessageBox::about(this, tr("About GitBusyLivin"),
@@ -74,7 +81,7 @@ void MainWindow::open()
 
 void MainWindow::init()
 {
-    setMinimumSize(640,480);
+    readSettings();
     m_qpRepo = new GBL_Repository();
     createActions();
     setWindowTitle(tr("GitBusyLivin"));
@@ -96,3 +103,24 @@ void MainWindow::createActions()
     helpMenu->addAction(tr("&About"), this, &MainWindow::about);
 
 }
+
+void MainWindow::readSettings()
+{
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    const QByteArray geometry = settings.value("geometry", QByteArray()).toByteArray();
+    if (geometry.isEmpty()) {
+        const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
+        resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
+        move((availableGeometry.width() - width()) / 2,
+             (availableGeometry.height() - height()) / 2);
+    } else {
+        restoreGeometry(geometry);
+    }
+}
+
+void MainWindow::writeSettings()
+{
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    settings.setValue("geometry", saveGeometry());
+}
+
