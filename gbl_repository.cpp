@@ -1,5 +1,6 @@
 #include "gbl_repository.h"
 #include <QTextStream>
+#include <QDebug>
 
 GBL_Repository::GBL_Repository(QObject *parent) : QObject(parent)
 {
@@ -52,4 +53,58 @@ bool GBL_Repository::open(QString path)
     m_iErrorCode = git_repository_open(&m_pRepo, spath);
 
     return m_iErrorCode >= 0;
+    /*if (bRet)
+    {
+        git_revwalk *walker;
+        int error = git_revwalk_new(&walker, m_pRepo);
+        error = git_revwalk_push_head(walker);
+
+        if (error >= 0)
+        {
+            git_oid oid;
+            while (!git_revwalk_next(&oid, walker)) {
+                break;
+            }
+        }
+    }
+    return bRet;*/
 }
+
+bool GBL_Repository::get_history(GBL_history_map &hist_map)
+{
+    git_revwalk *walker;
+    m_iErrorCode = git_revwalk_new(&walker, m_pRepo);
+    if (m_iErrorCode >= 0)
+    {
+        m_iErrorCode = git_revwalk_push_head(walker);
+        if (m_iErrorCode >= 0)
+        {
+            git_oid oid;
+            while (!git_revwalk_next(&oid, walker))
+            {
+                git_commit * commit = nullptr;
+                git_commit_lookup(&commit, m_pRepo, &oid);
+
+                QString soid(git_oid_tostr_s(&oid));
+                GBL_history_item *pHistItem = new GBL_history_item;
+                pHistItem->hist_summary = QString(git_commit_summary(commit));
+                const git_signature *pGit_Sig = git_commit_author(commit);
+                QString author;
+                QTextStream(&author) << pGit_Sig->name << " <" << pGit_Sig->email << ">";
+                pHistItem->hist_author = author;
+                pHistItem->hist_datetime = QDateTime::fromTime_t(pGit_Sig->when.time);
+                m_hist_map[soid] = pHistItem;
+
+                // free the commit
+                git_commit_free(commit);
+
+            }
+
+            hist_map = m_hist_map;
+            git_revwalk_free(walker);
+        }
+    }
+    return false;
+}
+
+
