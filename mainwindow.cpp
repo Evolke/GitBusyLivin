@@ -71,6 +71,8 @@ void MainWindow::open()
     {
         if (m_qpRepo->open(dirName))
         {
+            GBL_history_map h_map;
+            m_qpRepo->get_history(h_map);
         }
         else
         {

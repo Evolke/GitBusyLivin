@@ -17,6 +17,16 @@ GBL_Repository::~GBL_Repository()
 
 void GBL_Repository::cleanup()
 {
+    QMapIterator<QString, GBL_history_item*> i(m_hist_map);
+    while (i.hasNext())
+    {
+        i.next();
+        GBL_history_item *pHI = i.value();
+        delete pHI;
+    }
+
+    m_hist_map.clear();
+
     if (m_pRepo)
     {
         git_repository_free(m_pRepo);
@@ -53,21 +63,6 @@ bool GBL_Repository::open(QString path)
     m_iErrorCode = git_repository_open(&m_pRepo, spath);
 
     return m_iErrorCode >= 0;
-    /*if (bRet)
-    {
-        git_revwalk *walker;
-        int error = git_revwalk_new(&walker, m_pRepo);
-        error = git_revwalk_push_head(walker);
-
-        if (error >= 0)
-        {
-            git_oid oid;
-            while (!git_revwalk_next(&oid, walker)) {
-                break;
-            }
-        }
-    }
-    return bRet;*/
 }
 
 bool GBL_Repository::get_history(GBL_history_map &hist_map)
@@ -94,6 +89,8 @@ bool GBL_Repository::get_history(GBL_history_map &hist_map)
                 pHistItem->hist_author = author;
                 pHistItem->hist_datetime = QDateTime::fromTime_t(pGit_Sig->when.time);
                 m_hist_map[soid] = pHistItem;
+
+                qDebug() << pHistItem->hist_summary << pHistItem->hist_author << pHistItem->hist_datetime;
 
                 // free the commit
                 git_commit_free(commit);
