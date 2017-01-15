@@ -5,7 +5,8 @@
 GBL_Repository::GBL_Repository(QObject *parent) : QObject(parent)
 {
     git_libgit2_init();
-    m_pRepo = NULL;
+    m_pRepo = Q_NULLPTR;
+    m_pHist_Arr = Q_NULLPTR;
     m_iErrorCode = 0;
 }
 
@@ -17,21 +18,26 @@ GBL_Repository::~GBL_Repository()
 
 void GBL_Repository::cleanup()
 {
-    QMapIterator<QString, GBL_history_item*> i(m_hist_map);
-    while (i.hasNext())
+    if (m_pHist_Arr)
     {
-        i.next();
-        GBL_history_item *pHI = i.value();
-        delete pHI;
+        for (int i = 0; i < m_pHist_Arr->size(); i++)
+        {
+            GBL_history_item *pHI = m_pHist_Arr->at(i);
+            delete pHI;
+        }
+
+        m_pHist_Arr->clear();
+        delete m_pHist_Arr;
+        m_pHist_Arr = Q_NULLPTR;
     }
 
-    m_hist_map.clear();
 
     if (m_pRepo)
     {
         git_repository_free(m_pRepo);
-        m_pRepo = NULL;
+        m_pRepo = Q_NULLPTR;
     }
+
 }
 
 QString GBL_Repository::get_error_msg()
@@ -65,7 +71,7 @@ bool GBL_Repository::open(QString path)
     return m_iErrorCode >= 0;
 }
 
-bool GBL_Repository::get_history(GBL_history_map &hist_map)
+bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
 {
     git_revwalk *walker;
     m_iErrorCode = git_revwalk_new(&walker, m_pRepo);
@@ -88,16 +94,16 @@ bool GBL_Repository::get_history(GBL_history_map &hist_map)
                 QTextStream(&author) << pGit_Sig->name << " <" << pGit_Sig->email << ">";
                 pHistItem->hist_author = author;
                 pHistItem->hist_datetime = QDateTime::fromTime_t(pGit_Sig->when.time);
-                m_hist_map[soid] = pHistItem;
+                m_pHist_Arr->append(pHistItem);
 
-                qDebug() << pHistItem->hist_summary << pHistItem->hist_author << pHistItem->hist_datetime;
+                //qDebug() << pHistItem->hist_summary << pHistItem->hist_author << pHistItem->hist_datetime;
 
                 // free the commit
                 git_commit_free(commit);
 
             }
 
-            hist_map = m_hist_map;
+            *pHist_Arr = m_pHist_Arr;
             git_revwalk_free(walker);
         }
     }

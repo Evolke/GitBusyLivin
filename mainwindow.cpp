@@ -2,6 +2,7 @@
 
 #include "mainwindow.h"
 #include "qaboutdialog.h"
+#include "gbl_historymodel.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -71,8 +72,14 @@ void MainWindow::open()
     {
         if (m_qpRepo->open(dirName))
         {
-            GBL_history_map h_map;
-            m_qpRepo->get_history(h_map);
+            GBL_History_Array *pHistArr;
+            m_qpRepo->get_history(&pHistArr);
+
+            GBL_HistoryModel *pHm = new GBL_HistoryModel(pHistArr);
+
+            QTreeView *pTv = new QTreeView(this);
+            pTv->setModel(pHm);
+            setCentralWidget(pTv);
         }
         else
         {

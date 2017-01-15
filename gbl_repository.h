@@ -7,12 +7,13 @@
 #include <QMap>
 
 typedef struct GBL_history_item {
+    QString hist_oid;
     QString hist_summary;
     QDateTime hist_datetime;
     QString hist_author;
 } GBL_history_item;
 
-typedef QMap<QString, GBL_history_item*> GBL_history_map;
+typedef QVector<GBL_history_item*> GBL_History_Array;
 
 class GBL_Repository : public QObject
 {
@@ -24,7 +25,7 @@ public:
     QString get_error_msg();
     bool init(QString path, bool bare=false);
     bool open(QString path);
-    bool get_history(GBL_history_map& hist_map);
+    bool get_history(GBL_History_Array **pHist_Arr);
 
 signals:
 
@@ -35,7 +36,7 @@ private:
 
     git_repository *m_pRepo;
     int m_iErrorCode;
-    GBL_history_map m_hist_map;
+    GBL_History_Array *m_pHist_Arr;
 };
 
 #endif // GBL_REPOSITORY_H

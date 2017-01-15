@@ -15,11 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     gbl_repository.cpp \
-    qaboutdialog.cpp
+    qaboutdialog.cpp \
+    gbl_historymodel.cpp
 
 HEADERS  += mainwindow.h \
     gbl_repository.h \
-    qaboutdialog.h
+    qaboutdialog.h \
+    gbl_historymodel.h
 
 RESOURCES += \
     gitbusylivin.qrc
