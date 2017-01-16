@@ -16,6 +16,7 @@ public:
     Q_INVOKABLE virtual int columnCount(const QModelIndex &parent = QModelIndex()) const;
     Q_INVOKABLE virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     Q_INVOKABLE virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+    //Q_INVOKABLE virtual bool hasChildren(const QModelIndex &parent = QModelIndex()) const;
 
  private:
     GBL_History_Array *m_pHistArr;

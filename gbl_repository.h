@@ -6,14 +6,14 @@
 #include <QDateTime>
 #include <QMap>
 
-typedef struct GBL_history_item {
+typedef struct GBL_History_Item {
     QString hist_oid;
     QString hist_summary;
     QDateTime hist_datetime;
     QString hist_author;
-} GBL_history_item;
+} GBL_History_Item;
 
-typedef QVector<GBL_history_item*> GBL_History_Array;
+typedef QVector<GBL_History_Item*> GBL_History_Array;
 
 class GBL_Repository : public QObject
 {
@@ -33,6 +33,7 @@ public slots:
 
 private:
     void cleanup();
+    void cleanup_history();
 
     git_repository *m_pRepo;
     int m_iErrorCode;

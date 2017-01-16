@@ -16,7 +16,7 @@ GBL_HistoryModel::~GBL_HistoryModel()
 
 QModelIndex GBL_HistoryModel::index(int row, int column, const QModelIndex &parent) const
 {
-    return QModelIndex();
+    return createIndex(row, column);
 }
 
 QModelIndex GBL_HistoryModel::parent(const QModelIndex &child) const
@@ -24,9 +24,14 @@ QModelIndex GBL_HistoryModel::parent(const QModelIndex &child) const
     return QModelIndex();
 }
 
+/*bool GBL_HistoryModel::hasChildren(const QModelIndex &parent) const
+{
+    return false;
+}*/
+
 int GBL_HistoryModel::rowCount(const QModelIndex &parent) const
 {
-    return 0;
+    return m_pHistArr->length();
 }
 
 int GBL_HistoryModel::columnCount(const QModelIndex &parent) const
@@ -37,7 +42,22 @@ int GBL_HistoryModel::columnCount(const QModelIndex &parent) const
 
 QVariant GBL_HistoryModel::data(const QModelIndex &index, int role) const
 {
+    if (!index.isValid()) { return QVariant(); }
 
+    if (role == Qt::DisplayRole)
+    {
+        GBL_History_Item *pHistItem = m_pHistArr->at(index.row());
+        switch (index.column())
+        {
+            case 0:
+                return pHistItem->hist_summary;
+            case 1:
+                return pHistItem->hist_author;
+            case 2:
+                return pHistItem->hist_datetime.toString();
+        }
+    }
+    return QVariant();
 }
 
 QVariant GBL_HistoryModel::headerData(int section, Qt::Orientation orientation, int role) const

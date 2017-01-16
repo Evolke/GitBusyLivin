@@ -18,19 +18,7 @@ GBL_Repository::~GBL_Repository()
 
 void GBL_Repository::cleanup()
 {
-    if (m_pHist_Arr)
-    {
-        for (int i = 0; i < m_pHist_Arr->size(); i++)
-        {
-            GBL_history_item *pHI = m_pHist_Arr->at(i);
-            delete pHI;
-        }
-
-        m_pHist_Arr->clear();
-        delete m_pHist_Arr;
-        m_pHist_Arr = Q_NULLPTR;
-    }
-
+    cleanup_history();
 
     if (m_pRepo)
     {
@@ -38,6 +26,22 @@ void GBL_Repository::cleanup()
         m_pRepo = Q_NULLPTR;
     }
 
+}
+
+void GBL_Repository::cleanup_history()
+{
+    if (m_pHist_Arr)
+    {
+        for (int i = 0; i < m_pHist_Arr->size(); i++)
+        {
+            GBL_History_Item *pHI = m_pHist_Arr->at(i);
+            delete pHI;
+        }
+
+        m_pHist_Arr->clear();
+        delete m_pHist_Arr;
+        m_pHist_Arr = Q_NULLPTR;
+    }
 }
 
 QString GBL_Repository::get_error_msg()
@@ -80,6 +84,8 @@ bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
         m_iErrorCode = git_revwalk_push_head(walker);
         if (m_iErrorCode >= 0)
         {
+            cleanup_history();
+            m_pHist_Arr = new GBL_History_Array;
             git_oid oid;
             while (!git_revwalk_next(&oid, walker))
             {
@@ -87,7 +93,8 @@ bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
                 git_commit_lookup(&commit, m_pRepo, &oid);
 
                 QString soid(git_oid_tostr_s(&oid));
-                GBL_history_item *pHistItem = new GBL_history_item;
+                GBL_History_Item *pHistItem = new GBL_History_Item;
+                pHistItem->hist_oid = soid;
                 pHistItem->hist_summary = QString(git_commit_summary(commit));
                 const git_signature *pGit_Sig = git_commit_author(commit);
                 QString author;
