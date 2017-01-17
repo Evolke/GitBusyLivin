@@ -14,3 +14,4 @@ libs/libgit2.25.dylib
 libs/libgit2.dylib
 
 *.user
+*.exp
