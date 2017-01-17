@@ -10,6 +10,7 @@ class QAction;
 class QMenu;
 class QPlainTextEdit;
 class QSessionManager;
+class QTableView;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -35,6 +36,7 @@ private:
     void writeSettings();
 
     QPointer<GBL_Repository> m_qpRepo;
+    QTableView *m_pHistView;
 };
 
 #endif // MAINWINDOW_H

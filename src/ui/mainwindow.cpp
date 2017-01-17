@@ -80,6 +80,7 @@ void MainWindow::open()
             QTableView *pTv = new QTableView(this);
             pTv->setModel(pHm);
             pTv->verticalHeader()->hide();
+            pTv->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
             pTv->setSelectionBehavior(QAbstractItemView::SelectRows);
             pTv->setShowGrid(false);
             setCentralWidget(pTv);

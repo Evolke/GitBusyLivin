@@ -47,7 +47,7 @@ QVariant GBL_HistoryModel::data(const QModelIndex &index, int role) const
             case 1:
                 return pHistItem->hist_author;
             case 2:
-                return pHistItem->hist_datetime.toString();
+                return pHistItem->hist_datetime.toString("M/d/yyyy h:m:s ap");
         }
     }
     return QVariant();
@@ -57,7 +57,7 @@ QVariant GBL_HistoryModel::headerData(int section, Qt::Orientation orientation, 
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
         return m_headings.at(section);
-    /*if (role == Qt::DecorationRole)
+     /*if (role == Qt::DecorationRole)
         return QVariant::fromValue(services);*/
     return QAbstractTableModel::headerData(section, orientation, role);
 }
