@@ -55,7 +55,7 @@ QVariant GBL_HistoryModel::data(const QModelIndex &index, int role) const
 
 QVariant GBL_HistoryModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role == Qt::DisplayRole)
+    if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
         return m_headings.at(section);
     /*if (role == Qt::DecorationRole)
         return QVariant::fromValue(services);*/

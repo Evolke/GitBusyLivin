@@ -79,6 +79,8 @@ void MainWindow::open()
 
             QTableView *pTv = new QTableView(this);
             pTv->setModel(pHm);
+            pTv->verticalHeader()->hide();
+            pTv->setSelectionBehavior(QAbstractItemView::SelectRows);
             setCentralWidget(pTv);
         }
         else

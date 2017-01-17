@@ -69,7 +69,8 @@ bool GBL_Repository::init(QString path, bool bare)
 bool GBL_Repository::open(QString path)
 {
     cleanup();
-    const char* spath = path.toUtf8().constData();
+    const QByteArray l8b = path.toLocal8Bit();
+    const char* spath = l8b.constData();
     m_iErrorCode = git_repository_open(&m_pRepo, spath);
 
     return m_iErrorCode >= 0;
