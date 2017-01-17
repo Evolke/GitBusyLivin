@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QPointer>
-#include "gbl_repository.h"
+#include "src/gbl/gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;

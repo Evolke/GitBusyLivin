@@ -59,5 +59,5 @@ QVariant GBL_HistoryModel::headerData(int section, Qt::Orientation orientation, 
         return m_headings.at(section);
     /*if (role == Qt::DecorationRole)
         return QVariant::fromValue(services);*/
-    return QAbstractItemModel::headerData(section, orientation, role);
+    return QAbstractTableModel::headerData(section, orientation, role);
 }

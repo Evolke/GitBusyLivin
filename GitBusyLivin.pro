@@ -12,19 +12,19 @@ TARGET = GitBusyLivin
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
-    gbl_repository.cpp \
-    qaboutdialog.cpp \
-    gbl_historymodel.cpp
+SOURCES += src/main.cpp\
+        src/ui/mainwindow.cpp \
+    src/gbl/gbl_repository.cpp \
+    src/ui/qaboutdialog.cpp \
+    src/gbl/gbl_historymodel.cpp
 
-HEADERS  += mainwindow.h \
-    gbl_repository.h \
-    qaboutdialog.h \
-    gbl_historymodel.h
+HEADERS  += src/ui/mainwindow.h \
+    src/gbl/gbl_repository.h \
+    src/ui/qaboutdialog.h \
+    src/gbl/gbl_historymodel.h
 
 RESOURCES += \
-    gitbusylivin.qrc
+    resources/gitbusylivin.qrc
 
 win32:INCLUDEPATH += "D:/projects/qt/GitBusyLivin/libgit2/include"
 unix:INCLUDEPATH += "/projects/qt/GitBusyLivin/libgit2/include"
@@ -32,5 +32,5 @@ unix:INCLUDEPATH += "/projects/qt/GitBusyLivin/libgit2/include"
 win32:LIBS += D:/projects/qt/GitBusyLivin/libs/git2.lib
 unix:LIBS += /projects/qt/GitBusyLivin/libs/libgit2.dylib
 
-RC_ICONS = images/gitbusylivin.ico
-ICON = images/gitbusylivin.icns
+RC_ICONS = resources/images/gitbusylivin.ico
+ICON = resources/images/gitbusylivin.icns

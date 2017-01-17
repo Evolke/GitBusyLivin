@@ -2,7 +2,7 @@
 
 #include "mainwindow.h"
 #include "qaboutdialog.h"
-#include "gbl_historymodel.h"
+#include "src/gbl/gbl_historymodel.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -81,6 +81,7 @@ void MainWindow::open()
             pTv->setModel(pHm);
             pTv->verticalHeader()->hide();
             pTv->setSelectionBehavior(QAbstractItemView::SelectRows);
+            pTv->setShowGrid(false);
             setCentralWidget(pTv);
         }
         else

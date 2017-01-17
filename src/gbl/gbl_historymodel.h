@@ -2,7 +2,7 @@
 #define GBL_HISTORYMODEL_H
 
 #include <QAbstractItemModel>
-#include "gbl_repository.h"
+#include "src/gbl/gbl_repository.h"
 
 class GBL_HistoryModel : public QAbstractTableModel
 {
