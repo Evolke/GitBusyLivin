@@ -77,7 +77,7 @@ void MainWindow::open()
 
             GBL_HistoryModel *pHm = new GBL_HistoryModel(pHistArr);
 
-            QTreeView *pTv = new QTreeView(this);
+            QTableView *pTv = new QTableView(this);
             pTv->setModel(pHm);
             setCentralWidget(pTv);
         }

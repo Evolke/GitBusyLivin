@@ -1,6 +1,6 @@
 #include "gbl_historymodel.h"
 
-GBL_HistoryModel::GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent) : QAbstractItemModel(parent)
+GBL_HistoryModel::GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent) : QAbstractTableModel(parent)
 {
     m_pHistArr = pHistArr;
     m_headings.append(QString("Summary"));
@@ -16,18 +16,10 @@ GBL_HistoryModel::~GBL_HistoryModel()
 
 QModelIndex GBL_HistoryModel::index(int row, int column, const QModelIndex &parent) const
 {
+    if (!hasIndex(row, column, parent)) { return QModelIndex(); }
+
     return createIndex(row, column);
 }
-
-QModelIndex GBL_HistoryModel::parent(const QModelIndex &child) const
-{
-    return QModelIndex();
-}
-
-/*bool GBL_HistoryModel::hasChildren(const QModelIndex &parent) const
-{
-    return false;
-}*/
 
 int GBL_HistoryModel::rowCount(const QModelIndex &parent) const
 {
@@ -43,6 +35,7 @@ int GBL_HistoryModel::columnCount(const QModelIndex &parent) const
 QVariant GBL_HistoryModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()) { return QVariant(); }
+    if (index.row() > (m_pHistArr->length() -1) || index.row() < 0 ) { return QVariant(); }
 
     if (role == Qt::DisplayRole)
     {
