@@ -2,6 +2,30 @@ QMainWindow {
    background-color: #333333;
 }
 
+QMenuBar {
+    background: #222222;
+    color: #DDDDDD;
+}
+
+QMenuBar::item:selected {
+    background: none;
+    background-color: #999999;
+
+    color: #444444;
+}
+
+QMenu {
+    background: none;
+    background-color: #333333;
+    color: #DDDDDD;
+    padding: 0;
+}
+
+QMenu:selected {
+    background: #999999;
+    color: #444444;
+}
+
 QTableView {
     color: #DDDDDD;
     background-color: #333333;
