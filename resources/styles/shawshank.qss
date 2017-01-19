@@ -15,7 +15,16 @@ QHeaderView, QHeaderView::section {
    background-color: #222222;
 }
 
+QHeaderView::section:horizontal {
+    margin-top: 6px;
+    margin-bottom: 3px;
+    border-style: solid;
+    border-left-width: 1px;
+    border-right-color: #555555;
+    border-right-width: 1px;
+}
+
 QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:checked {
     background: none;
-    selection-background-color: #222222;
+    background-color: #222222;
 }

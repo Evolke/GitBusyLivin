@@ -8,6 +8,9 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     m_qpRepo = NULL;
+    m_pHistModel = NULL;
+    m_pHistView = NULL;
+
     init();
 }
 
@@ -75,16 +78,23 @@ void MainWindow::open()
             GBL_History_Array *pHistArr;
             m_qpRepo->get_history(&pHistArr);
 
-            GBL_HistoryModel *pHm = new GBL_HistoryModel(pHistArr);
-
-            m_pHistView = new QTableView(this);
-            m_pHistView->setModel(pHm);
-            m_pHistView->verticalHeader()->hide();
-            m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-            m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
-            m_pHistView->setShowGrid(false);
-            m_pHistView->setAlternatingRowColors(true);
-            setCentralWidget(m_pHistView);
+            if (m_pHistModel == NULL && m_pHistModel == NULL)
+            {
+                m_pHistModel = new GBL_HistoryModel(pHistArr);
+                m_pHistView = new QTableView(this);
+                m_pHistView->setModel(m_pHistModel);
+                m_pHistView->verticalHeader()->hide();
+                //m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+                m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
+                m_pHistView->setShowGrid(false);
+                m_pHistView->setAlternatingRowColors(true);
+                setCentralWidget(m_pHistView);
+            }
+            else
+            {
+               m_pHistModel->setModelData(pHistArr);
+               m_pHistView->reset();
+            }
         }
         else
         {

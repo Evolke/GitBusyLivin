@@ -17,6 +17,8 @@ public:
     Q_INVOKABLE virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     //Q_INVOKABLE virtual bool hasChildren(const QModelIndex &parent = QModelIndex()) const;
 
+    void setModelData(GBL_History_Array *pHistArr);
+
  private:
     GBL_History_Array *m_pHistArr;
     QVector<QString> m_headings;

@@ -14,6 +14,12 @@ GBL_HistoryModel::~GBL_HistoryModel()
 
 }
 
+void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
+{
+    m_pHistArr = pHistArr;
+    layoutChanged();
+}
+
 QModelIndex GBL_HistoryModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (!hasIndex(row, column, parent)) { return QModelIndex(); }

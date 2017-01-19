@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <QPointer>
-#include "src/gbl/gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -11,6 +10,8 @@ class QMenu;
 class QPlainTextEdit;
 class QSessionManager;
 class QTableView;
+class GBL_HistoryModel;
+class GBL_Repository;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -35,8 +36,9 @@ private:
     void readSettings();
     void writeSettings();
 
-    QPointer<GBL_Repository> m_qpRepo;
-    QTableView *m_pHistView;
+    GBL_Repository *m_qpRepo;
+    QPointer<QTableView> m_pHistView;
+    QPointer<GBL_HistoryModel> m_pHistModel;
 };
 
 #endif // MAINWINDOW_H
