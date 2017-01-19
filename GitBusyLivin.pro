@@ -34,3 +34,7 @@ unix:LIBS += /projects/qt/GitBusyLivin/libs/libgit2.dylib
 
 RC_ICONS = resources/images/gitbusylivin.ico
 ICON = resources/images/gitbusylivin.icns
+
+DISTFILES += \
+    resources/styles/zihuatanejo.qss \
+    resources/styles/shawshank.qss

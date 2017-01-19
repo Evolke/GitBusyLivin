@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>images/andy.png</file>
+        <file>styles/shawshank.qss</file>
+        <file>styles/zihuatanejo.qss</file>
     </qresource>
 </RCC>

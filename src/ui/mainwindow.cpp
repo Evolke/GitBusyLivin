@@ -77,13 +77,14 @@ void MainWindow::open()
 
             GBL_HistoryModel *pHm = new GBL_HistoryModel(pHistArr);
 
-            QTableView *pTv = new QTableView(this);
-            pTv->setModel(pHm);
-            pTv->verticalHeader()->hide();
-            pTv->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-            pTv->setSelectionBehavior(QAbstractItemView::SelectRows);
-            pTv->setShowGrid(false);
-            setCentralWidget(pTv);
+            m_pHistView = new QTableView(this);
+            m_pHistView->setModel(pHm);
+            m_pHistView->verticalHeader()->hide();
+            m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+            m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
+            m_pHistView->setShowGrid(false);
+            m_pHistView->setAlternatingRowColors(true);
+            setCentralWidget(m_pHistView);
         }
         else
         {

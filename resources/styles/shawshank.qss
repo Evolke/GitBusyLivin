@@ -1,0 +1,21 @@
+QMainWindow {
+   background-color: #333333;
+}
+
+QTableView {
+    color: #DDDDDD;
+    background-color: #333333;
+    alternate-background-color: #444444;
+    selection-color: #444444;
+    selection-background-color: #999999;
+}
+
+QHeaderView, QHeaderView::section {
+   color: #DDDDDD;
+   background-color: #222222;
+}
+
+QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:checked {
+    background: none;
+    selection-background-color: #222222;
+}
