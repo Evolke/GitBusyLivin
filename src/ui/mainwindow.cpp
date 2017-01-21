@@ -103,6 +103,12 @@ void MainWindow::open()
     }
 }
 
+void MainWindow::preferences()
+{
+    QMessageBox::about(this, tr("About GitBusyLivin"),
+             tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
+}
+
 void MainWindow::init()
 {
     readSettings();
@@ -127,6 +133,9 @@ void MainWindow::createActions()
     QAction *quitAct = fileMenu->addAction(sQuit, this, &QWidget::close);
     quitAct->setShortcuts(QKeySequence::Quit);
     quitAct->setStatusTip(tr("Quit the application"));
+
+    QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
+    editMenu->addAction(tr("&Preferences..."), this, &MainWindow::preferences);
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(tr("&About GitBusyLivin"), this, &MainWindow::about);

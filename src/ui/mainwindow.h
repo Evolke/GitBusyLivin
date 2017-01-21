@@ -28,6 +28,7 @@ private slots:
     void open();
     void new_local_repo();
     void new_network_repo();
+    void preferences();
     void closeEvent(QCloseEvent *event);
 
 private:
