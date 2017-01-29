@@ -21,7 +21,8 @@ SOURCES += src/main.cpp\
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
     src/ui/qaboutdialog.h \
-    src/gbl/gbl_historymodel.h
+    src/gbl/gbl_historymodel.h \
+    src/gbl/gbl_version.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
@@ -38,3 +39,16 @@ ICON = resources/images/gitbusylivin.icns
 DISTFILES += \
     resources/styles/zihuatanejo.qss \
     resources/styles/shawshank.qss
+
+
+#CUSTOM CODE HERE
+VERSION_MAJOR = 0
+VERSION_MINOR = 0
+VERSION_BUILD = 2
+
+DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
+       "VERSION_MINOR=$$VERSION_MINOR"\
+       "VERSION_BUILD=$$VERSION_BUILD"
+
+#Target version
+VERSION = $${VERSION_MAJOR}.$${VERSION_MINOR}.$${VERSION_BUILD}

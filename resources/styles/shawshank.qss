@@ -29,7 +29,7 @@ QMenu:selected {
 QTableView {
     color: #DDDDDD;
     background-color: #333333;
-    alternate-background-color: #444444;
+    alternate-background-color: #404040;
     selection-color: #444444;
     selection-background-color: #999999;
 }

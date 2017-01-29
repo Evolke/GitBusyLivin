@@ -1,5 +1,7 @@
+#include "src/gbl/gbl_version.h"
 #include "qaboutdialog.h"
 #include <QPainter>
+#include <QTextStream>
 
 QAboutDialog::QAboutDialog(QWidget *parent, Qt::WindowFlags f) : QDialog(parent, f)
 {
@@ -71,5 +73,9 @@ void QAboutDialog::paintEvent(QPaintEvent *event)
     p.setFont(QFont("Helvetica", size));
     p.setPen(QColor(140,140,140));
     p.drawText(QRectF(20,45, width() - 20, 100), tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
+    QString vers;
+    QTextStream(&vers) << "version: " << GBL_APP_VERSION;
+    p.setPen(QColor(20,20,20));
+    p.drawText(QPointF(20,80), vers);
 }
 
