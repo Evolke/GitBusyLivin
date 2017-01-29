@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QPointer>
+#include <QMap>
+
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -12,6 +14,7 @@ class QSessionManager;
 class QTableView;
 class GBL_HistoryModel;
 class GBL_Repository;
+class QDockWidget;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -33,6 +36,7 @@ private slots:
 
 private:
     void init();
+    void cleanupDocks();
     void createActions();
     void readSettings();
     void writeSettings();
@@ -40,6 +44,8 @@ private:
     GBL_Repository *m_qpRepo;
     QPointer<QTableView> m_pHistView;
     QPointer<GBL_HistoryModel> m_pHistModel;
+    QMap<QString, QDockWidget*> m_docks;
+    QMenu *m_pViewMenu;
 };
 
 #endif // MAINWINDOW_H

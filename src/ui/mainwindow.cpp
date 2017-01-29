@@ -21,6 +21,20 @@ MainWindow::~MainWindow()
         delete m_qpRepo;
     }
 
+
+}
+
+void MainWindow::cleanupDocks()
+{
+    QMapIterator<QString, QDockWidget*> i(m_docks);
+    while (i.hasNext()) {
+        i.next();
+        QDockWidget *pDock = i.value();
+        delete pDock;
+    }
+
+    m_docks.clear();
+
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -89,6 +103,18 @@ void MainWindow::open()
                 m_pHistView->setShowGrid(false);
                 m_pHistView->setAlternatingRowColors(true);
                 setCentralWidget(m_pHistView);
+                QDockWidget *pDock = new QDockWidget(tr("History - Files"), this);
+                QTreeView *pView = new QTreeView(pDock);
+                pDock->setWidget(pView);
+                m_docks["history_files"] = pDock;
+                addDockWidget(Qt::BottomDockWidgetArea, pDock);
+                m_pViewMenu->addAction(pDock->toggleViewAction());
+                pDock = new QDockWidget(tr("Text Differences"), this);
+                QTextEdit *pText = new QTextEdit(pDock);
+                pDock->setWidget(pText);
+                m_docks["file_diff"] = pDock;
+                addDockWidget(Qt::BottomDockWidgetArea, pDock);
+                m_pViewMenu->addAction(pDock->toggleViewAction());
             }
             else
             {
@@ -137,6 +163,7 @@ void MainWindow::createActions()
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(tr("&Preferences..."), this, &MainWindow::preferences);
 
+    m_pViewMenu = menuBar()->addMenu(tr("&View"));
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(tr("&About GitBusyLivin"), this, &MainWindow::about);
 

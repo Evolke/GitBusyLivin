@@ -4,7 +4,6 @@
 #include <QObject>
 #include <git2.h>
 #include <QDateTime>
-#include <QMap>
 
 typedef struct GBL_History_Item {
     QString hist_oid;
