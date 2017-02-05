@@ -6,6 +6,8 @@
 
 class GBL_HistoryModel : public QAbstractTableModel
 {
+    Q_OBJECT
+
 public:
     GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent = Q_NULLPTR);
     ~GBL_HistoryModel();
@@ -18,6 +20,8 @@ public:
     //Q_INVOKABLE virtual bool hasChildren(const QModelIndex &parent = QModelIndex()) const;
 
     void setModelData(GBL_History_Array *pHistArr);
+    GBL_History_Item* getHistoryItemAt(int index);
+
 
  private:
     GBL_History_Array *m_pHistArr;

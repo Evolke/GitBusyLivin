@@ -16,13 +16,19 @@ SOURCES += src/main.cpp\
         src/ui/mainwindow.cpp \
     src/gbl/gbl_repository.cpp \
     src/ui/qaboutdialog.cpp \
-    src/gbl/gbl_historymodel.cpp
+    src/gbl/gbl_historymodel.cpp \
+    src/ui/historyview.cpp \
+    src/gbl/gbl_filemodel.cpp \
+    src/ui/fileview.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
     src/ui/qaboutdialog.h \
     src/gbl/gbl_historymodel.h \
-    src/gbl/gbl_version.h
+    src/gbl/gbl_version.h \
+    src/ui/historyview.h \
+    src/gbl/gbl_filemodel.h \
+    src/ui/fileview.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
@@ -44,7 +50,7 @@ DISTFILES += \
 #CUSTOM CODE HERE
 VERSION_MAJOR = 0
 VERSION_MINOR = 0
-VERSION_BUILD = 2
+VERSION_BUILD = 3
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
        "VERSION_MINOR=$$VERSION_MINOR"\

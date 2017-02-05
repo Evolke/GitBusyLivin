@@ -56,7 +56,7 @@ void QAboutDialog::paintEvent(QPaintEvent *event)
     QPointF pixpos = frame.bottomRight() - QPointF(w+10,h);
 
     QLinearGradient linearGradient(0, 0, 0, height());
-    linearGradient.setColorAt(0.0, QColor::fromHsl(m_hue,100,100));
+    linearGradient.setColorAt(0.0, QColor::fromHsl(m_hue,120,120));
     linearGradient.setColorAt(1.0, QColor::fromHsl(m_hue,100,20));
     //p.setBrush(linearGradient);
     p.fillRect(0, 0, width(), height(), linearGradient);
@@ -68,14 +68,16 @@ void QAboutDialog::paintEvent(QPaintEvent *event)
  #ifdef Q_OS_WIN
     int size = 10;
  #else
-    int size = 12;
+    int size = 13;
  #endif
     p.setFont(QFont("Helvetica", size));
-    p.setPen(QColor(140,140,140));
-    p.drawText(QRectF(20,45, width() - 20, 100), tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
+    QString quote(tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
+
+    p.setPen(QColor(180,180,180));
+    p.drawText(QRectF(20,45, width() - 20, 100), quote);
     QString vers;
     QTextStream(&vers) << "version: " << GBL_APP_VERSION;
-    p.setPen(QColor(20,20,20));
+    p.setPen(QColor(0,0,0));
     p.drawText(QPointF(20,80), vers);
 }
 

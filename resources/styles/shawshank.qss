@@ -58,10 +58,105 @@ QTextEdit, QTreeView {
     background-color:#333333;
 }
 
-QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button, QTabBar {
+QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button, QTabBar, QToolBar, QStatusBar {
     color:#999999;
     background: none;
     background-color:#333333;
+}
+
+QToolBar {
+    border: none;
+    border-bottom: 1px solid #444;
+}
+
+QStatusBar {
+    border-top: 1px solid #444;
+}
+
+QScrollBar:vertical, QScrollBar:horizontal {
+    border: 1px solid #444;
+    background: #333;
+}
+
+QScrollBar:vertical {
+    margin: 17px 0 17px 0;
+    width: 15px;
+}
+
+QScrollBar:horizontal {
+    margin: 0 17px 0 17px;
+    height: 15px;
+}
+
+QScrollBar::up-arrow:vertical {
+    /*border: 1px solid #444;*/
+    background: #333;
+    image: url(:/images/light_up_arrow.png);
+    width: 8px;
+    height: 4px;
+}
+
+QScrollBar::down-arrow:vertical {
+    background: #333;
+    image: url(:/images/light_down_arrow.png);
+    width: 8px;
+    height: 4px;
+}
+
+QScrollBar::left-arrow:horizontal {
+    /*border: 1px solid #444;*/
+    background: #333;
+    image: url(:/images/light_left_arrow.png);
+    width: 4px;
+    height: 8px;
+}
+
+QScrollBar::right-arrow:horizontal {
+    background: #333;
+    image: url(:/images/light_right_arrow.png);
+    width: 4px;
+    height: 8px;
+}
+
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    border: 1px solid #555;
+    background: #333;
+}
+
+QScrollBar::handle:vertical {
+    min-height: 20px;
+    width: 15px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    border: 1px solid #444;
+    background: #333;
+ }
+
+QScrollBar::add-line:vertical {
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+    height: 15px;
+}
+QScrollBar::sub-line:vertical {
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+    height: 15px;
+}
+
+QScrollBar::add-line:horizontal {
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+    width: 15px;
+}
+QScrollBar::sub-line:horizontal {
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+    width: 15px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical, QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
 }
 
 QTabBar::tab {

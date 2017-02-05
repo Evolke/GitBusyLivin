@@ -38,6 +38,15 @@ int GBL_HistoryModel::columnCount(const QModelIndex &parent) const
     return 3;
 }
 
+GBL_History_Item* GBL_HistoryModel::getHistoryItemAt(int index)
+{
+    if (index >= 0 && index < m_pHistArr->length())
+    {
+        return m_pHistArr->at(index);
+    }
+    return NULL;
+}
+
 QVariant GBL_HistoryModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()) { return QVariant(); }

@@ -11,10 +11,11 @@ class QAction;
 class QMenu;
 class QPlainTextEdit;
 class QSessionManager;
-class QTableView;
+class HistoryView;
 class GBL_HistoryModel;
 class GBL_Repository;
 class QDockWidget;
+class QItemSelection;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -32,6 +33,9 @@ private slots:
     void new_local_repo();
     void new_network_repo();
     void preferences();
+    void toggleToolBar();
+    void toggleStatusBar();
+    void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void closeEvent(QCloseEvent *event);
 
 private:
@@ -42,10 +46,11 @@ private:
     void writeSettings();
 
     GBL_Repository *m_qpRepo;
-    QPointer<QTableView> m_pHistView;
+    HistoryView *m_pHistView;
     QPointer<GBL_HistoryModel> m_pHistModel;
     QMap<QString, QDockWidget*> m_docks;
     QMenu *m_pViewMenu;
+    QToolBar *m_pToolBar;
 };
 
 #endif // MAINWINDOW_H

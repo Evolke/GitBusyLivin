@@ -2,7 +2,11 @@
 
 #include "mainwindow.h"
 #include "qaboutdialog.h"
+#include "src/gbl/gbl_version.h"
 #include "src/gbl/gbl_historymodel.h"
+#include "src/gbl/gbl_filemodel.h"
+#include "src/ui/historyview.h"
+#include "src/ui/fileview.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,7 +25,7 @@ MainWindow::~MainWindow()
         delete m_qpRepo;
     }
 
-
+    cleanupDocks();
 }
 
 void MainWindow::cleanupDocks()
@@ -54,8 +58,8 @@ void MainWindow::about()
 
 void MainWindow::clone()
 {
-    QMessageBox::about(this, tr("About GitBusyLivin"),
-             tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
+    QMessageBox::about(this, tr("D'oh"),
+             tr("Under Construction"));
 }
 
 void MainWindow::new_local_repo()
@@ -89,27 +93,35 @@ void MainWindow::open()
     {
         if (m_qpRepo->open(dirName))
         {
+            QFileInfo fi(dirName);
+            QString title(GBL_APP_NAME);
+            QTextStream(&title) << " - " << fi.fileName();
+            setWindowTitle(title);
+
             GBL_History_Array *pHistArr;
             m_qpRepo->get_history(&pHistArr);
 
-            if (m_pHistModel == NULL && m_pHistModel == NULL)
+            if (m_pHistView == NULL && m_pHistModel == NULL)
             {
                 m_pHistModel = new GBL_HistoryModel(pHistArr);
-                m_pHistView = new QTableView(this);
+                m_pHistView = new HistoryView(this);
                 m_pHistView->setModel(m_pHistModel);
                 m_pHistView->verticalHeader()->hide();
                 //m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
                 m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
+                m_pHistView->setSelectionMode(QAbstractItemView::SingleSelection);
                 m_pHistView->setShowGrid(false);
                 m_pHistView->setAlternatingRowColors(true);
+                connect(m_pHistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historySelectionChanged);
                 setCentralWidget(m_pHistView);
                 QDockWidget *pDock = new QDockWidget(tr("History - Files"), this);
-                QTreeView *pView = new QTreeView(pDock);
+                FileView *pView = new FileView(pDock);
                 pDock->setWidget(pView);
+                pView->setModel(new GBL_FileModel(pView));
                 m_docks["history_files"] = pDock;
                 addDockWidget(Qt::BottomDockWidgetArea, pDock);
                 m_pViewMenu->addAction(pDock->toggleViewAction());
-                pDock = new QDockWidget(tr("Text Differences"), this);
+                pDock = new QDockWidget(tr("Differences"), this);
                 QTextEdit *pText = new QTextEdit(pDock);
                 pDock->setWidget(pText);
                 m_docks["file_diff"] = pDock;
@@ -120,6 +132,12 @@ void MainWindow::open()
             {
                m_pHistModel->setModelData(pHistArr);
                m_pHistView->reset();
+               QDockWidget *pDock = m_docks["history_files"];
+               FileView *pView = (FileView*)pDock->widget();
+               pView->reset();
+               GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
+               pMod->cleanFileArray();
+
             }
         }
         else
@@ -129,18 +147,67 @@ void MainWindow::open()
     }
 }
 
+void MainWindow::historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    Q_UNUSED(deselected);
+    QModelIndexList mil = selected.indexes();
+
+    //single row selection
+    if (mil.count() > 0)
+    {
+        QModelIndex mi = mil.at(0);
+        int row = mi.row();
+        GBL_History_Item *pHistItem = m_pHistModel->getHistoryItemAt(row);
+        if (pHistItem)
+        {
+            QDockWidget *pDock = m_docks["history_files"];
+            FileView *pView = (FileView*)pDock->widget();
+            pView->reset();
+            GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
+            pMod->cleanFileArray();
+            m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
+        }
+    }
+}
+
 void MainWindow::preferences()
 {
-    QMessageBox::about(this, tr("About GitBusyLivin"),
-             tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));
+    QMessageBox::about(this, tr("D'oh"),
+             tr("Under Construction"));
+}
+
+void MainWindow::toggleStatusBar()
+{
+    if (statusBar()->isVisible())
+    {
+        statusBar()->hide();
+    }
+    else
+    {
+       statusBar()->show();
+    }
+}
+
+void MainWindow::toggleToolBar()
+{
+    if (m_pToolBar->isVisible())
+    {
+        m_pToolBar->hide();
+    }
+    else
+    {
+        m_pToolBar->show();
+    }
 }
 
 void MainWindow::init()
 {
     readSettings();
     m_qpRepo = new GBL_Repository();
+    m_pToolBar = addToolBar(tr(GBL_APP_NAME));
     createActions();
-    setWindowTitle(tr("GitBusyLivin"));
+    setWindowTitle(tr(GBL_APP_NAME));
+    statusBar()->showMessage(tr("Ready"));
 }
 
 void MainWindow::createActions()
@@ -164,6 +231,14 @@ void MainWindow::createActions()
     editMenu->addAction(tr("&Preferences..."), this, &MainWindow::preferences);
 
     m_pViewMenu = menuBar()->addMenu(tr("&View"));
+    QAction *tbAct = m_pViewMenu->addAction(tr("&Toolbar"));
+    QAction *sbAct = m_pViewMenu->addAction(tr("&Statusbar"));
+    tbAct->setCheckable(true);
+    tbAct->setChecked(true);
+    sbAct->setCheckable(true);
+    sbAct->setChecked(true);
+    connect(tbAct, &QAction::toggled, this, &MainWindow::toggleToolBar);
+    connect(sbAct, &QAction::toggled, this, &MainWindow::toggleStatusBar);
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(tr("&About GitBusyLivin"), this, &MainWindow::about);
 
