@@ -2,6 +2,8 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QByteArray>
+#include <QFileInfo>
+
 #include "gbl_filemodel.h"
 
 static QByteArray g_temp_ba;
@@ -182,7 +184,7 @@ int GBL_Repository::tree_walk_callback(const char *root, const git_tree_entry *e
         pFItem->file_name = git_tree_entry_name(entry);
         pFItem->sub_dir = QString(root);
         const git_oid *pTroid = git_tree_entry_id(entry);
-        pFItem->file_oid = QString(git_oid_tostr_s(pTroid));
+        //pFItem->file_oid = QString(git_oid_tostr_s(pTroid));
         pFileMod->addFileItem(pFItem);
     }
     /*if (type == GIT_OBJ_TREE)
@@ -192,4 +194,62 @@ int GBL_Repository::tree_walk_callback(const char *root, const git_tree_entry *e
     }*/
 
     return 1;
+}
+
+bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, GBL_FileModel *pFileMod)
+{
+    git_oid oid;
+    git_tree *pTree = NULL, *pParentTree = NULL;
+    git_commit *pCommit = NULL, *pParentCommit = NULL;
+    int nParentCount;
+    git_diff_options diffopts = GIT_DIFF_OPTIONS_INIT;
+    git_diff *pDiff = NULL;
+
+    const char* str = qstring2cc(&oid_str);
+    m_iErrorCode = git_oid_fromstr(&oid, str);
+    if (m_iErrorCode >= 0)
+    {
+       m_iErrorCode = git_commit_lookup(&pCommit, m_pRepo, &oid);
+       if (m_iErrorCode >= 0)
+       {
+           m_iErrorCode = git_commit_tree(&pTree, pCommit);
+           nParentCount = git_commit_parentcount(pCommit);
+           if (nParentCount == 0)
+           {
+
+           }
+           else
+           {
+               for (int i = 0; i < nParentCount; i++)
+               {
+                   git_commit_parent(&pParentCommit, pCommit, i);
+                   git_commit_tree(&pParentTree, pParentCommit);
+                   git_diff_tree_to_tree(&pDiff, m_pRepo, pParentTree, pTree, &diffopts);
+                   git_diff_print(pDiff, GIT_DIFF_FORMAT_NAME_STATUS, diff_print_callback, pFileMod);
+                   git_diff_free(pDiff);
+                   git_commit_free(pParentCommit);
+                   git_tree_free(pParentTree);
+               }
+           }
+
+       }
+    }
+
+    return m_iErrorCode >= 0;
+}
+
+int GBL_Repository::diff_print_callback(const git_diff_delta *pDelta, const git_diff_hunk *pHunk, const git_diff_line *pLine, void *payload)
+{
+    //qDebug() << "old_file" << pDelta->old_file.path;
+    //qDebug() << "new_file" << pDelta->new_file.path;lkj
+    GBL_FileModel *pFileMod = (GBL_FileModel*)payload;
+
+    GBL_File_Item *pFItem = new GBL_File_Item;
+    QFileInfo fi(pDelta->new_file.path);
+    pFItem->file_name = QString(fi.fileName());
+    pFItem->sub_dir = QString(fi.path());
+    pFItem->status = pDelta->status;
+    pFileMod->addFileItem(pFItem);
+
+    return 0;
 }

@@ -13,6 +13,10 @@ public:
 signals:
 
 public slots:
+
+private slots:
+    virtual void resizeEvent(QResizeEvent *event);
+
 };
 
 #endif // FILEVIEW_H

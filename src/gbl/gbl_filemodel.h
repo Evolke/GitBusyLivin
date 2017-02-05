@@ -3,7 +3,7 @@
 
 #include <QAbstractItemModel>
 #include "gbl_repository.h"
-
+#include <QIcon>
 
 class GBL_FileModel : public QAbstractItemModel
 {
@@ -31,6 +31,7 @@ public slots:
 private:
     GBL_File_Array *m_pFileArr;
     QVector<QString> m_headings;
+    QIcon m_addDocIcon, m_removeDocIcon, m_modifyDocIcon, m_unknownDocIcon;
 };
 
 #endif // GBL_FILEMODEL_H

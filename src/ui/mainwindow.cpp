@@ -93,6 +93,8 @@ void MainWindow::open()
     {
         if (m_qpRepo->open(dirName))
         {
+            QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+
             QFileInfo fi(dirName);
             QString title(GBL_APP_NAME);
             QTextStream(&title) << " - " << fi.fileName();
@@ -139,6 +141,8 @@ void MainWindow::open()
                pMod->cleanFileArray();
 
             }
+
+            QApplication::restoreOverrideCursor();
         }
         else
         {
@@ -165,7 +169,8 @@ void MainWindow::historySelectionChanged(const QItemSelection &selected, const Q
             pView->reset();
             GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
             pMod->cleanFileArray();
-            m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
+            //m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
+            m_qpRepo->get_commit_to_parent_diff(pHistItem->hist_oid, pMod);
         }
     }
 }

@@ -1,7 +1,10 @@
 #include "gbl_filemodel.h"
 #include <QDebug>
+#include <QPixmap>
 
-GBL_FileModel::GBL_FileModel(QObject *parent) : QAbstractItemModel(parent)
+GBL_FileModel::GBL_FileModel(QObject *parent) : QAbstractItemModel(parent),
+    m_addDocIcon(QPixmap(":/images/add_doc_icon.png")), m_removeDocIcon(QPixmap(":/images/remove_doc_icon.png")),
+    m_modifyDocIcon(QPixmap(":/images/modify_doc_icon.png")), m_unknownDocIcon(QPixmap(":/images/unknown_doc_icon.png"))
 {
     m_pFileArr = new GBL_File_Array;
     m_headings.append(QString("File"));
@@ -32,7 +35,6 @@ void GBL_FileModel::cleanFileArray()
 void GBL_FileModel::addFileItem(GBL_File_Item *pFileItem)
 {
     m_pFileArr->append(pFileItem);
-    qDebug() << "filearray_size:" << m_pFileArr->size();
     layoutChanged();
 }
 
@@ -78,6 +80,24 @@ QVariant GBL_FileModel::data(const QModelIndex &index, int role) const
                 return pFileItem->sub_dir;
         }
     }
+    else if (role == Qt::DecorationRole && index.column() == 0)
+    {
+        GBL_File_Item *pFileItem = m_pFileArr->at(index.row());
+        switch (pFileItem->status)
+        {
+            case GIT_DELTA_ADDED:
+                return QVariant::fromValue(m_addDocIcon);
+                break;
+            case GIT_DELTA_DELETED:
+                return QVariant::fromValue(m_removeDocIcon);
+                break;
+            case GIT_DELTA_MODIFIED:
+                return QVariant::fromValue(m_modifyDocIcon);
+                break;
+            default:
+                return QVariant::fromValue(m_unknownDocIcon);
+        }
+    }
     return QVariant();
 }
 
@@ -85,8 +105,7 @@ QVariant GBL_FileModel::headerData(int section, Qt::Orientation orientation, int
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
         return m_headings.at(section);
-     /*if (role == Qt::DecorationRole)
-        return QVariant::fromValue(services);*/
+
     return QAbstractItemModel::headerData(section, orientation, role);
 
 }

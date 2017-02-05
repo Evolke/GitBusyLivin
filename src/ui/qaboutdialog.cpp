@@ -49,6 +49,8 @@ void QAboutDialog::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
     QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setRenderHint(QPainter::TextAntialiasing);
 
     QRectF frame(QPointF(0,0), geometry().size());
     qreal w = m_pix->width();

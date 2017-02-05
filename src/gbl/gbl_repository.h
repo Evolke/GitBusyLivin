@@ -15,7 +15,7 @@ typedef struct GBL_History_Item {
 typedef QVector<GBL_History_Item*> GBL_History_Array;
 
 typedef struct GBL_File_Item {
-    QString file_oid;
+    git_delta_t status;
     QString file_name;
     QString sub_dir;
 } GBL_File_Item;
@@ -33,6 +33,7 @@ public:
 
     static const char* qstring2cc(QString *pQStr);
     static int tree_walk_callback(const char *root, const git_tree_entry *entry, void *payload);
+    static int diff_print_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
 
     QString get_error_msg();
     bool init(QString path, bool bare=false);
@@ -40,6 +41,7 @@ public:
     bool get_history(GBL_History_Array **pHist_Arr);
     bool get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod);
     void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);
+    bool get_commit_to_parent_diff(QString oid_str, GBL_FileModel *pFileMod);
 
 signals:
 

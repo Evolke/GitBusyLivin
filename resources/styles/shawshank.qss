@@ -46,6 +46,7 @@ QHeaderView::section:horizontal {
     border-left-width: 1px;
     border-right-color: #555555;
     border-right-width: 1px;
+    padding-left: 5px;
 }
 
 QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:checked {
@@ -56,6 +57,16 @@ QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:
 QTextEdit, QTreeView {
     color:#ddd;
     background-color:#333333;
+}
+
+QTreeView::item:selected {
+    color: #444444;
+    background-color: #999999;
+}
+
+QTreeView::item:hover {
+    color: #cccccc;
+    background-color: #222222;
 }
 
 QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button, QTabBar, QToolBar, QStatusBar {

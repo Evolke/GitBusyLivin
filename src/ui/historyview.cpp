@@ -23,7 +23,7 @@ void HistoryView::resizeEvent(QResizeEvent *event)
 
     setColumnWidth(0, nWidth*.6);
     setColumnWidth(1, nWidth*.22);
-    setColumnWidth(2, nWidth*.18);
+    setColumnWidth(2, nWidth*.17);
 }
 
 /*void HistoryView::itemSelectionChanged()
