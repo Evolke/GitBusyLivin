@@ -16,3 +16,4 @@ libs/libgit2.dylib
 *.user
 *.exp
 *.DS_Store
+libs
