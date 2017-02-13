@@ -44,6 +44,7 @@ private:
     void createActions();
     void readSettings();
     void writeSettings();
+    void setupRepoUI(QString repoDir);
 
     GBL_Repository *m_qpRepo;
     HistoryView *m_pHistView;

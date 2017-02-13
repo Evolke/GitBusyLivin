@@ -69,10 +69,35 @@ QTreeView::item:hover {
     background-color: #222222;
 }
 
-QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button, QTabBar, QToolBar, QStatusBar {
+QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button, QTabBar, QToolBar, QStatusBar, QDialog, QLabel {
     color:#999999;
     background: none;
     background-color:#333333;
+}
+
+QLineEdit {
+    color: #999;
+    background-color: #444;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 3px;
+}
+
+QLineEdit:focus {
+    border-color: #777;
+}
+
+QPushButton {
+    color: #999;
+    background-color: #444;
+    border: 1px solid #555;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+QPushButton:hover {
+    color: #aaa;
+    background-color: #555;
 }
 
 QToolBar {

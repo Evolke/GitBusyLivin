@@ -7,6 +7,7 @@
 #include "src/gbl/gbl_filemodel.h"
 #include "src/ui/historyview.h"
 #include "src/ui/fileview.h"
+#include "clonedialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -58,8 +59,21 @@ void MainWindow::about()
 
 void MainWindow::clone()
 {
-    QMessageBox::about(this, tr("D'oh"),
-             tr("Under Construction"));
+    CloneDialog cloneDlg(this);
+    if (cloneDlg.exec() == QDialog::Accepted)
+    {
+        QString src = cloneDlg.getSource();
+        QString dst = cloneDlg.getDestination();
+
+        if (m_qpRepo->clone_repo(src, dst))
+        {
+            setupRepoUI(dst);
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Clone Error"), m_qpRepo->get_error_msg());
+        }
+    }
 }
 
 void MainWindow::new_local_repo()
@@ -67,7 +81,7 @@ void MainWindow::new_local_repo()
     QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),QString(), QFileDialog::ShowDirsOnly);
     if (!dirName.isEmpty())
     {
-        if (!m_qpRepo->init(dirName))
+        if (!m_qpRepo->init_repo(dirName))
         {
             QMessageBox::warning(this, tr("Creation Error"), m_qpRepo->get_error_msg());
         }
@@ -79,7 +93,7 @@ void MainWindow::new_network_repo()
     QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),QString(), QFileDialog::ShowDirsOnly);
     if (!dirName.isEmpty())
     {
-        if (!m_qpRepo->init(dirName, true))
+        if (!m_qpRepo->init_repo(dirName, true))
         {
             QMessageBox::warning(this, tr("Creation Error"), m_qpRepo->get_error_msg());
         }
@@ -91,64 +105,70 @@ void MainWindow::open()
     QString dirName = QFileDialog::getExistingDirectory(this);
     if (!dirName.isEmpty())
     {
-        if (m_qpRepo->open(dirName))
+        if (m_qpRepo->open_repo(dirName))
         {
-            QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-
-            QFileInfo fi(dirName);
-            QString title(GBL_APP_NAME);
-            QTextStream(&title) << " - " << fi.fileName();
-            setWindowTitle(title);
-
-            GBL_History_Array *pHistArr;
-            m_qpRepo->get_history(&pHistArr);
-
-            if (m_pHistView == NULL && m_pHistModel == NULL)
-            {
-                m_pHistModel = new GBL_HistoryModel(pHistArr);
-                m_pHistView = new HistoryView(this);
-                m_pHistView->setModel(m_pHistModel);
-                m_pHistView->verticalHeader()->hide();
-                //m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-                m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
-                m_pHistView->setSelectionMode(QAbstractItemView::SingleSelection);
-                m_pHistView->setShowGrid(false);
-                m_pHistView->setAlternatingRowColors(true);
-                connect(m_pHistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historySelectionChanged);
-                setCentralWidget(m_pHistView);
-                QDockWidget *pDock = new QDockWidget(tr("History - Files"), this);
-                FileView *pView = new FileView(pDock);
-                pDock->setWidget(pView);
-                pView->setModel(new GBL_FileModel(pView));
-                m_docks["history_files"] = pDock;
-                addDockWidget(Qt::BottomDockWidgetArea, pDock);
-                m_pViewMenu->addAction(pDock->toggleViewAction());
-                pDock = new QDockWidget(tr("Differences"), this);
-                QTextEdit *pText = new QTextEdit(pDock);
-                pDock->setWidget(pText);
-                m_docks["file_diff"] = pDock;
-                addDockWidget(Qt::BottomDockWidgetArea, pDock);
-                m_pViewMenu->addAction(pDock->toggleViewAction());
-            }
-            else
-            {
-               m_pHistModel->setModelData(pHistArr);
-               m_pHistView->reset();
-               QDockWidget *pDock = m_docks["history_files"];
-               FileView *pView = (FileView*)pDock->widget();
-               pView->reset();
-               GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
-               pMod->cleanFileArray();
-
-            }
-
-            QApplication::restoreOverrideCursor();
+            setupRepoUI(dirName);
         }
         else
         {
             QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
         }
     }
+}
+
+void MainWindow::setupRepoUI(QString repoDir)
+{
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+
+    QFileInfo fi(repoDir);
+    QString title(GBL_APP_NAME);
+    QTextStream(&title) << " - " << fi.fileName();
+    setWindowTitle(title);
+
+    GBL_History_Array *pHistArr;
+    m_qpRepo->get_history(&pHistArr);
+
+    if (m_pHistView == NULL && m_pHistModel == NULL)
+    {
+        m_pHistModel = new GBL_HistoryModel(pHistArr);
+        m_pHistView = new HistoryView(this);
+        m_pHistView->setModel(m_pHistModel);
+        m_pHistView->verticalHeader()->hide();
+        //m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        m_pHistView->setSelectionMode(QAbstractItemView::SingleSelection);
+        m_pHistView->setShowGrid(false);
+        m_pHistView->setAlternatingRowColors(true);
+        connect(m_pHistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historySelectionChanged);
+        setCentralWidget(m_pHistView);
+        QDockWidget *pDock = new QDockWidget(tr("History - Files"), this);
+        FileView *pView = new FileView(pDock);
+        pDock->setWidget(pView);
+        pView->setModel(new GBL_FileModel(pView));
+        m_docks["history_files"] = pDock;
+        addDockWidget(Qt::BottomDockWidgetArea, pDock);
+        m_pViewMenu->addAction(pDock->toggleViewAction());
+        pDock = new QDockWidget(tr("Differences"), this);
+        QTextEdit *pText = new QTextEdit(pDock);
+        pDock->setWidget(pText);
+        m_docks["file_diff"] = pDock;
+        addDockWidget(Qt::BottomDockWidgetArea, pDock);
+        m_pViewMenu->addAction(pDock->toggleViewAction());
+    }
+    else
+    {
+       m_pHistModel->setModelData(pHistArr);
+       m_pHistView->reset();
+       QDockWidget *pDock = m_docks["history_files"];
+       FileView *pView = (FileView*)pDock->widget();
+       pView->reset();
+       GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
+       pMod->cleanFileArray();
+
+    }
+
+    QApplication::restoreOverrideCursor();
+
 }
 
 void MainWindow::historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
@@ -221,7 +241,7 @@ void MainWindow::createActions()
     QMenu *newMenu = fileMenu->addMenu(tr("&New"));
     newMenu->addAction(tr("&Local Repository..."), this, &MainWindow::new_local_repo);
     newMenu->addAction(tr("&Network Repository..."), this, &MainWindow::new_network_repo);
-    fileMenu->addAction(tr("&Clone"), this, &MainWindow::clone);
+    fileMenu->addAction(tr("&Clone..."), this, &MainWindow::clone);
     fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
  #ifdef Q_OS_WIN
     QString sQuit = tr("&Exit");

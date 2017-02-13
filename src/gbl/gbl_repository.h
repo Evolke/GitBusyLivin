@@ -36,8 +36,10 @@ public:
     static int diff_print_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
 
     QString get_error_msg();
-    bool init(QString path, bool bare=false);
-    bool open(QString path);
+    bool init_repo(QString path, bool bare=false);
+    bool open_repo(QString path);
+    bool clone_repo(QString srcUrl, QString dstPath);
+
     bool get_history(GBL_History_Array **pHist_Arr);
     bool get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod);
     void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);
