@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -20,7 +20,8 @@ SOURCES += src/main.cpp\
     src/ui/historyview.cpp \
     src/gbl/gbl_filemodel.cpp \
     src/ui/fileview.cpp \
-    src/ui/clonedialog.cpp
+    src/ui/clonedialog.cpp \
+    src/ui/urlpixmap.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -30,7 +31,8 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/historyview.h \
     src/gbl/gbl_filemodel.h \
     src/ui/fileview.h \
-    src/ui/clonedialog.h
+    src/ui/clonedialog.h \
+    src/ui/urlpixmap.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc

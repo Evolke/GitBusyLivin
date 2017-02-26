@@ -17,7 +17,7 @@ QAboutDialog::QAboutDialog(QWidget *parent, Qt::WindowFlags f) : QDialog(parent,
     m_pix = new QPixmap(QLatin1String(":/images/andy.png"));
     //setAutoFillBackground(false);
     m_hue = (int)rand()%360;
-    m_timer = startTimer(5000);
+    m_timer = startTimer(10000);
 }
 
 QAboutDialog::~QAboutDialog()

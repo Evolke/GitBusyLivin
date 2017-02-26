@@ -10,6 +10,7 @@ typedef struct GBL_History_Item {
     QString hist_summary;
     QDateTime hist_datetime;
     QString hist_author;
+    QString hist_author_email;
 } GBL_History_Item;
 
 typedef QVector<GBL_History_Item*> GBL_History_Array;

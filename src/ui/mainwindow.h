@@ -42,6 +42,7 @@ private:
     void init();
     void cleanupDocks();
     void createActions();
+    void createDocks();
     void readSettings();
     void writeSettings();
     void setupRepoUI(QString repoDir);

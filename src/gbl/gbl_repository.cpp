@@ -126,6 +126,7 @@ bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
                 QString author;
                 QTextStream(&author) << pGit_Sig->name << " <" << pGit_Sig->email << ">";
                 pHistItem->hist_author = author;
+                pHistItem->hist_author_email = QString(pGit_Sig->email);
                 pHistItem->hist_datetime = QDateTime::fromTime_t(pGit_Sig->when.time);
                 m_pHist_Arr->append(pHistItem);
 

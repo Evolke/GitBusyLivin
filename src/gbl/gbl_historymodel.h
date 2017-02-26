@@ -4,6 +4,10 @@
 #include <QAbstractItemModel>
 #include "src/gbl/gbl_repository.h"
 
+QT_BEGIN_NAMESPACE
+class UrlPixmap;
+QT_END_NAMESPACE
+
 class GBL_HistoryModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -21,11 +25,18 @@ public:
 
     void setModelData(GBL_History_Array *pHistArr);
     GBL_History_Item* getHistoryItemAt(int index);
+    QString getGravatarUrl(QString sEmail);
 
+public slots:
+    void avatarDownloaded();
 
- private:
+private:
+    void cleanupAvatars();
+
     GBL_History_Array *m_pHistArr;
     QVector<QString> m_headings;
+    QMap<QString, UrlPixmap*> m_avatarMap;
+    QMapIterator<QString, UrlPixmap*> *m_pAvMapIt;
 };
 
 #endif // GBL_HISTORYMODEL_H

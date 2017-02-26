@@ -128,44 +128,14 @@ void MainWindow::setupRepoUI(QString repoDir)
     GBL_History_Array *pHistArr;
     m_qpRepo->get_history(&pHistArr);
 
-    if (m_pHistView == NULL && m_pHistModel == NULL)
-    {
-        m_pHistModel = new GBL_HistoryModel(pHistArr);
-        m_pHistView = new HistoryView(this);
-        m_pHistView->setModel(m_pHistModel);
-        m_pHistView->verticalHeader()->hide();
-        //m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-        m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        m_pHistView->setSelectionMode(QAbstractItemView::SingleSelection);
-        m_pHistView->setShowGrid(false);
-        m_pHistView->setAlternatingRowColors(true);
-        connect(m_pHistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historySelectionChanged);
-        setCentralWidget(m_pHistView);
-        QDockWidget *pDock = new QDockWidget(tr("History - Files"), this);
-        FileView *pView = new FileView(pDock);
-        pDock->setWidget(pView);
-        pView->setModel(new GBL_FileModel(pView));
-        m_docks["history_files"] = pDock;
-        addDockWidget(Qt::BottomDockWidgetArea, pDock);
-        m_pViewMenu->addAction(pDock->toggleViewAction());
-        pDock = new QDockWidget(tr("Differences"), this);
-        QTextEdit *pText = new QTextEdit(pDock);
-        pDock->setWidget(pText);
-        m_docks["file_diff"] = pDock;
-        addDockWidget(Qt::BottomDockWidgetArea, pDock);
-        m_pViewMenu->addAction(pDock->toggleViewAction());
-    }
-    else
-    {
-       m_pHistModel->setModelData(pHistArr);
-       m_pHistView->reset();
-       QDockWidget *pDock = m_docks["history_files"];
-       FileView *pView = (FileView*)pDock->widget();
-       pView->reset();
-       GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
-       pMod->cleanFileArray();
+    m_pHistModel->setModelData(pHistArr);
+    m_pHistView->reset();
+    QDockWidget *pDock = m_docks["history_files"];
+    FileView *pView = (FileView*)pDock->widget();
+    pView->reset();
+    GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
+    pMod->cleanFileArray();
 
-    }
 
     QApplication::restoreOverrideCursor();
 
@@ -231,6 +201,7 @@ void MainWindow::init()
     m_qpRepo = new GBL_Repository();
     m_pToolBar = addToolBar(tr(GBL_APP_NAME));
     createActions();
+    createDocks();
     setWindowTitle(tr(GBL_APP_NAME));
     statusBar()->showMessage(tr("Ready"));
 }
@@ -266,6 +237,34 @@ void MainWindow::createActions()
     connect(sbAct, &QAction::toggled, this, &MainWindow::toggleStatusBar);
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(tr("&About GitBusyLivin"), this, &MainWindow::about);
+}
+
+void MainWindow::createDocks()
+{
+    m_pHistModel = new GBL_HistoryModel(NULL);
+    m_pHistView = new HistoryView(this);
+    m_pHistView->setModel(m_pHistModel);
+    m_pHistView->verticalHeader()->hide();
+    //m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_pHistView->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_pHistView->setShowGrid(false);
+    m_pHistView->setAlternatingRowColors(true);
+    connect(m_pHistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historySelectionChanged);
+    setCentralWidget(m_pHistView);
+    QDockWidget *pDock = new QDockWidget(tr("History - Files"), this);
+    FileView *pView = new FileView(pDock);
+    pDock->setWidget(pView);
+    pView->setModel(new GBL_FileModel(pView));
+    m_docks["history_files"] = pDock;
+    addDockWidget(Qt::BottomDockWidgetArea, pDock);
+    m_pViewMenu->addAction(pDock->toggleViewAction());
+    pDock = new QDockWidget(tr("Differences"), this);
+    QTextEdit *pText = new QTextEdit(pDock);
+    pDock->setWidget(pText);
+    m_docks["file_diff"] = pDock;
+    addDockWidget(Qt::BottomDockWidgetArea, pDock);
+    m_pViewMenu->addAction(pDock->toggleViewAction());
 
 }
 
