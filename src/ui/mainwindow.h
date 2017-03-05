@@ -16,6 +16,8 @@ class GBL_HistoryModel;
 class GBL_Repository;
 class QDockWidget;
 class QItemSelection;
+class QNetworkAccessManager;
+class QNetworkDiskCache;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -26,6 +28,8 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    QNetworkAccessManager* getNetworkAccessManager() { return m_pNetAM; }
+    QNetworkDiskCache* getNetworkCache() { return m_pNetCache; }
 private slots:
     void about();
     void clone();
@@ -53,6 +57,9 @@ private:
     QMap<QString, QDockWidget*> m_docks;
     QMenu *m_pViewMenu;
     QToolBar *m_pToolBar;
+    QNetworkAccessManager *m_pNetAM;
+    QNetworkDiskCache *m_pNetCache;
+
 };
 
 #endif // MAINWINDOW_H

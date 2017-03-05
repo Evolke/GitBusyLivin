@@ -6,6 +6,7 @@
 
 QT_BEGIN_NAMESPACE
 class UrlPixmap;
+class QNetworkReply;
 QT_END_NAMESPACE
 
 class GBL_HistoryModel : public QAbstractTableModel
@@ -26,9 +27,10 @@ public:
     void setModelData(GBL_History_Array *pHistArr);
     GBL_History_Item* getHistoryItemAt(int index);
     QString getGravatarUrl(QString sEmail);
+    void getAvatarFromUrl(QString sUrl, QString sEmail);
 
 public slots:
-    void avatarDownloaded();
+    void avatarDownloaded(QNetworkReply* pReply);
 
 private:
     void cleanupAvatars();
@@ -36,6 +38,7 @@ private:
     GBL_History_Array *m_pHistArr;
     QVector<QString> m_headings;
     QMap<QString, UrlPixmap*> m_avatarMap;
+    QMap<QString, QString> m_gravMap;
     QMapIterator<QString, UrlPixmap*> *m_pAvMapIt;
 };
 

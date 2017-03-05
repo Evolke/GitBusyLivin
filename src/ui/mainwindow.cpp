@@ -8,6 +8,11 @@
 #include "src/ui/historyview.h"
 #include "src/ui/fileview.h"
 #include "clonedialog.h"
+#include "src/gbl/gbl_storage.h"
+#include <QNetworkAccessManager>
+#include <QNetworkDiskCache>
+#include <QDir>
+#include <QFileInfo>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -15,6 +20,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_qpRepo = NULL;
     m_pHistModel = NULL;
     m_pHistView = NULL;
+    m_pNetAM = NULL;
+    m_pNetCache = NULL;
 
     init();
 }
@@ -26,6 +33,8 @@ MainWindow::~MainWindow()
         delete m_qpRepo;
     }
 
+    if (m_pNetAM) { delete m_pNetAM; }
+    //if (m_pNetCache) { delete m_pNetCache;}
     cleanupDocks();
 }
 
@@ -241,7 +250,7 @@ void MainWindow::createActions()
 
 void MainWindow::createDocks()
 {
-    m_pHistModel = new GBL_HistoryModel(NULL);
+    m_pHistModel = new GBL_HistoryModel(NULL, this);
     m_pHistView = new HistoryView(this);
     m_pHistView->setModel(m_pHistModel);
     m_pHistView->verticalHeader()->hide();
@@ -280,6 +289,20 @@ void MainWindow::readSettings()
     } else {
         restoreGeometry(geometry);
     }
+
+    m_pNetAM = new QNetworkAccessManager(this);
+
+    //create cache dir
+    QString sCachePath = GBL_Storage::getCachePath();
+    QDir cachePath(sCachePath);
+    if (!cachePath.exists())
+    {
+        cachePath.mkpath(sCachePath);
+    }
+
+    m_pNetCache = new QNetworkDiskCache(this);
+    m_pNetCache->setCacheDirectory(sCachePath);
+    m_pNetAM->setCache(m_pNetCache);
 }
 
 void MainWindow::writeSettings()

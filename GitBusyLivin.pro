@@ -21,7 +21,8 @@ SOURCES += src/main.cpp\
     src/gbl/gbl_filemodel.cpp \
     src/ui/fileview.cpp \
     src/ui/clonedialog.cpp \
-    src/ui/urlpixmap.cpp
+    src/ui/urlpixmap.cpp \
+    src/gbl/gbl_storage.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -32,7 +33,8 @@ HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_filemodel.h \
     src/ui/fileview.h \
     src/ui/clonedialog.h \
-    src/ui/urlpixmap.h
+    src/ui/urlpixmap.h \
+    src/gbl/gbl_storage.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
@@ -67,7 +69,7 @@ DISTFILES += \
 #CUSTOM CODE HERE
 VERSION_MAJOR = 0
 VERSION_MINOR = 0
-VERSION_BUILD = 6
+VERSION_BUILD = 7
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
        "VERSION_MINOR=$$VERSION_MINOR"\

@@ -65,7 +65,7 @@ QString GBL_Repository::get_error_msg()
 
 const char* GBL_Repository::qstring2cc(QString *pQStr)
 {
-    g_temp_ba = pQStr->toLocal8Bit();
+    g_temp_ba = pQStr->toUtf8();
     const char* str = g_temp_ba.constData();
 
     return str;
@@ -74,7 +74,7 @@ const char* GBL_Repository::qstring2cc(QString *pQStr)
 bool GBL_Repository::init_repo(QString path, bool bare)
 {
     cleanup();
-    /*const QByteArray l8b = path.toLocal8Bit();
+    /*const QByteArray l8b = path.toUtf8();
     const char* spath = l8b.constData();*/
     m_iErrorCode = git_repository_init(&m_pRepo, qstring2cc(&path), bare);
     return m_iErrorCode >= 0;
@@ -83,9 +83,9 @@ bool GBL_Repository::init_repo(QString path, bool bare)
 bool GBL_Repository::clone_repo(QString srcUrl, QString dstPath)
 {
     cleanup();
-    QByteArray baUrl = srcUrl.toLocal8Bit();
+    QByteArray baUrl = srcUrl.toUtf8();
     const char* strUrl = baUrl.constData();
-    QByteArray baPath = dstPath.toLocal8Bit();
+    QByteArray baPath = dstPath.toUtf8();
     const char* strPath = baPath.constData();
     m_iErrorCode = git_clone(&m_pRepo, strUrl, strPath, NULL);
 
@@ -95,7 +95,7 @@ bool GBL_Repository::clone_repo(QString srcUrl, QString dstPath)
 bool GBL_Repository::open_repo(QString path)
 {
     cleanup();
-    /*const QByteArray l8b = path.toLocal8Bit();
+    /*const QByteArray l8b = path.toUtf8();
     const char* spath = l8b.constData();*/
     m_iErrorCode = git_repository_open(&m_pRepo, qstring2cc(&path));
     return m_iErrorCode >= 0;

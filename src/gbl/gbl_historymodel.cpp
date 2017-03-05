@@ -5,7 +5,14 @@
 #include <QTextStream>
 #include <QIcon>
 #include <QDebug>
+#include <QByteArray>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+
 #include "src/ui/urlpixmap.h"
+#include "src/ui/mainwindow.h"
+
 
 GBL_HistoryModel::GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent) : QAbstractTableModel(parent)
 {
@@ -36,16 +43,27 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
 {
     m_pHistArr = pHistArr;
     cleanupAvatars();
+
+    MainWindow *pMain = (MainWindow*)parent();
+    QNetworkAccessManager *pNetAM = pMain->getNetworkAccessManager();
+    //QNetworkDiskCache *pNetCache = pMain->getNetworkCache();
+
     for (int i = 0; i < m_pHistArr->size(); i++)
     {
         GBL_History_Item *pHistItem = m_pHistArr->at(i);
         QString sEmail = pHistItem->hist_author_email.toLower();
         if (!m_avatarMap.contains(sEmail))
         {
-            UrlPixmap *pUrlpm = new UrlPixmap(this);
+            UrlPixmap *pUrlpm = new UrlPixmap(pNetAM, this);
             m_avatarMap[sEmail] = pUrlpm;
         }
+        /*else
+        {
+            qDebug() << "avatarMap.contains = true";
+        }*/
     }
+
+    qDebug() << "avatarMap.size:" << m_avatarMap.size();
 
     if (m_pAvMapIt) delete m_pAvMapIt;
     m_pAvMapIt = new QMapIterator<QString, UrlPixmap*>(m_avatarMap);
@@ -54,10 +72,12 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
     {
        m_pAvMapIt->next();
        QString sEmail = m_pAvMapIt->key();
-       UrlPixmap *pUrlPM = m_pAvMapIt->value();
+       //UrlPixmap *pUrlPM = m_pAvMapIt->value();
        QString sUrl = getGravatarUrl(sEmail);
-       pUrlPM->loadFromUrl(sUrl);
-       connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
+       m_gravMap[sUrl] = sEmail;
+       getAvatarFromUrl(sUrl, sEmail);
+       //pUrlPM->loadFromUrl(sUrl);
+       //connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
     }
 
     layoutChanged();
@@ -65,28 +85,58 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
 
 QString GBL_HistoryModel::getGravatarUrl(QString sEmail)
 {
-    QByteArray baEmail = sEmail.toLocal8Bit();
+    QByteArray baEmail = sEmail.toUtf8();
     QByteArray ba = QCryptographicHash::hash(baEmail, QCryptographicHash::Md5);
     QString sUrl;
     QTextStream(&sUrl) << "https://www.gravatar.com/avatar/" << ba.toHex() << "?d=identicon&s=48";
-    //qDebug() << sUrl;
+    qDebug() << "getGravatarUrl:" << sUrl;
     return sUrl;
 }
 
-void GBL_HistoryModel::avatarDownloaded()
+void GBL_HistoryModel::getAvatarFromUrl(QString sUrl, QString sEmail)
 {
-    if (m_pAvMapIt->hasNext())
+    MainWindow *pMain = (MainWindow*)parent();
+    QNetworkAccessManager *pNetAM = pMain->getNetworkAccessManager();
+
+    connect(
+      pNetAM, SIGNAL (finished(QNetworkReply*)),
+      this, SLOT (avatarDownloaded(QNetworkReply*))
+      );
+
+    QNetworkRequest request(sUrl);
+    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
+    pNetAM->get(request);
+}
+
+void GBL_HistoryModel::avatarDownloaded(QNetworkReply* pReply)
+{
+    QString sUrl = pReply->url().toString();
+
+    QString sEmail = m_gravMap[sUrl];
+    UrlPixmap *pUrlpm = m_avatarMap[sEmail];
+    QByteArray baImg = pReply->readAll();
+    pReply->deleteLater();
+
+    if (baImg.size() > 0)
     {
-       m_pAvMapIt->next();
-       QString sEmail = m_pAvMapIt->key();
-       UrlPixmap *pUrlPM = m_pAvMapIt->value();
-       QString sUrl = getGravatarUrl(sEmail);
-       pUrlPM->loadFromUrl(sUrl);
-       connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
-    }
-    else
-    {
+        qDebug() << "avatarDownloaded;" << sUrl;
+        qDebug() << "avatarDownloaded size:" << baImg.size();
         layoutChanged();
+        pUrlpm->setPixmapData(baImg);
+        pReply->close();
+
+        if (m_pAvMapIt->hasNext())
+        {
+           m_pAvMapIt->next();
+           QString sEmail = m_pAvMapIt->key();
+           //UrlPixmap *pUrlPM = m_pAvMapIt->value();
+           qDebug() << "next_email:" << sEmail;
+           QString sUrl = getGravatarUrl(sEmail);
+           m_gravMap[sUrl] = sEmail;
+           getAvatarFromUrl(sUrl, sEmail);
+           //pUrlPM->loadFromUrl(sUrl);
+           //connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
+        }
     }
 }
 
@@ -149,7 +199,7 @@ QVariant GBL_HistoryModel::data(const QModelIndex &index, int role) const
         if (m_avatarMap.contains(sEmail))
         {
             UrlPixmap *pUP = m_avatarMap[sEmail];
-            return QVariant::fromValue(*(pUP->getSmallPixmap(16)));
+            return QVariant::fromValue(*(pUP->getSmallPixmap(20)));
         }
 
         return QVariant();

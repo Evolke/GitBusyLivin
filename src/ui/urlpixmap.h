@@ -8,16 +8,18 @@ class QPixmap;
 class QIcon;
 class QNetworkAccessManager;
 class QNetworkReply;
+class QNetworkDiskCache;
 QT_END_NAMESPACE
 
 class UrlPixmap : public QObject
 {
     Q_OBJECT
 public:
-    explicit UrlPixmap(QObject *parent = 0);
+    explicit UrlPixmap(QNetworkAccessManager* pNetAM, QObject *parent = 0);
     ~UrlPixmap();
 
     void loadFromUrl(QString imageUrl);
+    void setPixmapData(QByteArray ba);
     QPixmap* getPixmap();
     QPixmap* getSmallPixmap(int size);
 
