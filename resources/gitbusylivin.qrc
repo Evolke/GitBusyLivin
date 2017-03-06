@@ -15,5 +15,9 @@
         <file>images/modify_doc_icon.png</file>
         <file>images/remove_doc_icon.png</file>
         <file>images/unknown_doc_icon.png</file>
+        <file>images/dark_dock_close_icon.png</file>
+        <file>images/dark_dock_max_icon.png</file>
+        <file>images/light_dock_close_icon.png</file>
+        <file>images/light_dock_max_icon.png</file>
     </qresource>
 </RCC>

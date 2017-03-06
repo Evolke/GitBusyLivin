@@ -39,15 +39,22 @@ HEADERS  += src/ui/mainwindow.h \
 RESOURCES += \
     resources/gitbusylivin.qrc
 
-win32:INCLUDEPATH += "D:/projects/qt/GitBusyLivin/libgit2/include"
-unix:INCLUDEPATH += "/projects/qt/GitBusyLivin/libgit2/include"
+INCLUDEPATH += $$PWD/libgit2/include
 
-win32:LIBS += D:/projects/qt/GitBusyLivin/libs/git2.lib \
-    -lwinhttp \
+win32:LIBS += -lwinhttp \
     -lrpcrt4 \
     -lcrypt32 \
     -ladvapi32 \
     -lole32
+
+win32 {
+    debug {
+        LIBS += $$PWD/libs/debug/git2.lib
+    }
+    release {
+        LIBS += $$PWD/libs/release/git2.lib
+    }
+}
 
 macx:LIBS += /usr/lib/libiconv.dylib \
     /usr/lib/libSystem.dylib \
@@ -56,7 +63,16 @@ macx:LIBS += /usr/lib/libiconv.dylib \
     /usr/lib/libz.dylib \
     -framework CoreFoundation \
     -framework Security \
-    /projects/qt/GitBusyLivin/libs/libgit2.a
+
+macx {
+    debug {
+        LIBS += $$PWD/libs/debug/libgit2.a
+    }
+
+    release {
+        LIBS += $$PWD/libs/release/libgit2.a
+    }
+}
 
 RC_ICONS = resources/images/gitbusylivin.ico
 ICON = resources/images/gitbusylivin.icns

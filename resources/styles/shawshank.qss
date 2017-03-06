@@ -75,6 +75,11 @@ QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-b
     background-color:#333333;
 }
 
+QDockWidget {
+    titlebar-close-icon: url(:/images/light_dock_close_icon.png);
+    titlebar-normal-icon: url(:/images/light_dock_max_icon.png);
+}
+
 QLineEdit {
     color: #999;
     background-color: #444;
