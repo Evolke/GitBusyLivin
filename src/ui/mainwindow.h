@@ -18,6 +18,7 @@ class QDockWidget;
 class QItemSelection;
 class QNetworkAccessManager;
 class QNetworkDiskCache;
+class QAction;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -41,8 +42,12 @@ private slots:
     void toggleStatusBar();
     void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void closeEvent(QCloseEvent *event);
+    void updateRecentRepoActions();
+    void openRecentRepo();
 
 private:
+    enum { MaxRecentRepos = 10 };
+
     void init();
     void cleanupDocks();
     void createActions();
@@ -50,6 +55,9 @@ private:
     void readSettings();
     void writeSettings();
     void setupRepoUI(QString repoDir);
+    static bool hasRecentRepos();
+    void prependToRecentRepos(const QString &dirName);
+    void setRecentReposVisible(bool visible);
 
     GBL_Repository *m_qpRepo;
     HistoryView *m_pHistView;
@@ -59,6 +67,10 @@ private:
     QToolBar *m_pToolBar;
     QNetworkAccessManager *m_pNetAM;
     QNetworkDiskCache *m_pNetCache;
+
+    QAction *m_pRecentRepoActs[MaxRecentRepos];
+    QAction *m_pRecentRepoSeparator;
+    QAction *m_pRecentRepoSubMenuAct;
 
 };
 

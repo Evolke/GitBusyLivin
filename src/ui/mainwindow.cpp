@@ -116,12 +116,31 @@ void MainWindow::open()
     {
         if (m_qpRepo->open_repo(dirName))
         {
+            MainWindow::prependToRecentRepos(dirName);
             setupRepoUI(dirName);
         }
         else
         {
             QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
         }
+    }
+}
+
+void MainWindow::openRecentRepo()
+{
+    if (const QAction *action = qobject_cast<const QAction *>(sender()))
+    {
+        QString dirName = action->data().toString();
+        if (m_qpRepo->open_repo(dirName))
+        {
+            MainWindow::prependToRecentRepos(dirName);
+            setupRepoUI(dirName);
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+        }
+
     }
 }
 
@@ -223,6 +242,22 @@ void MainWindow::createActions()
     newMenu->addAction(tr("&Network Repository..."), this, &MainWindow::new_network_repo);
     fileMenu->addAction(tr("&Clone..."), this, &MainWindow::clone);
     fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
+    fileMenu->addSeparator();
+
+    QMenu *recentMenu = fileMenu->addMenu(tr("Recent"));
+    connect(recentMenu, &QMenu::aboutToShow, this, &MainWindow::updateRecentRepoActions);
+    m_pRecentRepoSubMenuAct = recentMenu->menuAction();
+
+    for (int i = 0; i < MaxRecentRepos; ++i) {
+        m_pRecentRepoActs[i] = recentMenu->addAction(QString(), this, &MainWindow::openRecentRepo);
+        m_pRecentRepoActs[i]->setVisible(false);
+    }
+
+    m_pRecentRepoSeparator = fileMenu->addSeparator();
+
+    setRecentReposVisible(MainWindow::hasRecentRepos());
+
+
  #ifdef Q_OS_WIN
     QString sQuit = tr("&Exit");
  #else
@@ -311,3 +346,73 @@ void MainWindow::writeSettings()
     settings.setValue("geometry", saveGeometry());
 }
 
+static inline QString RecentReposKey() { return QStringLiteral("RecentRepoList"); }
+static inline QString fileKey() { return QStringLiteral("file"); }
+
+static QStringList readRecentRepos(QSettings &settings)
+{
+    QStringList result;
+    const int count = settings.beginReadArray(RecentReposKey());
+    for (int i = 0; i < count; ++i) {
+        settings.setArrayIndex(i);
+        result.append(settings.value(fileKey()).toString());
+    }
+    settings.endArray();
+    return result;
+}
+
+static void writeRecentRepos(const QStringList &files, QSettings &settings)
+{
+    const int count = files.size();
+    settings.beginWriteArray(RecentReposKey());
+    for (int i = 0; i < count; ++i) {
+        settings.setArrayIndex(i);
+        settings.setValue(fileKey(), files.at(i));
+    }
+    settings.endArray();
+}
+
+bool MainWindow::hasRecentRepos()
+{
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    const int count = settings.beginReadArray(RecentReposKey());
+    settings.endArray();
+    return count > 0;
+}
+
+void MainWindow::prependToRecentRepos(const QString &dirName)
+{
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+
+    const QStringList oldRecentRepos = readRecentRepos(settings);
+    QStringList RecentRepos = oldRecentRepos;
+    RecentRepos.removeAll(dirName);
+    RecentRepos.prepend(dirName);
+    if (oldRecentRepos != RecentRepos)
+        writeRecentRepos(RecentRepos, settings);
+
+    setRecentReposVisible(!RecentRepos.isEmpty());
+}
+
+void MainWindow::setRecentReposVisible(bool visible)
+{
+    m_pRecentRepoSubMenuAct->setVisible(visible);
+    m_pRecentRepoSeparator->setVisible(visible);
+}
+
+void MainWindow::updateRecentRepoActions()
+{
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+
+    const QStringList RecentRepos = readRecentRepos(settings);
+    const int count = qMin(int(MaxRecentRepos), RecentRepos.size());
+    int i = 0;
+    for ( ; i < count; ++i) {
+        const QString fileName = QFileInfo(RecentRepos.at(i)).fileName();
+        m_pRecentRepoActs[i]->setText(tr("&%1 %2").arg(i + 1).arg(fileName));
+        m_pRecentRepoActs[i]->setData(RecentRepos.at(i));
+        m_pRecentRepoActs[i]->setVisible(true);
+    }
+    for ( ; i < MaxRecentRepos; ++i)
+        m_pRecentRepoActs[i]->setVisible(false);
+}
