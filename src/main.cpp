@@ -12,9 +12,10 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName(GBL_APP_NAME);
     QCoreApplication::setApplicationVersion(QString(GBL_APP_VERSION));
 
-    QFile file(":/styles/shawshank.qss");
+     QFile file(":/styles/shawshank.qss");
+    //QFile file(":/styles/zihuatanejo.qss");
     file.open(QFile::ReadOnly);
-    QString styleSheet = QString::fromLatin1(file.readAll());
+    QString styleSheet = QString::fromUtf8(file.readAll());
     a.setStyleSheet(styleSheet);
     MainWindow w;
     w.show();

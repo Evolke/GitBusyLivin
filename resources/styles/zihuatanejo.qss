@@ -1,0 +1,208 @@
+QMainWindow {
+   background-color: #CCCCCC;
+}
+
+QMenuBar {
+    background: #DDDDDD;
+    color: #333333;
+}
+
+QMenuBar::item:selected {
+    background: none;
+    background-color: #666666;
+
+    color: #BBBBBB;
+}
+
+QMenu {
+    background: none;
+    background-color: #CCCCCC;
+    color: #333333;
+    padding: 0;
+}
+
+QMenu:selected {
+    background: #666666;
+    color: #BBBBBB;
+}
+
+QTableView {
+    color: #333333;
+    background-color: #BCFFF2;
+    alternate-background-color: #9AFFF2;
+    selection-color: #BBBBBB;
+    selection-background-color: #666666;
+}
+
+QHeaderView, QHeaderView::section {
+   color: #333333;
+   background-color: #DDDDDD;
+}
+
+QHeaderView::section:horizontal {
+    margin-top: 6px;
+    margin-bottom: 3px;
+    border-style: solid;
+    border-left-width: 1px;
+    border-right-color: #555555;
+    border-right-width: 1px;
+    padding-left: 5px;
+}
+
+QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:checked {
+    background: none;
+    background-color: #DDDDDD;
+}
+
+QTextEdit, QTreeView {
+    color:#ddd;
+    background-color:#CCCCCC;
+}
+
+QTreeView::item:selected {
+    color: #BBBBBB;
+    background-color: #666666;
+}
+
+QTreeView::item:hover {
+    color: #cccccc;
+    background-color: #DDDDDD;
+}
+
+QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button, QTabBar, QToolBar, QStatusBar, QDialog, QLabel {
+    color:#666666;
+    background: none;
+    background-color:#CCCCCC;
+}
+
+QDockWidget {
+    titlebar-close-icon: url(:/images/dark_dock_close_icon.png);
+    titlebar-normal-icon: url(:/images/dark_dock_max_icon.png);
+}
+
+QLineEdit {
+    color: #666666;
+    background-color: #BBBBBB;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 3px;
+}
+
+QLineEdit:focus {
+    border-color: #777;
+}
+
+QPushButton {
+    color: #666666;
+    background-color: #BBBBBB;
+    border: 1px solid #999999;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+QPushButton:hover {
+    color: #aaa;
+    background-color: #555;
+}
+
+QToolBar {
+    border: none;
+    border-bottom: 1px solid #BBBBBB;
+}
+
+QStatusBar {
+    border-top: 1px solid #BBBBBB;
+}
+
+QScrollBar:vertical, QScrollBar:horizontal {
+    border: 1px solid #BBBBBB;
+    background: #CCCCCC;
+}
+
+QScrollBar:vertical {
+    margin: 17px 0 17px 0;
+    width: 15px;
+}
+
+QScrollBar:horizontal {
+    margin: 0 17px 0 17px;
+    height: 15px;
+}
+
+QScrollBar::up-arrow:vertical {
+    /*border: 1px solid #BBBBBB;*/
+    background: #CCCCCC;
+    image: url(:/images/dark_up_arrow.png);
+    width: 8px;
+    height: 4px;
+}
+
+QScrollBar::down-arrow:vertical {
+    background: #CCCCCC;
+    image: url(:/images/dark_down_arrow.png);
+    width: 8px;
+    height: 4px;
+}
+
+QScrollBar::left-arrow:horizontal {
+    /*border: 1px solid #BBBBBB;*/
+    background: #CCCCCC;
+    image: url(:/images/dark_left_arrow.png);
+    width: 4px;
+    height: 8px;
+}
+
+QScrollBar::right-arrow:horizontal {
+    background: #CCCCCC;
+    image: url(:/images/dark_right_arrow.png);
+    width: 4px;
+    height: 8px;
+}
+
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    border: 1px solid #555;
+    background: #CCCCCC;
+}
+
+QScrollBar::handle:vertical {
+    min-height: 20px;
+    width: 15px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    border: 1px solid #BBBBBB;
+    background: #CCCCCC;
+ }
+
+QScrollBar::add-line:vertical {
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+    height: 15px;
+}
+QScrollBar::sub-line:vertical {
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+    height: 15px;
+}
+
+QScrollBar::add-line:horizontal {
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+    width: 15px;
+}
+QScrollBar::sub-line:horizontal {
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+    width: 15px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical, QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
+}
+
+QTabBar::tab {
+    background: none;
+    background-color: #CCCCCC;
+    border: 1px solid #555;
+    padding: 5px;
+}
