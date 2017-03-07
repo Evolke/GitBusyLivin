@@ -189,7 +189,7 @@ QVariant GBL_HistoryModel::data(const QModelIndex &index, int role) const
             case 1:
                 return pHistItem->hist_author;
             case 2:
-                return pHistItem->hist_datetime.toString("M/d/yyyy h:m:s ap");
+                return pHistItem->hist_datetime.toString("MM/dd/yyyy hh:mm:ss ap");
         }
     }
     else if (role == Qt::DecorationRole && index.column() == 1)
