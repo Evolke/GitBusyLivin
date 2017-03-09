@@ -8,6 +8,7 @@
 typedef struct GBL_History_Item {
     QString hist_oid;
     QString hist_summary;
+    QString hist_message;
     QDateTime hist_datetime;
     QString hist_author;
     QString hist_author_email;

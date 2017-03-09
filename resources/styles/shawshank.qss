@@ -69,6 +69,13 @@ QTreeView::item:hover {
     background-color: #222222;
 }
 
+QSplitter::handle:vertical {
+    background-color: #333333;
+    border-top: 1px solid #444444;
+    border-bottom: 1px solid #222222;
+    height: 4px;
+}
+
 QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button, QTabBar, QToolBar, QStatusBar, QDialog, QLabel {
     color:#999999;
     background: none;

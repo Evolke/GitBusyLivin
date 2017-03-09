@@ -122,6 +122,7 @@ bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
                 GBL_History_Item *pHistItem = new GBL_History_Item;
                 pHistItem->hist_oid = soid;
                 pHistItem->hist_summary = QString(git_commit_summary(commit));
+                pHistItem->hist_message = QString(git_commit_message(commit));
                 const git_signature *pGit_Sig = git_commit_author(commit);
                 QString author;
                 QTextStream(&author) << pGit_Sig->name << " <" << pGit_Sig->email << ">";

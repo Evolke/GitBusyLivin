@@ -9,10 +9,12 @@
 #include "src/ui/fileview.h"
 #include "clonedialog.h"
 #include "src/gbl/gbl_storage.h"
+#include "commitdetail.h"
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
 #include <QDir>
 #include <QFileInfo>
+#include <QSplitter>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -158,8 +160,9 @@ void MainWindow::setupRepoUI(QString repoDir)
 
     m_pHistModel->setModelData(pHistArr);
     m_pHistView->reset();
-    QDockWidget *pDock = m_docks["history_files"];
-    FileView *pView = (FileView*)pDock->widget();
+    QDockWidget *pDock = m_docks["history_details"];
+    QSplitter *pSplit = (QSplitter*)pDock->widget();
+    FileView *pView = (FileView*)pSplit->widget(1);
     pView->reset();
     GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
     pMod->cleanFileArray();
@@ -182,8 +185,11 @@ void MainWindow::historySelectionChanged(const QItemSelection &selected, const Q
         GBL_History_Item *pHistItem = m_pHistModel->getHistoryItemAt(row);
         if (pHistItem)
         {
-            QDockWidget *pDock = m_docks["history_files"];
-            FileView *pView = (FileView*)pDock->widget();
+            QDockWidget *pDock = m_docks["history_details"];
+            QSplitter *pSplit = (QSplitter*)pDock->widget();
+            FileView *pView = (FileView*)pSplit->widget(1);
+            CommitDetail *pDetail = (CommitDetail*)pSplit->widget(0);
+            pDetail->setDetails(pHistItem, m_pHistModel->getAvatar(pHistItem->hist_author_email));
             pView->reset();
             GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
             pMod->cleanFileArray();
@@ -296,11 +302,15 @@ void MainWindow::createDocks()
     m_pHistView->setAlternatingRowColors(true);
     connect(m_pHistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historySelectionChanged);
     setCentralWidget(m_pHistView);
-    QDockWidget *pDock = new QDockWidget(tr("History - Files"), this);
-    FileView *pView = new FileView(pDock);
-    pDock->setWidget(pView);
+    QDockWidget *pDock = new QDockWidget(tr("History - Details"), this);
+    QSplitter *pDetailSplit = new QSplitter(Qt::Vertical, pDock);
+    CommitDetail *pDetail = new CommitDetail(pDetailSplit);
+    FileView *pView = new FileView(pDetailSplit);
+    pDetailSplit->addWidget(pDetail);
+    pDetailSplit->addWidget(pView);
+    pDock->setWidget(pDetailSplit);
     pView->setModel(new GBL_FileModel(pView));
-    m_docks["history_files"] = pDock;
+    m_docks["history_details"] = pDock;
     addDockWidget(Qt::BottomDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
     pDock = new QDockWidget(tr("Differences"), this);

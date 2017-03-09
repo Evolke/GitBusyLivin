@@ -26,8 +26,8 @@ public:
 
     void setModelData(GBL_History_Array *pHistArr);
     GBL_History_Item* getHistoryItemAt(int index);
-    QString getGravatarUrl(QString sEmail);
     void getAvatarFromUrl(QString sUrl, QString sEmail);
+    QPixmap* getAvatar(QString sEmail);
 
 public slots:
     void avatarDownloaded(QNetworkReply* pReply);

@@ -1,5 +1,4 @@
 #include "gbl_historymodel.h"
-#include <QCryptographicHash>
 #include <QUrl>
 #include <QPixmap>
 #include <QTextStream>
@@ -12,6 +11,7 @@
 
 #include "src/ui/urlpixmap.h"
 #include "src/ui/mainwindow.h"
+#include "gbl_storage.h"
 
 
 GBL_HistoryModel::GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent) : QAbstractTableModel(parent)
@@ -73,7 +73,7 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
        m_pAvMapIt->next();
        QString sEmail = m_pAvMapIt->key();
        //UrlPixmap *pUrlPM = m_pAvMapIt->value();
-       QString sUrl = getGravatarUrl(sEmail);
+       QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
        m_gravMap[sUrl] = sEmail;
        getAvatarFromUrl(sUrl, sEmail);
        //pUrlPM->loadFromUrl(sUrl);
@@ -83,14 +83,13 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
     layoutChanged();
 }
 
-QString GBL_HistoryModel::getGravatarUrl(QString sEmail)
+QPixmap* GBL_HistoryModel::getAvatar(QString sEmail)
 {
-    QByteArray baEmail = sEmail.toUtf8();
-    QByteArray ba = QCryptographicHash::hash(baEmail, QCryptographicHash::Md5);
-    QString sUrl;
-    QTextStream(&sUrl) << "https://www.gravatar.com/avatar/" << ba.toHex() << "?d=identicon&s=48";
-    qDebug() << "getGravatarUrl:" << sUrl;
-    return sUrl;
+    QString slcEmail = sEmail.toLower();
+    UrlPixmap *pAvatar = (UrlPixmap*)m_avatarMap[slcEmail];
+    if (pAvatar) return pAvatar->getPixmap();
+
+    return NULL;
 }
 
 void GBL_HistoryModel::getAvatarFromUrl(QString sUrl, QString sEmail)
@@ -131,7 +130,7 @@ void GBL_HistoryModel::avatarDownloaded(QNetworkReply* pReply)
            QString sEmail = m_pAvMapIt->key();
            //UrlPixmap *pUrlPM = m_pAvMapIt->value();
            qDebug() << "next_email:" << sEmail;
-           QString sUrl = getGravatarUrl(sEmail);
+           QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
            m_gravMap[sUrl] = sEmail;
            getAvatarFromUrl(sUrl, sEmail);
            //pUrlPM->loadFromUrl(sUrl);

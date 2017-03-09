@@ -10,6 +10,8 @@ public:
 
     static QString getStoragePath();
     static QString getCachePath();
+    static QString getGravatarUrl(QString sEmail);
+
 };
 
 #endif // GBL_STORAGE_H
