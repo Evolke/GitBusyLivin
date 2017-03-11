@@ -76,7 +76,8 @@ QSplitter::handle:vertical {
     height: 4px;
 }
 
-QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button, QTabBar, QToolBar, QStatusBar, QDialog, QLabel {
+QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button,
+QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QWidget {
     color:#999999;
     background: none;
     background-color:#333333;

@@ -14,9 +14,11 @@ int main(int argc, char *argv[])
 
      QFile file(":/styles/shawshank.qss");
     //QFile file(":/styles/zihuatanejo.qss");
+
     file.open(QFile::ReadOnly);
     QString styleSheet = QString::fromUtf8(file.readAll());
     a.setStyleSheet(styleSheet);
+
     MainWindow w;
     w.show();
 

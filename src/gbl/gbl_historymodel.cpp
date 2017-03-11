@@ -20,13 +20,11 @@ GBL_HistoryModel::GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent)
     m_headings.append(QString("Summary"));
     m_headings.append(QString("Author"));
     m_headings.append(QString("Date"));
-    m_pAvMapIt = NULL;
 }
 
 GBL_HistoryModel::~GBL_HistoryModel()
 {
     cleanupAvatars();
-    if (m_pAvMapIt) delete m_pAvMapIt;
 }
 
 void GBL_HistoryModel::cleanupAvatars()
@@ -43,6 +41,8 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
 {
     m_pHistArr = pHistArr;
     cleanupAvatars();
+    m_emailList.clear();
+    m_gravMap.clear();
 
     MainWindow *pMain = (MainWindow*)parent();
     QNetworkAccessManager *pNetAM = pMain->getNetworkAccessManager();
@@ -56,6 +56,7 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
         {
             UrlPixmap *pUrlpm = new UrlPixmap(pNetAM, this);
             m_avatarMap[sEmail] = pUrlpm;
+            m_emailList.append(sEmail);
         }
         /*else
         {
@@ -65,14 +66,10 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
 
     qDebug() << "avatarMap.size:" << m_avatarMap.size();
 
-    if (m_pAvMapIt) delete m_pAvMapIt;
-    m_pAvMapIt = new QMapIterator<QString, UrlPixmap*>(m_avatarMap);
-
-    if (m_pAvMapIt->hasNext())
+    if (!m_emailList.isEmpty())
     {
-       m_pAvMapIt->next();
-       QString sEmail = m_pAvMapIt->key();
-       //UrlPixmap *pUrlPM = m_pAvMapIt->value();
+       QString sEmail = m_emailList.first();
+       m_emailList.removeFirst();
        QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
        m_gravMap[sUrl] = sEmail;
        getAvatarFromUrl(sUrl, sEmail);
@@ -109,25 +106,35 @@ void GBL_HistoryModel::getAvatarFromUrl(QString sUrl, QString sEmail)
 
 void GBL_HistoryModel::avatarDownloaded(QNetworkReply* pReply)
 {
+    if (m_avatarMap.isEmpty() || m_gravMap.isEmpty())
+    {
+        pReply->deleteLater();
+        return;
+    }
+
     QString sUrl = pReply->url().toString();
 
-    QString sEmail = m_gravMap[sUrl];
-    UrlPixmap *pUrlpm = m_avatarMap[sEmail];
     QByteArray baImg = pReply->readAll();
     pReply->deleteLater();
 
     if (baImg.size() > 0)
     {
+        QString sEmail = m_gravMap[sUrl];
+        if (!sEmail.length()) return;
+
+        UrlPixmap *pUrlpm = m_avatarMap[sEmail];
+        if (!pUrlpm) return;
+
         qDebug() << "avatarDownloaded;" << sUrl;
         qDebug() << "avatarDownloaded size:" << baImg.size();
         layoutChanged();
         pUrlpm->setPixmapData(baImg);
         pReply->close();
 
-        if (m_pAvMapIt->hasNext())
+        if (!m_emailList.isEmpty())
         {
-           m_pAvMapIt->next();
-           QString sEmail = m_pAvMapIt->key();
+           QString sEmail = m_emailList.first();
+           m_emailList.removeFirst();
            //UrlPixmap *pUrlPM = m_pAvMapIt->value();
            qDebug() << "next_email:" << sEmail;
            QString sUrl = GBL_Storage::getGravatarUrl(sEmail);

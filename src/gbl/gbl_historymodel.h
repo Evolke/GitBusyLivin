@@ -39,7 +39,7 @@ private:
     QVector<QString> m_headings;
     QMap<QString, UrlPixmap*> m_avatarMap;
     QMap<QString, QString> m_gravMap;
-    QMapIterator<QString, UrlPixmap*> *m_pAvMapIt;
+    QList<QString> m_emailList;
 };
 
 #endif // GBL_HISTORYMODEL_H

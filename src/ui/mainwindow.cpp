@@ -162,6 +162,8 @@ void MainWindow::setupRepoUI(QString repoDir)
     m_pHistView->reset();
     QDockWidget *pDock = m_docks["history_details"];
     QSplitter *pSplit = (QSplitter*)pDock->widget();
+    CommitDetailScrollArea *pDetailSA = (CommitDetailScrollArea*)pSplit->widget(0);
+    pDetailSA->reset();
     FileView *pView = (FileView*)pSplit->widget(1);
     pView->reset();
     GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
@@ -188,7 +190,7 @@ void MainWindow::historySelectionChanged(const QItemSelection &selected, const Q
             QDockWidget *pDock = m_docks["history_details"];
             QSplitter *pSplit = (QSplitter*)pDock->widget();
             FileView *pView = (FileView*)pSplit->widget(1);
-            CommitDetail *pDetail = (CommitDetail*)pSplit->widget(0);
+            CommitDetailScrollArea *pDetail = (CommitDetailScrollArea*)pSplit->widget(0);
             pDetail->setDetails(pHistItem, m_pHistModel->getAvatar(pHistItem->hist_author_email));
             pView->reset();
             GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
@@ -304,9 +306,9 @@ void MainWindow::createDocks()
     setCentralWidget(m_pHistView);
     QDockWidget *pDock = new QDockWidget(tr("History - Details"), this);
     QSplitter *pDetailSplit = new QSplitter(Qt::Vertical, pDock);
-    CommitDetail *pDetail = new CommitDetail(pDetailSplit);
+    CommitDetailScrollArea *pScroll = new CommitDetailScrollArea(pDetailSplit);
     FileView *pView = new FileView(pDetailSplit);
-    pDetailSplit->addWidget(pDetail);
+    pDetailSplit->addWidget(pScroll);
     pDetailSplit->addWidget(pView);
     pDock->setWidget(pDetailSplit);
     pView->setModel(new GBL_FileModel(pView));
@@ -316,10 +318,23 @@ void MainWindow::createDocks()
     pDock = new QDockWidget(tr("Differences"), this);
     QTextEdit *pText = new QTextEdit(pDock);
     pDock->setWidget(pText);
-    m_docks["file_diff"] = pDock;
+    m_docks["history_diff"] = pDock;
     addDockWidget(Qt::BottomDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
-
+    pDock = new QDockWidget(tr("Staged"));
+    m_docks["staged"] = pDock;
+    addDockWidget(Qt::RightDockWidgetArea, pDock);
+    m_pViewMenu->addAction(pDock->toggleViewAction());
+    pView = new FileView(pDock);
+    pDock->setWidget(pView);
+    pView->setModel(new GBL_FileModel(pView));
+    pDock = new QDockWidget(tr("Unstaged"));
+    m_docks["unstaged"] = pDock;
+    addDockWidget(Qt::RightDockWidgetArea, pDock);
+    m_pViewMenu->addAction(pDock->toggleViewAction());
+    pView = new FileView(pDock);
+    pDock->setWidget(pView);
+    pView->setModel(new GBL_FileModel(pView));
 }
 
 void MainWindow::readSettings()

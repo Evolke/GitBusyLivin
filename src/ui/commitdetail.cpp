@@ -9,7 +9,7 @@
 #include "src/gbl/gbl_storage.h"
 #include "src/gbl/gbl_repository.h"
 
-CommitDetail::CommitDetail(QWidget *parent) : QWidget(parent)
+CommitDetail::CommitDetail(QWidget *parent) : QFrame(parent)
 {
     //resize(400,200);
     m_pHistItem = NULL;
@@ -20,9 +20,17 @@ CommitDetail::CommitDetail(QWidget *parent) : QWidget(parent)
     m_pDetails->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
     mainLayout->addWidget(m_pAvatar,0,0);
     mainLayout->addWidget(m_pDetails,0,1);
-    mainLayout->setColumnMinimumWidth(0,0);
-    mainLayout->setColumnMinimumWidth(1,0);
-    mainLayout->setRowMinimumHeight(0,0);
+    m_pAvatar->setMaximumWidth(50);
+    m_pAvatar->setAlignment(Qt::AlignHCenter|Qt::AlignTop);
+    m_pDetails->setAlignment(Qt::AlignLeft|Qt::AlignTop);
+    m_pDetails->setMinimumHeight(0);
+    m_pDetails->setMinimumWidth(0);
+}
+
+void CommitDetail::reset()
+{
+    m_pAvatar->clear();
+    m_pDetails->clear();
 }
 
 void CommitDetail::setDetails(GBL_History_Item *pHistItem, QPixmap *pAvatar)
@@ -45,6 +53,41 @@ void CommitDetail::setDetails(GBL_History_Item *pHistItem, QPixmap *pAvatar)
     sHtml += "</table>";
     //qDebug() << sHtml;
     m_pDetails->setText(sHtml);
-    if (pAvatar) m_pAvatar->setPixmap(*pAvatar);
+    if (pAvatar)
+    {
+        QPixmap avatar = pAvatar->scaledToWidth(48);
+        m_pAvatar->setPixmap(avatar);
+    }
 
+}
+
+
+/**
+ *    CommitDetailScrollArea
+ *
+ */
+CommitDetailScrollArea::CommitDetailScrollArea(QWidget *parent) : QScrollArea(parent)
+{
+   m_pDetail = new CommitDetail(this);
+   setFrameStyle(QFrame::StyledPanel);
+}
+
+void CommitDetailScrollArea::resizeEvent(QResizeEvent *event)
+{
+    Q_UNUSED(event);
+
+    QSize sa_size = size();
+    sa_size -= QSize(20,20);
+    m_pDetail->setMinimumSize(sa_size);
+    m_pDetail->move(10,10);
+}
+
+void CommitDetailScrollArea::reset()
+{
+    m_pDetail->reset();
+}
+
+void CommitDetailScrollArea::setDetails(GBL_History_Item *pHistItem, QPixmap *pAvatar)
+{
+    m_pDetail->setDetails(pHistItem, pAvatar);
 }
