@@ -1,6 +1,7 @@
 #include "commitdetail.h"
 
 #include <QLabel>
+#include <QTextEdit>
 #include <QGridLayout>
 #include <QString>
 #include <QTextStream>
@@ -15,16 +16,19 @@ CommitDetail::CommitDetail(QWidget *parent) : QFrame(parent)
     m_pHistItem = NULL;
     QGridLayout *mainLayout = new QGridLayout(this);
     m_pAvatar = new QLabel(this);
-    m_pDetails = new QLabel(this);
-    m_pDetails->setWordWrap(true);
+    m_pDetails = new QTextEdit(this);
+    m_pDetails->setReadOnly(true);
+    m_pDetails->setFrameStyle(QFrame::NoFrame);
     m_pDetails->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
     mainLayout->addWidget(m_pAvatar,0,0);
     mainLayout->addWidget(m_pDetails,0,1);
+    mainLayout->setSpacing(0);
     m_pAvatar->setMaximumWidth(50);
     m_pAvatar->setAlignment(Qt::AlignHCenter|Qt::AlignTop);
-    m_pDetails->setAlignment(Qt::AlignLeft|Qt::AlignTop);
-    m_pDetails->setMinimumHeight(0);
-    m_pDetails->setMinimumWidth(0);
+    //m_pDetails->setAlignment(Qt::AlignLeft|Qt::AlignTop);
+    //m_pDetails->setMinimumHeight(0);
+    //m_pDetails->setMinimumWidth(0);
+    setContentsMargins(0,0,0,0);
 }
 
 void CommitDetail::reset()
@@ -52,7 +56,7 @@ void CommitDetail::setDetails(GBL_History_Item *pHistItem, QPixmap *pAvatar)
     sHtml += "</td></tr>";
     sHtml += "</table>";
     //qDebug() << sHtml;
-    m_pDetails->setText(sHtml);
+    m_pDetails->setHtml(sHtml);
     if (pAvatar)
     {
         QPixmap avatar = pAvatar->scaledToWidth(48);
@@ -69,6 +73,7 @@ void CommitDetail::setDetails(GBL_History_Item *pHistItem, QPixmap *pAvatar)
 CommitDetailScrollArea::CommitDetailScrollArea(QWidget *parent) : QScrollArea(parent)
 {
    m_pDetail = new CommitDetail(this);
+   //setContentsMargins(0,0,0,0);
    setFrameStyle(QFrame::StyledPanel);
 }
 
@@ -77,9 +82,10 @@ void CommitDetailScrollArea::resizeEvent(QResizeEvent *event)
     Q_UNUSED(event);
 
     QSize sa_size = size();
-    sa_size -= QSize(20,20);
-    m_pDetail->setMinimumSize(sa_size);
-    m_pDetail->move(10,10);
+    //sa_size -= QSize(10,10);
+    //m_pDetail->setMinimumSize(sa_size);
+    m_pDetail->resize(sa_size);
+    //m_pDetail->move(5,5);
 }
 
 void CommitDetailScrollArea::reset()

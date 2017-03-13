@@ -5,6 +5,7 @@
 #include <QFileInfo>
 
 #include "gbl_filemodel.h"
+#include "src/ui/mainwindow.h"
 
 static QByteArray g_temp_ba;
 
@@ -210,13 +211,29 @@ int GBL_Repository::tree_walk_callback(const char *root, const git_tree_entry *e
     return 1;
 }
 
-bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, GBL_FileModel *pFileMod)
+bool GBL_Repository::get_commit_to_parent_diff_files(QString oid_str, GBL_FileModel *pFileMod)
+{
+    return get_commit_to_parent_diff(oid_str, GIT_DIFF_FORMAT_NAME_STATUS,  diff_print_files_callback, pFileMod);
+}
+
+bool GBL_Repository::get_commit_to_parent_diff_lines(QString oid_str, MainWindow *pMain, char *path)
+{
+    return get_commit_to_parent_diff(oid_str, GIT_DIFF_FORMAT_PATCH, diff_print_lines_callback, pMain, path);
+}
+
+bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path)
 {
     git_oid oid;
     git_tree *pTree = NULL, *pParentTree = NULL;
     git_commit *pCommit = NULL, *pParentCommit = NULL;
     int nParentCount;
     git_diff_options diffopts = GIT_DIFF_OPTIONS_INIT;
+    if (path)
+    {
+        diffopts.pathspec.strings = &path;
+        diffopts.pathspec.count = 1;
+    }
+
     git_diff *pDiff = NULL;
 
     const char* str = qstring2cc(&oid_str);
@@ -228,18 +245,14 @@ bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, GBL_FileModel *p
        {
            m_iErrorCode = git_commit_tree(&pTree, pCommit);
            nParentCount = git_commit_parentcount(pCommit);
-           if (nParentCount == 0)
-           {
-
-           }
-           else
+           if (nParentCount > 0)
            {
                for (int i = 0; i < nParentCount; i++)
                {
                    git_commit_parent(&pParentCommit, pCommit, i);
                    git_commit_tree(&pParentTree, pParentCommit);
                    git_diff_tree_to_tree(&pDiff, m_pRepo, pParentTree, pTree, &diffopts);
-                   git_diff_print(pDiff, GIT_DIFF_FORMAT_NAME_STATUS, diff_print_callback, pFileMod);
+                   git_diff_print(pDiff, format, callback, payload);
                    git_diff_free(pDiff);
                    git_commit_free(pParentCommit);
                    git_tree_free(pParentTree);
@@ -252,10 +265,13 @@ bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, GBL_FileModel *p
     return m_iErrorCode >= 0;
 }
 
-int GBL_Repository::diff_print_callback(const git_diff_delta *pDelta, const git_diff_hunk *pHunk, const git_diff_line *pLine, void *payload)
+int GBL_Repository::diff_print_files_callback(const git_diff_delta *pDelta, const git_diff_hunk *pHunk, const git_diff_line *pLine, void *payload)
 {
     //qDebug() << "old_file" << pDelta->old_file.path;
     //qDebug() << "new_file" << pDelta->new_file.path;lkj
+    Q_UNUSED(pHunk);
+    Q_UNUSED(pLine);
+
     GBL_FileModel *pFileMod = (GBL_FileModel*)payload;
 
     GBL_File_Item *pFItem = new GBL_File_Item;
@@ -264,6 +280,48 @@ int GBL_Repository::diff_print_callback(const git_diff_delta *pDelta, const git_
     pFItem->sub_dir = QString(fi.path());
     pFItem->status = pDelta->status;
     pFileMod->addFileItem(pFItem);
+
+    return 0;
+}
+
+int GBL_Repository::diff_print_lines_callback(const git_diff_delta *pDelta, const git_diff_hunk *pHunk, const git_diff_line *pLine, void *payload)
+{
+    Q_UNUSED(pHunk);
+
+    qDebug() << "old_file" << pDelta->old_file.path;
+    qDebug() << "new_file" << pDelta->new_file.path;
+
+    /*if (pHunk)
+    {
+        qDebug() << "git_diff_hunk_new_lines" << pHunk->new_lines;
+        qDebug() << "git_diff-hunk_new_start" << pHunk->new_start;
+        qDebug() << "git_diff_hunk_old_lines" << pHunk->old_lines;
+        qDebug() << "git_diff-hunk_old_start" << pHunk->old_start;
+        QString sHeader;
+        for (int i = 0; i < pHunk->header_len; i++)
+        {
+            sHeader += pHunk->header[i];
+        }
+        qDebug() << "git_diff_hunk_header" << sHeader;
+    }*/
+
+    if (pLine)
+    {
+        //qDebug() << "git_diff_line_origin" << pLine->origin;
+        //qDebug() << "git_diff_line_new_line#" << pLine->new_lineno;
+        //qDebug() << "git_diff_line_old_line#" << pLine->old_lineno;
+        QString content(pLine->content);
+        content = content.left(pLine->content_len);
+        //qDebug() << "git_diff_line_content" << content;
+        GBL_Line_Item li;
+        li.content = content;
+        li.line_change_type = pLine->origin;
+        li.new_line_num = pLine->new_lineno;
+        li.old_line_num = pLine->old_lineno;
+        MainWindow *pMain = (MainWindow*)payload;
+        pMain->addToDiffView(&li);
+
+    }
 
     return 0;
 }

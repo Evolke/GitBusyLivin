@@ -24,7 +24,19 @@ typedef struct GBL_File_Item {
 
 typedef QVector<GBL_File_Item*> GBL_File_Array;
 
+typedef struct GBL_Line_Item {
+    char line_change_type;
+    int old_line_num;
+    int new_line_num;
+    QString content;
+} GBL_Line_Item;
+
+typedef QVector<GBL_Line_Item*> GBL_Line_Array;
+
+QT_BEGIN_NAMESPACE
 class GBL_FileModel;
+class MainWindow;
+QT_END_NAMESPACE
 
 class GBL_Repository : public QObject
 {
@@ -35,7 +47,8 @@ public:
 
     static const char* qstring2cc(QString *pQStr);
     static int tree_walk_callback(const char *root, const git_tree_entry *entry, void *payload);
-    static int diff_print_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
+    static int diff_print_files_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
+    static int diff_print_lines_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
 
     QString get_error_msg();
     bool init_repo(QString path, bool bare=false);
@@ -45,7 +58,8 @@ public:
     bool get_history(GBL_History_Array **pHist_Arr);
     bool get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod);
     void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);
-    bool get_commit_to_parent_diff(QString oid_str, GBL_FileModel *pFileMod);
+    bool get_commit_to_parent_diff_files(QString oid_str, GBL_FileModel *pFileMod);
+    bool get_commit_to_parent_diff_lines(QString oid_str, MainWindow *pMain, char *path);
 
 signals:
 
@@ -54,6 +68,9 @@ public slots:
 private:
     void cleanup();
     void cleanup_history();
+
+    bool get_commit_to_parent_diff(QString oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path=Q_NULLPTR);
+
     git_repository *m_pRepo;
     int m_iErrorCode;
     GBL_History_Array *m_pHist_Arr;

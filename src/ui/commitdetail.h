@@ -6,6 +6,7 @@
 QT_BEGIN_NAMESPACE
     struct GBL_History_Item;
     class QLabel;
+    class QTextEdit;
 QT_END_NAMESPACE
 
 class CommitDetail : public QFrame
@@ -23,7 +24,8 @@ public slots:
 
 private:
     GBL_History_Item *m_pHistItem;
-    QLabel *m_pAvatar, *m_pDetails;
+    QLabel *m_pAvatar;
+    QTextEdit *m_pDetails;
 };
 
 

@@ -19,6 +19,7 @@ class QItemSelection;
 class QNetworkAccessManager;
 class QNetworkDiskCache;
 class QAction;
+struct GBL_Line_Item;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -31,6 +32,9 @@ public:
 
     QNetworkAccessManager* getNetworkAccessManager() { return m_pNetAM; }
     QNetworkDiskCache* getNetworkCache() { return m_pNetCache; }
+
+    void addToDiffView(GBL_Line_Item *pLineItem);
+
 private slots:
     void about();
     void clone();
@@ -41,6 +45,7 @@ private slots:
     void toggleToolBar();
     void toggleStatusBar();
     void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void historyFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void closeEvent(QCloseEvent *event);
     void updateRecentRepoActions();
     void openRecentRepo();

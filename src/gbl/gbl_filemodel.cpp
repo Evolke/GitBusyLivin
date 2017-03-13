@@ -7,6 +7,7 @@ GBL_FileModel::GBL_FileModel(QObject *parent) : QAbstractItemModel(parent),
     m_modifyDocIcon(QPixmap(":/images/modify_doc_icon.png")), m_unknownDocIcon(QPixmap(":/images/unknown_doc_icon.png"))
 {
     m_pFileArr = new GBL_File_Array;
+    m_pHistItem = NULL;
     m_headings.append(QString("File"));
     m_headings.append(QString("Path"));
 
@@ -38,6 +39,24 @@ void GBL_FileModel::addFileItem(GBL_File_Item *pFileItem)
     layoutChanged();
 }
 
+GBL_File_Item* GBL_FileModel::getFileItemAt(int index)
+{
+    if (m_pFileArr && index >= 0 && index < m_pFileArr->length())
+    {
+        return m_pFileArr->at(index);
+    }
+    return NULL;
+}
+
+void GBL_FileModel::setHistoryItem(GBL_History_Item *pHistItem)
+{
+    m_pHistItem = pHistItem;
+}
+
+GBL_History_Item* GBL_FileModel::getHistoryItem()
+{
+    return m_pHistItem;
+}
 
 QModelIndex GBL_FileModel::index(int row, int column, const QModelIndex &parent) const
 {

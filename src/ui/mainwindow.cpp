@@ -7,6 +7,7 @@
 #include "src/gbl/gbl_filemodel.h"
 #include "src/ui/historyview.h"
 #include "src/ui/fileview.h"
+#include "diffview.h"
 #include "clonedialog.h"
 #include "src/gbl/gbl_storage.h"
 #include "commitdetail.h"
@@ -195,10 +196,61 @@ void MainWindow::historySelectionChanged(const QItemSelection &selected, const Q
             pView->reset();
             GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
             pMod->cleanFileArray();
+            pMod->setHistoryItem(pHistItem);
+
             //m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
-            m_qpRepo->get_commit_to_parent_diff(pHistItem->hist_oid, pMod);
+            m_qpRepo->get_commit_to_parent_diff_files(pHistItem->hist_oid, pMod);
         }
     }
+}
+
+void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    Q_UNUSED(deselected);
+    QModelIndexList mil = selected.indexes();
+
+    //single row selection
+    if (mil.count() > 0)
+    {
+        QModelIndex mi = mil.at(0);
+        int row = mi.row();
+        QDockWidget *pDock = m_docks["history_details"];
+        QSplitter *pSplit = (QSplitter*)pDock->widget();
+        FileView *pView = (FileView*)pSplit->widget(1);
+        GBL_FileModel *pFileMod = (GBL_FileModel*)pView->model();
+        GBL_File_Item *pFileItem = pFileMod->getFileItemAt(row);
+        if (pFileItem)
+        {
+            QString path;
+            QString sub;
+            if (pFileItem->sub_dir != '.')
+            {
+                sub = pFileItem->sub_dir;
+                sub += QDir::separator();
+            }
+            QTextStream(&path) << sub << pFileItem->file_name;
+            QByteArray baPath = path.toUtf8();
+            GBL_History_Item *pHistItem = pFileMod->getHistoryItem();
+            QDockWidget *pDock = m_docks["file_diff"];
+            DiffView *pDV = (DiffView*)pDock->widget();
+            pDV->clear();
+
+            if (m_qpRepo->get_commit_to_parent_diff_lines(pHistItem->hist_oid, this, baPath.data()))
+            {
+            }
+
+        }
+    }
+}
+
+void MainWindow::addToDiffView(GBL_Line_Item *pLineItem)
+{
+    QDockWidget *pDock = m_docks["file_diff"];
+    DiffView *pDV = (DiffView*)pDock->widget();
+
+    QString line;
+    QTextStream(&line) << pLineItem->old_line_num << " " << pLineItem->new_line_num << " " << pLineItem->line_change_type << pLineItem->content;
+    pDV->append(line);
 }
 
 void MainWindow::preferences()
@@ -304,6 +356,8 @@ void MainWindow::createDocks()
     m_pHistView->setAlternatingRowColors(true);
     connect(m_pHistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historySelectionChanged);
     setCentralWidget(m_pHistView);
+
+    //setup history details dock
     QDockWidget *pDock = new QDockWidget(tr("History - Details"), this);
     QSplitter *pDetailSplit = new QSplitter(Qt::Vertical, pDock);
     CommitDetailScrollArea *pScroll = new CommitDetailScrollArea(pDetailSplit);
@@ -312,15 +366,20 @@ void MainWindow::createDocks()
     pDetailSplit->addWidget(pView);
     pDock->setWidget(pDetailSplit);
     pView->setModel(new GBL_FileModel(pView));
+    connect(pView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historyFileSelectionChanged);
     m_docks["history_details"] = pDock;
     addDockWidget(Qt::BottomDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
+
+    //setup file differences dock
     pDock = new QDockWidget(tr("Differences"), this);
-    QTextEdit *pText = new QTextEdit(pDock);
-    pDock->setWidget(pText);
-    m_docks["history_diff"] = pDock;
+    DiffView *pDV = new DiffView(pDock);
+    pDock->setWidget(pDV);
+    m_docks["file_diff"] = pDock;
     addDockWidget(Qt::BottomDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
+
+    //setup staged dock
     pDock = new QDockWidget(tr("Staged"));
     m_docks["staged"] = pDock;
     addDockWidget(Qt::RightDockWidgetArea, pDock);
@@ -328,6 +387,8 @@ void MainWindow::createDocks()
     pView = new FileView(pDock);
     pDock->setWidget(pView);
     pView->setModel(new GBL_FileModel(pView));
+
+    //setup unstaged dock
     pDock = new QDockWidget(tr("Unstaged"));
     m_docks["unstaged"] = pDock;
     addDockWidget(Qt::RightDockWidgetArea, pDock);
