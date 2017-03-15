@@ -170,6 +170,9 @@ void MainWindow::setupRepoUI(QString repoDir)
     GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
     pMod->cleanFileArray();
 
+    pDock = m_docks["file_diff"];
+    DiffView *pDV = (DiffView*)pDock->widget();
+    pDV->reset();
 
     QApplication::restoreOverrideCursor();
 
@@ -197,6 +200,9 @@ void MainWindow::historySelectionChanged(const QItemSelection &selected, const Q
             GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
             pMod->cleanFileArray();
             pMod->setHistoryItem(pHistItem);
+            pDock = m_docks["file_diff"];
+            DiffView *pDV = (DiffView*)pDock->widget();
+            pDV->reset();
 
             //m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
             m_qpRepo->get_commit_to_parent_diff_files(pHistItem->hist_oid, pMod);
@@ -233,10 +239,11 @@ void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, con
             GBL_History_Item *pHistItem = pFileMod->getHistoryItem();
             QDockWidget *pDock = m_docks["file_diff"];
             DiffView *pDV = (DiffView*)pDock->widget();
-            pDV->clear();
+            pDV->reset();
 
             if (m_qpRepo->get_commit_to_parent_diff_lines(pHistItem->hist_oid, this, baPath.data()))
             {
+                pDV->setDiffFromLines();
             }
 
         }
@@ -248,9 +255,7 @@ void MainWindow::addToDiffView(GBL_Line_Item *pLineItem)
     QDockWidget *pDock = m_docks["file_diff"];
     DiffView *pDV = (DiffView*)pDock->widget();
 
-    QString line;
-    QTextStream(&line) << pLineItem->old_line_num << " " << pLineItem->new_line_num << " " << pLineItem->line_change_type << pLineItem->content;
-    pDV->append(line);
+    pDV->addLine(pLineItem);
 }
 
 void MainWindow::preferences()

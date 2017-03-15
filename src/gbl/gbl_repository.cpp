@@ -288,8 +288,8 @@ int GBL_Repository::diff_print_lines_callback(const git_diff_delta *pDelta, cons
 {
     Q_UNUSED(pHunk);
 
-    qDebug() << "old_file" << pDelta->old_file.path;
-    qDebug() << "new_file" << pDelta->new_file.path;
+    //qDebug() << "old_file" << pDelta->old_file.path;
+    //qDebug() << "new_file" << pDelta->new_file.path;
 
     /*if (pHunk)
     {

@@ -31,7 +31,7 @@ QString GBL_Storage::getGravatarUrl(QString sEmail)
     QByteArray ba = QCryptographicHash::hash(baEmail, QCryptographicHash::Md5);
     QString sUrl;
     QTextStream(&sUrl) << "https://www.gravatar.com/avatar/" << ba.toHex() << "?d=identicon&s=48";
-    qDebug() << "getGravatarUrl:" << sUrl;
+    //qDebug() << "getGravatarUrl:" << sUrl;
     return sUrl;
 }
 

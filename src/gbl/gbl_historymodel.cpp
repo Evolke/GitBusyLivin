@@ -64,7 +64,7 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
         }*/
     }
 
-    qDebug() << "avatarMap.size:" << m_avatarMap.size();
+    //qDebug() << "avatarMap.size:" << m_avatarMap.size();
 
     if (!m_emailList.isEmpty())
     {
@@ -125,8 +125,8 @@ void GBL_HistoryModel::avatarDownloaded(QNetworkReply* pReply)
         UrlPixmap *pUrlpm = m_avatarMap[sEmail];
         if (!pUrlpm) return;
 
-        qDebug() << "avatarDownloaded;" << sUrl;
-        qDebug() << "avatarDownloaded size:" << baImg.size();
+        //qDebug() << "avatarDownloaded;" << sUrl;
+        //qDebug() << "avatarDownloaded size:" << baImg.size();
         layoutChanged();
         pUrlpm->setPixmapData(baImg);
         pReply->close();
@@ -136,7 +136,7 @@ void GBL_HistoryModel::avatarDownloaded(QNetworkReply* pReply)
            QString sEmail = m_emailList.first();
            m_emailList.removeFirst();
            //UrlPixmap *pUrlPM = m_pAvMapIt->value();
-           qDebug() << "next_email:" << sEmail;
+           //qDebug() << "next_email:" << sEmail;
            QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
            m_gravMap[sUrl] = sEmail;
            getAvatarFromUrl(sUrl, sEmail);
