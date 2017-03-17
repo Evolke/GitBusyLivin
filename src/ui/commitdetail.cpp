@@ -13,6 +13,7 @@
 CommitDetail::CommitDetail(QWidget *parent) : QFrame(parent)
 {
     //resize(400,200);
+    setFrameStyle(QFrame::StyledPanel);
     m_pHistItem = NULL;
     QGridLayout *mainLayout = new QGridLayout(this);
     m_pAvatar = new QLabel(this);

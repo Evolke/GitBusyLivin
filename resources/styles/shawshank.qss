@@ -83,6 +83,11 @@ QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QWidget {
     background-color:#333333;
 }
 
+QLabel {
+    background: transparent;
+}
+
+
 QDockWidget {
     titlebar-close-icon: url(:/images/light_dock_close_icon.png);
     titlebar-normal-icon: url(:/images/light_dock_max_icon.png);
@@ -213,4 +218,12 @@ QTabBar::tab {
     background-color: #333;
     border: 1px solid #555;
     padding: 5px;
+}
+
+DiffView {
+}
+
+DiffInfoWidget {
+    color: #DDDDDD;
+    background-color: #222222;
 }

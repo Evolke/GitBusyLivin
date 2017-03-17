@@ -232,7 +232,7 @@ void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, con
             if (pFileItem->sub_dir != '.')
             {
                 sub = pFileItem->sub_dir;
-                sub += QDir::separator();
+                sub += '/';
             }
             QTextStream(&path) << sub << pFileItem->file_name;
             QByteArray baPath = path.toUtf8();
@@ -243,7 +243,7 @@ void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, con
 
             if (m_qpRepo->get_commit_to_parent_diff_lines(pHistItem->hist_oid, this, baPath.data()))
             {
-                pDV->setDiffFromLines();
+                pDV->setDiffFromLines(pFileItem);
             }
 
         }
@@ -290,13 +290,14 @@ void MainWindow::toggleToolBar()
 
 void MainWindow::init()
 {
-    readSettings();
     m_qpRepo = new GBL_Repository();
     m_pToolBar = addToolBar(tr(GBL_APP_NAME));
+    m_pToolBar->setObjectName("MainWindow/Toolbar");
     createActions();
     createDocks();
     setWindowTitle(tr(GBL_APP_NAME));
     statusBar()->showMessage(tr("Ready"));
+    readSettings();
 }
 
 void MainWindow::createActions()
@@ -365,6 +366,7 @@ void MainWindow::createDocks()
     //setup history details dock
     QDockWidget *pDock = new QDockWidget(tr("History - Details"), this);
     QSplitter *pDetailSplit = new QSplitter(Qt::Vertical, pDock);
+    pDetailSplit->setFrameStyle(QFrame::StyledPanel);
     CommitDetailScrollArea *pScroll = new CommitDetailScrollArea(pDetailSplit);
     FileView *pView = new FileView(pDetailSplit);
     pDetailSplit->addWidget(pScroll);
@@ -373,6 +375,7 @@ void MainWindow::createDocks()
     pView->setModel(new GBL_FileModel(pView));
     connect(pView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historyFileSelectionChanged);
     m_docks["history_details"] = pDock;
+    pDock->setObjectName("MainWindow/HistoryDetails");
     addDockWidget(Qt::BottomDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
 
@@ -381,12 +384,14 @@ void MainWindow::createDocks()
     DiffView *pDV = new DiffView(pDock);
     pDock->setWidget(pDV);
     m_docks["file_diff"] = pDock;
+    pDock->setObjectName("MainWindow/Differences");
     addDockWidget(Qt::BottomDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
 
     //setup staged dock
     pDock = new QDockWidget(tr("Staged"));
     m_docks["staged"] = pDock;
+    pDock->setObjectName("MainWindow/Staged");
     addDockWidget(Qt::RightDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
     pView = new FileView(pDock);
@@ -396,6 +401,7 @@ void MainWindow::createDocks()
     //setup unstaged dock
     pDock = new QDockWidget(tr("Unstaged"));
     m_docks["unstaged"] = pDock;
+    pDock->setObjectName("MainWindow/Unstaged");
     addDockWidget(Qt::RightDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
     pView = new FileView(pDock);
@@ -406,7 +412,7 @@ void MainWindow::createDocks()
 void MainWindow::readSettings()
 {
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
-    const QByteArray geometry = settings.value("geometry", QByteArray()).toByteArray();
+    const QByteArray geometry = settings.value("MainWindow/Geometry", QByteArray()).toByteArray();
     if (geometry.isEmpty()) {
         const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
         resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
@@ -414,6 +420,12 @@ void MainWindow::readSettings()
              (availableGeometry.height() - height()) / 2);
     } else {
         restoreGeometry(geometry);
+    }
+
+    const QByteArray state = settings.value("MainWindow/WindowState", QByteArray()).toByteArray();
+    if (!state.isEmpty())
+    {
+        restoreState(state);
     }
 
     m_pNetAM = new QNetworkAccessManager(this);
@@ -434,7 +446,8 @@ void MainWindow::readSettings()
 void MainWindow::writeSettings()
 {
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
-    settings.setValue("geometry", saveGeometry());
+    settings.setValue("MainWindow/Geometry", saveGeometry());
+    settings.setValue("MainWindow/WindowState", saveState());
 }
 
 static inline QString RecentReposKey() { return QStringLiteral("RecentRepoList"); }

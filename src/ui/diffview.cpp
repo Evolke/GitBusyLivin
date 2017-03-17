@@ -1,11 +1,22 @@
 #include "diffview.h"
 #include <QDebug>
+#include <QTextEdit>
+#include <QLabel>
+#include <QGridLayout>
 
-DiffView::DiffView(QWidget *parent) : QTextEdit(parent)
+DiffView::DiffView(QWidget *parent) : QScrollArea(parent)
 {
-    setReadOnly(true);
-    setWordWrapMode(QTextOption::NoWrap);
-    setContentsMargins(10,10,10,10);
+
+    QGridLayout *mainLayout = new QGridLayout(this);
+    m_pDiff = new DiffEdit(this);
+    m_pInfo = new DiffInfoWidget(this);
+    mainLayout->addWidget(m_pInfo,0,0);
+    mainLayout->addWidget(m_pDiff,1,0);
+    mainLayout->setSpacing(0);
+    setFrameStyle(QFrame::StyledPanel);
+    mainLayout->setContentsMargins(0,0,0,0);
+    m_pDiff->setReadOnly(true);
+    m_pDiff->setWordWrapMode(QTextOption::NoWrap);
 }
 
 DiffView::~DiffView()
@@ -15,7 +26,8 @@ DiffView::~DiffView()
 
 void DiffView::reset()
 {
-    clear();
+    m_pDiff->clear();
+    m_pInfo->reset();
     cleanupDiffArray();
     //setHtml("<table cellpadding=\'5\' cellspacing=\'0\'><tr><td></td><td></td><td></td><td></td></tr></table>");
     //qDebug() << "reset" << toHtml();
@@ -41,61 +53,12 @@ void DiffView::addLine(GBL_Line_Item *pLI)
     pLineItem->line_change_type = pLI->line_change_type;
     pLineItem->new_line_num = pLI->new_line_num;
     pLineItem->old_line_num = pLI->old_line_num;
-    //qDebug() << pLineItem->content;
     m_diff_arr.append(pLineItem);
-    /*QString html = toHtml();
-    QString row("<tr><td>");
-    QString num;
-    QString htmlContent = pLI->content.toHtmlEscaped();
-    if (pLI->old_line_num > 0) row += num.setNum(pLI->old_line_num);
-    row += "</td><td>";
-    if (pLI->new_line_num > 0) row += num.setNum(pLI->new_line_num);
-    row += "</td>";
-    QString addStyle("color:#ccc;background-color:#353");
-    QString delStyle("color:#ccc;background-color:#533");
-
-    switch (pLI->line_change_type)
-    {
-        case GIT_DIFF_LINE_FILE_HDR:
-        case GIT_DIFF_LINE_HUNK_HDR:
-            row += "<td></td><td><i>";
-            row += htmlContent;
-            row += "</i></td>";
-            break;
-        case GIT_DIFF_LINE_ADDITION:
-            row += "<td style=\'";
-            row += addStyle;
-            row += "\'>";
-            row += pLI->line_change_type;
-            row += "</td>";
-            row += "<td style=\'";
-            row += addStyle;
-            row += "\'>";
-            row += htmlContent;
-            row += "</td>";
-            break;
-        case GIT_DIFF_LINE_DELETION:
-            row += "<td style=\'";
-            row += delStyle;
-            row += "\'>";
-            row += pLI->line_change_type;
-            row += "</td>";
-            row += "<td style=\'";
-            row += delStyle;
-            row += "\'>";
-            row += htmlContent;
-            row += "</td>";
-            break;
-    }
-
-    row += "</tr></table>";
-    html = html.replace(QString("</table>"), row);
-    //qDebug() << html;
-    setHtml(html);*/
 }
 
-void DiffView::setDiffFromLines()
+void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
 {
+    m_pInfo->setFileItem(pFileItem);
     QString num;
     QString htmlContent;
 
@@ -106,48 +69,110 @@ void DiffView::setDiffFromLines()
     for (int i = 0; i < m_diff_arr.size(); i++)
     {
         GBL_Line_Item *pLI = (GBL_Line_Item*)m_diff_arr.at(i);
-        sHtml += "<tr><td>";
+        htmlContent = pLI->content.toHtmlEscaped();
+        sHtml += "<tr>";
+        sHtml += "<td>";
         if (pLI->old_line_num > 0) sHtml += num.setNum(pLI->old_line_num);
         sHtml += "</td><td>";
         if (pLI->new_line_num > 0) sHtml += num.setNum(pLI->new_line_num);
         sHtml += "</td>";
-        htmlContent = pLI->content.toHtmlEscaped();
-        switch (pLI->line_change_type)
+        if (pLI->line_change_type == GIT_DIFF_LINE_ADDITION || pLI->line_change_type == GIT_DIFF_LINE_DELETION)
         {
-            case GIT_DIFF_LINE_FILE_HDR:
-            case GIT_DIFF_LINE_HUNK_HDR:
-                sHtml += "<td></td><td><i>";
-                sHtml += htmlContent;
-                sHtml += "</i></td>";
-                break;
-            case GIT_DIFF_LINE_ADDITION:
-                sHtml += "<td style=\'";
-                sHtml += addStyle;
-                sHtml += "\'>";
-                sHtml += pLI->line_change_type;
-                sHtml += "</td>";
-                sHtml += "<td style=\'";
-                sHtml += addStyle;
-                sHtml += "\'>";
-                sHtml += htmlContent;
-                sHtml += "</td>";
-                break;
-            case GIT_DIFF_LINE_DELETION:
-                sHtml += "<td style=\'";
-                sHtml += delStyle;
-                sHtml += "\'>";
-                sHtml += pLI->line_change_type;
-                sHtml += "</td>";
-                sHtml += "<td style=\'";
-                sHtml += delStyle;
-                sHtml += "\'>";
-                sHtml += htmlContent;
-                sHtml += "</td>";
-                break;
+            QString style = pLI->line_change_type == GIT_DIFF_LINE_ADDITION ? addStyle : delStyle;
+            sHtml += "<td style=\'";
+            sHtml += style;
+            sHtml += ";width:50px;";
+            sHtml += "\'>";
+            sHtml += pLI->line_change_type;
+            sHtml += "</td>";
+            sHtml += "<td style=\'";
+            sHtml += style;
+            sHtml += "\'>";
+            sHtml += htmlContent;
+            sHtml += "</td>";
+        }
+        else {
+            sHtml += "<td></td><td>";
+            bool bHeader = pLI->line_change_type == GIT_DIFF_LINE_FILE_HDR || pLI->line_change_type == GIT_DIFF_LINE_HUNK_HDR;
+            sHtml += bHeader ? "<i>" : "";
+            sHtml += htmlContent;
+            sHtml += bHeader ? "</i>" : "";
+            sHtml += "</td>";
         }
 
         sHtml += "</tr>";
     }
     sHtml += "</table>";
-    setHtml(sHtml);
+    m_pDiff->setHtml(sHtml);
+}
+
+
+DiffInfoWidget::DiffInfoWidget(QWidget *parent) : QFrame(parent)
+{
+    setFrameStyle(QFrame::StyledPanel);
+    QGridLayout *mainLayout = new QGridLayout(this);
+    m_pFileImgLabel = new QLabel(this);
+    m_pFilePathLabel = new QLabel(this);
+
+    mainLayout->addWidget(m_pFileImgLabel, 0,0);
+    mainLayout->addWidget(m_pFilePathLabel, 0,1);
+    mainLayout->setSpacing(0);
+    mainLayout->setContentsMargins(0,0,0,0);
+    setMaximumHeight(25);
+    m_pFileImgLabel->setMaximumWidth(30);
+    //m_pFileImgLabel->resize(25,25);
+    //m_pFileImgLabel->setMinimumHeight(25);
+    //m_pFilePathLabel->resize(200,25);
+    m_pFilePathLabel->setMinimumHeight(25);
+    m_pFileImgLabel->setAlignment(Qt::AlignHCenter|Qt::AlignCenter);
+    m_pFilePathLabel->setAlignment(Qt::AlignLeft|Qt::AlignVCenter);
+
+    m_pPixmap = new QPixmap();
+}
+
+void DiffInfoWidget::reset()
+{
+    m_pFileImgLabel->clear();
+    m_pFilePathLabel->clear();
+}
+
+void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
+{
+    QString path;
+    QString sub;
+    if (pFileItem->sub_dir != '.')
+    {
+        sub = pFileItem->sub_dir;
+        sub += '/';
+    }
+    QTextStream(&path) << sub << pFileItem->file_name;
+
+    QPixmap *pPixmap;
+    switch (pFileItem->status)
+    {
+        case GIT_DELTA_ADDED:
+            qDebug() << m_pPixmap->load(QLatin1String(":/images/add_doc_icon.png"));
+            break;
+        case GIT_DELTA_DELETED:
+             qDebug() << m_pPixmap->load(QLatin1String(":/images/remove_doc_icon.png"));
+            break;
+        case GIT_DELTA_MODIFIED:
+             qDebug() << m_pPixmap->load(QLatin1String(":/images/modify_doc_icon.png"));
+            break;
+        default:
+             m_pPixmap->load(QLatin1String(":/images/unknown_doc_icon.png"));
+            break;
+    }
+
+    m_pFileImgLabel->setPixmap(*m_pPixmap);
+    qDebug() << m_pFileImgLabel->geometry();
+    m_pFilePathLabel->setText(path);
+    qDebug() << m_pFilePathLabel->geometry();
+}
+
+
+DiffEdit::DiffEdit(QWidget *parent) : QTextEdit(parent)
+{
+    setViewportMargins(10,10,10,10);
+    setFrameStyle(QFrame::NoFrame);
 }
