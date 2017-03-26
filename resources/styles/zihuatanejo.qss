@@ -1,9 +1,9 @@
 QMainWindow {
-   background-color: #CCCCCC;
+   background-color: #ddd;
 }
 
 QMenuBar {
-    background: #DDDDDD;
+    background: #eee;
     color: #333333;
 }
 
@@ -28,10 +28,30 @@ QMenu:selected {
 
 QTableView {
     color: #333333;
-    background-color: #BCFFF2;
-    alternate-background-color: #9AFFF2;
+    background-color: #267BD9;
+    alternate-background-color: #267B8D;
     selection-color: #BBBBBB;
     selection-background-color: #666666;
+}
+
+QTableView::item {
+    border: 0;
+    padding: 2px 0;
+    background-color: #267BD9;
+    color: #ddd;
+}
+
+QTableView::item:alternate {
+    background-color: #267B8D;
+}
+
+QTableView::item:selected {
+    color: #333;
+    background-color: #aaa;
+}
+
+QTableView::item:hover {
+    color: #fff;
 }
 
 QHeaderView, QHeaderView::section {
@@ -40,13 +60,13 @@ QHeaderView, QHeaderView::section {
 }
 
 QHeaderView::section:horizontal {
-    margin-top: 6px;
+    /*margin-top: 6px;*/
     margin-bottom: 3px;
     border-style: solid;
     border-left-width: 1px;
-    border-right-color: #555555;
+    border-right-color: #AAAAAA;
     border-right-width: 1px;
-    padding-left: 5px;
+    padding: 2px 5px;
 }
 
 QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:checked {
@@ -55,9 +75,18 @@ QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:
 }
 
 QTextEdit, QTreeView {
-    color:#ddd;
-    background-color:#CCCCCC;
+    color:#333;
+    background-color:#fff;
 }
+
+QTreeView {
+    outline: 0;
+}
+
+QTreeView::item {
+    padding: 2px 0;
+}
+
 
 QTreeView::item:selected {
     color: #BBBBBB;
@@ -69,10 +98,18 @@ QTreeView::item:hover {
     background-color: #DDDDDD;
 }
 
-QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button, QTabBar, QToolBar, QStatusBar, QDialog, QLabel {
-    color:#666666;
+QSplitter::handle:vertical {
+    background-color: #ddd;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #999;
+    height: 4px;
+}
+
+QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button,
+QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QFrame {
+    color:#333333;
     background: none;
-    background-color:#CCCCCC;
+    background-color:#eee;
 }
 
 QDockWidget {
@@ -105,6 +142,11 @@ QPushButton:hover {
     background-color: #555;
 }
 
+QPushButton:disabled {
+    color: #555555;
+    background-color: #333333;
+}
+
 QToolBar {
     border: none;
     border-bottom: 1px solid #BBBBBB;
@@ -116,7 +158,7 @@ QStatusBar {
 
 QScrollBar:vertical, QScrollBar:horizontal {
     border: 1px solid #BBBBBB;
-    background: #CCCCCC;
+    background: #ddd;
 }
 
 QScrollBar:vertical {
@@ -131,7 +173,7 @@ QScrollBar:horizontal {
 
 QScrollBar::up-arrow:vertical {
     /*border: 1px solid #BBBBBB;*/
-    background: #CCCCCC;
+    background: #ddd;
     image: url(:/images/dark_up_arrow.png);
     width: 8px;
     height: 4px;
@@ -160,7 +202,7 @@ QScrollBar::right-arrow:horizontal {
 }
 
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
-    border: 1px solid #555;
+    border: 1px solid #999;
     background: #CCCCCC;
 }
 
@@ -205,4 +247,13 @@ QTabBar::tab {
     background-color: #CCCCCC;
     border: 1px solid #555;
     padding: 5px;
+}
+
+DiffView {
+}
+
+DiffInfoWidget {
+    color: #DDDDDD;
+    background-color: #222222;
+    border: none;
 }

@@ -24,7 +24,8 @@ SOURCES += src/main.cpp\
     src/ui/urlpixmap.cpp \
     src/gbl/gbl_storage.cpp \
     src/ui/commitdetail.cpp \
-    src/ui/diffview.cpp
+    src/ui/diffview.cpp \
+    src/ui/prefsdialog.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -38,7 +39,8 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/urlpixmap.h \
     src/gbl/gbl_storage.h \
     src/ui/commitdetail.h \
-    src/ui/diffview.h
+    src/ui/diffview.h \
+    src/ui/prefsdialog.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
@@ -89,7 +91,7 @@ DISTFILES += \
 #CUSTOM CODE HERE
 VERSION_MAJOR = 0
 VERSION_MINOR = 0
-VERSION_BUILD = 11
+VERSION_BUILD = 13
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
        "VERSION_MINOR=$$VERSION_MINOR"\

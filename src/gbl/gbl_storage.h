@@ -11,6 +11,8 @@ public:
     static QString getStoragePath();
     static QString getCachePath();
     static QString getGravatarUrl(QString sEmail);
+    static QString getThemesPath();
+    static QStringList getThemes();
 
 };
 

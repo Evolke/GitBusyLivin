@@ -7,6 +7,8 @@
 #include <QNetworkReply>
 #include <QNetworkDiskCache>
 #include <QDir>
+#include <QSvgRenderer>
+#include <QPainter>
 
 
 UrlPixmap::UrlPixmap(QNetworkAccessManager *pNetAM, QObject *parent) : QObject(parent)
@@ -65,4 +67,31 @@ QPixmap* UrlPixmap::getSmallPixmap(int size)
 
 
     return m_pSmallPixmap;
+}
+
+void UrlPixmap::loadSVGResource(QString sRes, QString sStrokeColor)
+{
+     QSvgRenderer svg;
+    if (sStrokeColor.isEmpty())
+    {
+      svg.load(sRes);
+    }
+    else
+    {
+        QFile file(sRes);
+        file.open(QIODevice::ReadOnly);
+        QString sSvgFile = QString::fromUtf8(file.readAll());
+        QString sStrokeReplace ("stroke:");
+        sStrokeReplace += sStrokeColor;
+        QString sNewSvgFile = sSvgFile.replace(QString("stroke:#000"),sStrokeReplace);
+        svg.load(sNewSvgFile.toUtf8());
+    }
+    QPixmap pix(svg.defaultSize());
+
+    pix.fill(Qt::transparent);
+    QPainter pixPainter(&pix);
+    svg.render(&pixPainter);
+    qDebug() << pix.size();
+    qDebug() << "is null:" << pix.isNull();
+    m_pPixmap->swap(pix);
 }

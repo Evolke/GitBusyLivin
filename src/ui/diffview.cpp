@@ -62,18 +62,37 @@ void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
     QString num;
     QString htmlContent;
 
-    QString addStyle("color:#ccc;background-color:#353");
-    QString delStyle("color:#ccc;background-color:#533");
+    QColor txtClr = palette().color(QPalette::Text);
+    QColor bckClr = palette().color(QPalette::Window);
+    QString lineNumBgClr = bckClr.darker(115).name(QColor::HexArgb);
+    qDebug() << "text color lightness:" << txtClr.lightness();
+    qDebug() << "back color lightness:" << bckClr.lightness();
+    int nBCLight = bckClr.lightness();
 
-    QString sHtml("<table cellpadding=\'5\' cellspacing=\'0\'>");
+    QString lineStyle("border-right:1px solid ");
+    lineStyle += txtClr.name(QColor::HexRgb);
+    qDebug() << lineStyle;
+    QString darkAddStyle("color:#ccc;background-color:#353");
+    QString darkDelStyle("color:#ccc;background-color:#533");
+    QString lightAddStyle("color:#333;background-color:#D4EACD");
+    QString lightDelStyle("color:#333;background-color:#F0D6D6");
+    QString addStyle = nBCLight > 150 ? lightAddStyle : darkAddStyle;
+    QString delStyle = nBCLight > 150 ? lightDelStyle : darkDelStyle;
+
+    QString sHtml("<table cellpadding=\'5\' cellspacing=\'0\' style=\'border: 1px solid #000\'>");
     for (int i = 0; i < m_diff_arr.size(); i++)
     {
         GBL_Line_Item *pLI = (GBL_Line_Item*)m_diff_arr.at(i);
         htmlContent = pLI->content.toHtmlEscaped();
         sHtml += "<tr>";
-        sHtml += "<td>";
+        sHtml += "<td bgcolor=\'";
+        sHtml += lineNumBgClr;
+        sHtml +="\' align=\'right\'>";
         if (pLI->old_line_num > 0) sHtml += num.setNum(pLI->old_line_num);
-        sHtml += "</td><td>";
+        sHtml += "</td>";
+        sHtml += "<td bgcolor=\'";
+        sHtml += lineNumBgClr;
+        sHtml +="\' align=\'right\'>";
         if (pLI->new_line_num > 0) sHtml += num.setNum(pLI->new_line_num);
         sHtml += "</td>";
         if (pLI->line_change_type == GIT_DIFF_LINE_ADDITION || pLI->line_change_type == GIT_DIFF_LINE_DELETION)
@@ -147,17 +166,16 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
     }
     QTextStream(&path) << sub << pFileItem->file_name;
 
-    QPixmap *pPixmap;
     switch (pFileItem->status)
     {
         case GIT_DELTA_ADDED:
-            qDebug() << m_pPixmap->load(QLatin1String(":/images/add_doc_icon.png"));
+            m_pPixmap->load(QLatin1String(":/images/add_doc_icon.png"));
             break;
         case GIT_DELTA_DELETED:
-             qDebug() << m_pPixmap->load(QLatin1String(":/images/remove_doc_icon.png"));
+            m_pPixmap->load(QLatin1String(":/images/remove_doc_icon.png"));
             break;
         case GIT_DELTA_MODIFIED:
-             qDebug() << m_pPixmap->load(QLatin1String(":/images/modify_doc_icon.png"));
+             m_pPixmap->load(QLatin1String(":/images/modify_doc_icon.png"));
             break;
         default:
              m_pPixmap->load(QLatin1String(":/images/unknown_doc_icon.png"));
@@ -165,14 +183,14 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
     }
 
     m_pFileImgLabel->setPixmap(*m_pPixmap);
-    qDebug() << m_pFileImgLabel->geometry();
+    //qDebug() << m_pFileImgLabel->geometry();
     m_pFilePathLabel->setText(path);
-    qDebug() << m_pFilePathLabel->geometry();
+    //qDebug() << m_pFilePathLabel->geometry();
 }
 
 
 DiffEdit::DiffEdit(QWidget *parent) : QTextEdit(parent)
 {
-    setViewportMargins(10,10,10,10);
+    //setViewportMargins(5,5,5,5);
     setFrameStyle(QFrame::NoFrame);
 }

@@ -1,5 +1,6 @@
-QMainWindow {
+QMainWindow, QApplication {
    background-color: #333333;
+   color: #DDDDDD;
 }
 
 QMenuBar {
@@ -9,9 +10,8 @@ QMenuBar {
 
 QMenuBar::item:selected {
     background: none;
-    background-color: #999999;
-
-    color: #444444;
+    background-color: #222;
+    color: #eee;
 }
 
 QMenu {
@@ -22,8 +22,8 @@ QMenu {
 }
 
 QMenu:selected {
-    background: #999999;
-    color: #444444;
+    background: #222;
+    color: #eee;
 }
 
 QTableView {
@@ -32,6 +32,21 @@ QTableView {
     alternate-background-color: #404040;
     selection-color: #444444;
     selection-background-color: #999999;
+    outline: 0
+}
+
+QTableView::item {
+    border: 0;
+    padding: 2px 0;
+}
+
+QTableView::item:selected {
+    color: #eee;
+    background-color: #222;
+}
+
+QTableView::item:hover {
+    color: #cccccc;
 }
 
 QHeaderView, QHeaderView::section {
@@ -40,13 +55,13 @@ QHeaderView, QHeaderView::section {
 }
 
 QHeaderView::section:horizontal {
-    margin-top: 6px;
+    /*margin-top: 6px;*/
     margin-bottom: 3px;
     border-style: solid;
     border-left-width: 1px;
     border-right-color: #555555;
     border-right-width: 1px;
-    padding-left: 5px;
+    padding: 2px 5px;
 }
 
 QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:checked {
@@ -59,14 +74,71 @@ QTextEdit, QTreeView {
     background-color:#333333;
 }
 
+QTreeView {
+    outline: 0;
+}
+
+QTreeView::item {
+    padding: 2px 0;
+}
+
+
 QTreeView::item:selected {
-    color: #444444;
-    background-color: #999999;
+    color: #eee;
+    background-color: #222;
 }
 
 QTreeView::item:hover {
     color: #cccccc;
-    background-color: #222222;
+    background-color: #333333;
+}
+
+QListView {
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 2px;
+    background-color: #222;
+    outline: 0;
+}
+
+QListView::item {
+   width: 100%;
+}
+
+QListView::item:selected {
+    color: #ddd;
+    background: none;
+    background-color: #222;
+}
+
+QComboBox {
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 3px 20px 3px 5px;
+}
+
+QComboBox::drop-down {
+    border: none;
+    border-left: 1px solid #555;
+    width: 20px;
+}
+
+QComboBox::drop-down:on {
+    background-color: #222;
+}
+
+QComboBox::down-arrow {
+    image: url(:/images/light_down_arrow.png);
+}
+
+QComboBox::down-arrow:on {
+    top: 1px;
+    left: 1px;
+}
+
+QComboBox QAbstractItemView {
+    selection-color: #eee;
+    selection-background-color: #222;
 }
 
 QSplitter::handle:vertical {
@@ -116,6 +188,11 @@ QPushButton {
 QPushButton:hover {
     color: #aaa;
     background-color: #555;
+}
+
+QPushButton:disabled {
+    color: #555555;
+    background-color: #333333;
 }
 
 QToolBar {
@@ -226,4 +303,5 @@ DiffView {
 DiffInfoWidget {
     color: #DDDDDD;
     background-color: #222222;
+    border: none;
 }

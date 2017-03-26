@@ -11,6 +11,9 @@
 #include "clonedialog.h"
 #include "src/gbl/gbl_storage.h"
 #include "commitdetail.h"
+#include "prefsdialog.h"
+#include "urlpixmap.h"
+
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
 #include <QDir>
@@ -36,8 +39,8 @@ MainWindow::~MainWindow()
         delete m_qpRepo;
     }
 
-    if (m_pNetAM) { delete m_pNetAM; }
     //if (m_pNetCache) { delete m_pNetCache;}
+    if (m_pNetAM) { delete m_pNetAM; }
     cleanupDocks();
 }
 
@@ -260,8 +263,18 @@ void MainWindow::addToDiffView(GBL_Line_Item *pLineItem)
 
 void MainWindow::preferences()
 {
-    QMessageBox::about(this, tr("D'oh"),
-             tr("Under Construction"));
+    QString currentTheme = m_sTheme;
+    PrefsDialog prefsDlg(this);
+    if (prefsDlg.exec() == QDialog::Accepted)
+    {
+        QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+        settings.setValue("UI/Theme", m_sTheme);
+
+    }
+    else
+    {
+        setTheme(currentTheme);
+    }
 }
 
 void MainWindow::toggleStatusBar()
@@ -293,6 +306,7 @@ void MainWindow::init()
     m_qpRepo = new GBL_Repository();
     m_pToolBar = addToolBar(tr(GBL_APP_NAME));
     m_pToolBar->setObjectName("MainWindow/Toolbar");
+    m_pToolBar->setIconSize(QSize(20,20));
     createActions();
     createDocks();
     setWindowTitle(tr(GBL_APP_NAME));
@@ -336,6 +350,7 @@ void MainWindow::createActions()
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(tr("&Preferences..."), this, &MainWindow::preferences);
 
+    m_pRepoMenu = menuBar()->addMenu(tr("&Repository"));
     m_pViewMenu = menuBar()->addMenu(tr("&View"));
     QAction *tbAct = m_pViewMenu->addAction(tr("&Toolbar"));
     QAction *sbAct = m_pViewMenu->addAction(tr("&Statusbar"));
@@ -428,7 +443,7 @@ void MainWindow::readSettings()
         restoreState(state);
     }
 
-    m_pNetAM = new QNetworkAccessManager(this);
+    m_pNetAM = new QNetworkAccessManager();
 
     //create cache dir
     QString sCachePath = GBL_Storage::getCachePath();
@@ -441,6 +456,35 @@ void MainWindow::readSettings()
     m_pNetCache = new QNetworkDiskCache(this);
     m_pNetCache->setCacheDirectory(sCachePath);
     m_pNetAM->setCache(m_pNetCache);
+
+    QString sTheme = settings.value("UI/Theme", "none").toString();
+
+    setTheme(sTheme);
+
+
+   /**/
+    UrlPixmap svgpix(NULL);
+
+
+    QStyleOptionToolBar option;
+    option.initFrom(m_pToolBar);
+    QPalette pal = option.palette;
+    QColor txtClr = pal.color(QPalette::Text);
+    QString sBorderClr = txtClr.name(QColor::HexRgb);
+
+    svgpix.loadSVGResource(":/images/push_toolbar_icon.svg", sBorderClr);
+
+    QAction *pushAct = new QAction(QIcon(*svgpix.getPixmap()), tr("&Push"), this);
+    m_pRepoMenu->addAction(pushAct);
+    m_pToolBar->addAction(pushAct);
+
+    svgpix.loadSVGResource(":/images/pull_toolbar_icon.svg", sBorderClr);
+
+    QAction *pullAct = new QAction(QIcon(*svgpix.getPixmap()), tr("&Pull"), this);
+    m_pRepoMenu->addAction(pullAct);
+    m_pToolBar->addAction(pullAct);
+    m_pToolBar->setIconSize(QSize(16,16));
+
 }
 
 void MainWindow::writeSettings()
@@ -448,6 +492,7 @@ void MainWindow::writeSettings()
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
     settings.setValue("MainWindow/Geometry", saveGeometry());
     settings.setValue("MainWindow/WindowState", saveState());
+
 }
 
 static inline QString RecentReposKey() { return QStringLiteral("RecentRepoList"); }
@@ -519,4 +564,42 @@ void MainWindow::updateRecentRepoActions()
     }
     for ( ; i < MaxRecentRepos; ++i)
         m_pRecentRepoActs[i]->setVisible(false);
+}
+
+void MainWindow::setTheme(const QString &theme)
+{
+    QString styleSheet;
+    QString sPath;
+
+    m_sTheme = theme;
+
+    if (theme != "none")
+    {
+        if (theme == "shawshank")
+        {
+            sPath = ":/styles/shawshank.qss";
+        }
+        else if (theme == "zihuatanejo")
+        {
+            sPath = ":/styles/zihuatanejo.qss";
+        }
+        else
+        {
+            sPath = GBL_Storage::getThemesPath();
+            sPath += QDir::separator();
+            sPath += theme;
+            sPath += ".qss";
+        }
+    }
+
+    if (!sPath.isEmpty())
+    {
+        QFile file(sPath);
+        file.open(QFile::ReadOnly);
+        styleSheet = QString::fromUtf8(file.readAll());
+    }
+
+    QApplication *app = (QApplication*)QCoreApplication::instance();
+    app->setStyleSheet(styleSheet);
+
 }

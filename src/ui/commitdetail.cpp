@@ -24,7 +24,7 @@ CommitDetail::CommitDetail(QWidget *parent) : QFrame(parent)
     mainLayout->addWidget(m_pAvatar,0,0);
     mainLayout->addWidget(m_pDetails,0,1);
     mainLayout->setSpacing(0);
-    m_pAvatar->setMaximumWidth(50);
+    m_pAvatar->setMaximumWidth(42);
     m_pAvatar->setAlignment(Qt::AlignHCenter|Qt::AlignTop);
     //m_pDetails->setAlignment(Qt::AlignLeft|Qt::AlignTop);
     //m_pDetails->setMinimumHeight(0);
@@ -60,7 +60,7 @@ void CommitDetail::setDetails(GBL_History_Item *pHistItem, QPixmap *pAvatar)
     m_pDetails->setHtml(sHtml);
     if (pAvatar)
     {
-        QPixmap avatar = pAvatar->scaledToWidth(48);
+        QPixmap avatar = pAvatar->scaledToWidth(40);
         m_pAvatar->setPixmap(avatar);
     }
 

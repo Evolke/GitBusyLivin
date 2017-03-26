@@ -19,5 +19,9 @@
         <file>images/dark_dock_max_icon.png</file>
         <file>images/light_dock_close_icon.png</file>
         <file>images/light_dock_max_icon.png</file>
+        <file>images/general_pref_icon.svg</file>
+        <file>images/ui_pref_icon.svg</file>
+        <file>images/pull_toolbar_icon.svg</file>
+        <file>images/push_toolbar_icon.svg</file>
     </qresource>
 </RCC>

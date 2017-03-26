@@ -4,7 +4,6 @@
 
 HistoryView::HistoryView(QWidget *parent) : QTableView(parent)
 {
-
 }
 
 HistoryView::~HistoryView()
@@ -22,8 +21,8 @@ void HistoryView::resizeEvent(QResizeEvent *event)
     if (pSB && pSB->isVisible()) nWidth -= pSB->width();
 
     setColumnWidth(0, nWidth*.6);
-    setColumnWidth(1, nWidth*.22);
-    setColumnWidth(2, nWidth*.17);
+    setColumnWidth(1, nWidth*.24);
+    setColumnWidth(2, nWidth*.15);
 }
 
 /*void HistoryView::itemSelectionChanged()

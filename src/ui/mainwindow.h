@@ -34,6 +34,8 @@ public:
     QNetworkDiskCache* getNetworkCache() { return m_pNetCache; }
 
     void addToDiffView(GBL_Line_Item *pLineItem);
+    void setTheme(const QString &theme);
+    QString getTheme() { return m_sTheme; }
 
 private slots:
     void about();
@@ -63,15 +65,15 @@ private:
     static bool hasRecentRepos();
     void prependToRecentRepos(const QString &dirName);
     void setRecentReposVisible(bool visible);
-
     GBL_Repository *m_qpRepo;
     HistoryView *m_pHistView;
     QPointer<GBL_HistoryModel> m_pHistModel;
     QMap<QString, QDockWidget*> m_docks;
-    QMenu *m_pViewMenu;
+    QMenu *m_pViewMenu, *m_pRepoMenu;
     QToolBar *m_pToolBar;
     QNetworkAccessManager *m_pNetAM;
     QNetworkDiskCache *m_pNetCache;
+    QString m_sTheme;
 
     QAction *m_pRecentRepoActs[MaxRecentRepos];
     QAction *m_pRecentRepoSeparator;
