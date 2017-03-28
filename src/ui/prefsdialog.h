@@ -2,6 +2,7 @@
 #define PREFSDIALOG_H
 
 #include <QDialog>
+#include "src/gbl/gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
     class QListWidget;
@@ -19,6 +20,9 @@ class GeneralPrefsPage : public QWidget
     Q_OBJECT
 public:
     explicit GeneralPrefsPage(QWidget *parent = 0);
+
+    void setName(QString sName);
+    void setEmail(QString sEmail);
 
 private:
     QLineEdit *m_pNameEdit, *m_pEmailEdit;
@@ -44,6 +48,7 @@ class PrefsDialog : public QDialog
 public:
     explicit PrefsDialog(QWidget *parent = 0);
 
+    void setConfigMap(GBL_Config_Map *pMap);
 signals:
 
 public slots:

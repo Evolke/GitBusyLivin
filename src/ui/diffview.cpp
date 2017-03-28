@@ -191,6 +191,6 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
 
 DiffEdit::DiffEdit(QWidget *parent) : QTextEdit(parent)
 {
-    //setViewportMargins(5,5,5,5);
+    setViewportMargins(5,5,5,5);
     setFrameStyle(QFrame::NoFrame);
 }

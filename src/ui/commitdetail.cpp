@@ -12,7 +12,7 @@
 
 CommitDetail::CommitDetail(QWidget *parent) : QFrame(parent)
 {
-    //resize(400,200);
+    //resize(400,200)
     setFrameStyle(QFrame::StyledPanel);
     m_pHistItem = NULL;
     QGridLayout *mainLayout = new QGridLayout(this);
@@ -76,6 +76,7 @@ CommitDetailScrollArea::CommitDetailScrollArea(QWidget *parent) : QScrollArea(pa
    m_pDetail = new CommitDetail(this);
    //setContentsMargins(0,0,0,0);
    setFrameStyle(QFrame::StyledPanel);
+   setViewportMargins(0,0,0,0);
 }
 
 void CommitDetailScrollArea::resizeEvent(QResizeEvent *event)

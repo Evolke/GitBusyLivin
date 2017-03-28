@@ -7,6 +7,12 @@
 #include "gbl_filemodel.h"
 #include "src/ui/mainwindow.h"
 
+extern char git_buf__initbuf[];
+extern char git_buf__oom[];
+
+/* Use to initialize buffer structure when git_buf is on stack */
+#define GIT_BUF_INIT { git_buf__initbuf, 0, 0 }
+
 static QByteArray g_temp_ba;
 
 GBL_Repository::GBL_Repository(QObject *parent) : QObject(parent)
@@ -15,14 +21,20 @@ GBL_Repository::GBL_Repository(QObject *parent) : QObject(parent)
     m_pRepo = Q_NULLPTR;
     m_pHist_Arr = Q_NULLPTR;
     m_iErrorCode = 0;
+    m_pConfig_Map = new GBL_Config_Map;
 }
 
 GBL_Repository::~GBL_Repository()
 {
+    delete m_pConfig_Map;
+
     cleanup();
     git_libgit2_shutdown();
 }
 
+/**
+ * @brief GBL_Repository::cleanup
+ */
 void GBL_Repository::cleanup()
 {
     cleanup_history();
@@ -35,6 +47,9 @@ void GBL_Repository::cleanup()
 
 }
 
+/**
+ * @brief GBL_Repository::cleanup_history
+ */
 void GBL_Repository::cleanup_history()
 {
     if (m_pHist_Arr)
@@ -51,6 +66,10 @@ void GBL_Repository::cleanup_history()
     }
 }
 
+/**
+ * @brief GBL_Repository::get_error_msg
+ * @return
+ */
 QString GBL_Repository::get_error_msg()
 {
     QString error_msg;
@@ -64,6 +83,11 @@ QString GBL_Repository::get_error_msg()
     return error_msg;
 }
 
+/**
+ * @brief GBL_Repository::qstring2cc
+ * @param pQStr
+ * @return
+ */
 const char* GBL_Repository::qstring2cc(QString *pQStr)
 {
     g_temp_ba = pQStr->toUtf8();
@@ -72,6 +96,56 @@ const char* GBL_Repository::qstring2cc(QString *pQStr)
     return str;
 }
 
+/**
+ * @brief GBL_Repository::check_libgit_return
+ * @param ret
+ */
+void GBL_Repository::check_libgit_return(int ret)
+{
+    m_iErrorCode = ret;
+
+    if (ret < 0) throw GBL_RepositoryException();
+}
+
+/**
+ * @brief GBL_Repository::get_global_config_info
+ * @param out
+ * @return
+ */
+bool GBL_Repository::get_global_config_info(GBL_Config_Map **out)
+{
+    git_config *cfg = NULL;
+    git_buf buf = GIT_BUF_INIT;
+    //const char *name, *email;
+    try
+    {
+        check_libgit_return(git_config_find_global(&buf));
+        check_libgit_return(git_config_open_ondisk(&cfg, buf.ptr));
+        git_buf_free(&buf);
+        check_libgit_return(git_config_get_string_buf(&buf, cfg, "user.name"));
+        m_pConfig_Map->insert(QString("global.user.name"), QString(buf.ptr));
+        git_buf_free(&buf);
+        check_libgit_return(git_config_get_string_buf(&buf, cfg, "user.email"));
+        m_pConfig_Map->insert(QString("global.user.email"),QString(buf.ptr));
+
+       *out = m_pConfig_Map;
+    }
+    catch(GBL_RepositoryException &e)
+    {
+        return false;
+    }
+
+    git_buf_free(&buf);
+    if (cfg != NULL) git_config_free(cfg);
+    return true;
+}
+
+/**
+ * @brief GBL_Repository::init_repo
+ * @param path
+ * @param bare
+ * @return
+ */
 bool GBL_Repository::init_repo(QString path, bool bare)
 {
     cleanup();

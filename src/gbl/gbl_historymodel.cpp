@@ -44,40 +44,43 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
     m_emailList.clear();
     m_gravMap.clear();
 
-    MainWindow *pMain = (MainWindow*)parent();
-    QNetworkAccessManager *pNetAM = pMain->getNetworkAccessManager();
-    //QNetworkDiskCache *pNetCache = pMain->getNetworkCache();
-
-    for (int i = 0; i < m_pHistArr->size(); i++)
+    if (!pHistArr->isEmpty())
     {
-        GBL_History_Item *pHistItem = m_pHistArr->at(i);
-        QString sEmail = pHistItem->hist_author_email.toLower();
-        if (!m_avatarMap.contains(sEmail))
+        MainWindow *pMain = (MainWindow*)parent();
+        QNetworkAccessManager *pNetAM = pMain->getNetworkAccessManager();
+        //QNetworkDiskCache *pNetCache = pMain->getNetworkCache();
+
+        for (int i = 0; i < m_pHistArr->size(); i++)
         {
-            UrlPixmap *pUrlpm = new UrlPixmap(pNetAM, this);
-            m_avatarMap[sEmail] = pUrlpm;
-            m_emailList.append(sEmail);
+            GBL_History_Item *pHistItem = m_pHistArr->at(i);
+            QString sEmail = pHistItem->hist_author_email.toLower();
+            if (!m_avatarMap.contains(sEmail))
+            {
+                UrlPixmap *pUrlpm = new UrlPixmap(pNetAM, this);
+                m_avatarMap[sEmail] = pUrlpm;
+                m_emailList.append(sEmail);
+            }
+            /*else
+            {
+                qDebug() << "avatarMap.contains = true";
+            }*/
         }
-        /*else
+
+        //qDebug() << "avatarMap.size:" << m_avatarMap.size();
+
+        if (!m_emailList.isEmpty())
         {
-            qDebug() << "avatarMap.contains = true";
-        }*/
+           QString sEmail = m_emailList.first();
+           m_emailList.removeFirst();
+           QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
+           m_gravMap[sUrl] = sEmail;
+           getAvatarFromUrl(sUrl, sEmail);
+           //pUrlPM->loadFromUrl(sUrl);
+           //connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
+        }
+
+        layoutChanged();
     }
-
-    //qDebug() << "avatarMap.size:" << m_avatarMap.size();
-
-    if (!m_emailList.isEmpty())
-    {
-       QString sEmail = m_emailList.first();
-       m_emailList.removeFirst();
-       QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
-       m_gravMap[sUrl] = sEmail;
-       getAvatarFromUrl(sUrl, sEmail);
-       //pUrlPM->loadFromUrl(sUrl);
-       //connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
-    }
-
-    layoutChanged();
 }
 
 QPixmap* GBL_HistoryModel::getAvatar(QString sEmail)

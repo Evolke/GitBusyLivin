@@ -100,6 +100,13 @@ void MainWindow::new_local_repo()
         {
             QMessageBox::warning(this, tr("Creation Error"), m_qpRepo->get_error_msg());
         }
+        else
+        {
+            if (m_qpRepo->open_repo(dirName))
+            {
+                setupRepoUI(dirName);
+            }
+        }
     }
 }
 
@@ -159,24 +166,26 @@ void MainWindow::setupRepoUI(QString repoDir)
     QTextStream(&title) << " - " << fi.fileName();
     setWindowTitle(title);
 
-    GBL_History_Array *pHistArr;
+    GBL_History_Array *pHistArr = NULL;
     m_qpRepo->get_history(&pHistArr);
 
-    m_pHistModel->setModelData(pHistArr);
-    m_pHistView->reset();
-    QDockWidget *pDock = m_docks["history_details"];
-    QSplitter *pSplit = (QSplitter*)pDock->widget();
-    CommitDetailScrollArea *pDetailSA = (CommitDetailScrollArea*)pSplit->widget(0);
-    pDetailSA->reset();
-    FileView *pView = (FileView*)pSplit->widget(1);
-    pView->reset();
-    GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
-    pMod->cleanFileArray();
+    if (pHistArr != NULL && !pHistArr->isEmpty())
+    {
+        m_pHistModel->setModelData(pHistArr);
+        m_pHistView->reset();
+        QDockWidget *pDock = m_docks["history_details"];
+        QSplitter *pSplit = (QSplitter*)pDock->widget();
+        CommitDetailScrollArea *pDetailSA = (CommitDetailScrollArea*)pSplit->widget(0);
+        pDetailSA->reset();
+        FileView *pView = (FileView*)pSplit->widget(1);
+        pView->reset();
+        GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
+        pMod->cleanFileArray();
 
-    pDock = m_docks["file_diff"];
-    DiffView *pDV = (DiffView*)pDock->widget();
-    pDV->reset();
-
+        pDock = m_docks["file_diff"];
+        DiffView *pDV = (DiffView*)pDock->widget();
+        pDV->reset();
+    }
     QApplication::restoreOverrideCursor();
 
 }
@@ -264,12 +273,19 @@ void MainWindow::addToDiffView(GBL_Line_Item *pLineItem)
 void MainWindow::preferences()
 {
     QString currentTheme = m_sTheme;
+
+    GBL_Config_Map *pConfigMap;
+    if (!m_qpRepo->get_global_config_info(&pConfigMap))
+    {
+       QMessageBox::warning(this, tr("Config Error"), m_qpRepo->get_error_msg());
+    }
+
     PrefsDialog prefsDlg(this);
+    prefsDlg.setConfigMap(pConfigMap);
     if (prefsDlg.exec() == QDialog::Accepted)
     {
         QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
         settings.setValue("UI/Theme", m_sTheme);
-
     }
     else
     {

@@ -12,6 +12,7 @@
 #include <QStackedWidget>
 #include <QDebug>
 #include <QComboBox>
+#include <QGroupBox>
 
 
 /**
@@ -99,6 +100,12 @@ void PrefsDialog::createListItems()
 
 }
 
+void PrefsDialog::setConfigMap(GBL_Config_Map *pMap)
+{
+    GeneralPrefsPage *pPage = (GeneralPrefsPage*)m_pPages->widget(0);
+    pPage->setName(pMap->value("global.user.name"));
+    pPage->setEmail(pMap->value("global.user.email"));
+}
 
 /******************* GeneralPrefsPage ***************/
 GeneralPrefsPage::GeneralPrefsPage(QWidget *parent) : QWidget(parent)
@@ -109,18 +116,36 @@ GeneralPrefsPage::GeneralPrefsPage(QWidget *parent) : QWidget(parent)
     QLabel *pEmailLabel = new QLabel(tr("Email Address:"));
     m_pEmailEdit = new QLineEdit();
 
-    QGridLayout *mainLayout = new QGridLayout(this);
-    mainLayout->addWidget(pNameLabel,0,0);
-    mainLayout->addWidget(m_pNameEdit,0,1);
-    mainLayout->addWidget(pEmailLabel,1,0);
-    mainLayout->addWidget(m_pEmailEdit,1,1);
+    QGroupBox *pGGUBox = new QGroupBox(tr("Goblal Git User"));
+    QGridLayout *pGGULayout = new QGridLayout();
+    pGGULayout->addWidget(pNameLabel,0,0);
+    pGGULayout->addWidget(m_pNameEdit,0,1);
+    pGGULayout->addWidget(pEmailLabel,1,0);
+    pGGULayout->addWidget(m_pEmailEdit,1,1);
+    pGGUBox->setLayout(pGGULayout);
+    QVBoxLayout *mainLayout = new QVBoxLayout();
+    mainLayout->addWidget(pGGUBox);
+    mainLayout->addSpacing(60);
+    setLayout(mainLayout);
+}
+
+void GeneralPrefsPage::setName(QString sName)
+{
+    m_pNameEdit->setText(sName);
+}
+
+void GeneralPrefsPage::setEmail(QString sEmail)
+{
+    m_pEmailEdit->setText(sEmail);
 }
 
 /******************* UIPrefsPage ***************/
 UIPrefsPage::UIPrefsPage(QWidget *parent) : QWidget(parent)
 {
-    QGridLayout *mainLayout = new QGridLayout(this);
+    QGroupBox *pThemeBox = new QGroupBox();
+    QGridLayout *pThemeLayout = new QGridLayout(this);
     QLabel *pThemeLabel = new QLabel(tr("Theme:"));
+    pThemeLabel->setMaximumWidth(60);
     m_pThemeCombo = new QComboBox(this);
     QStringList themes = GBL_Storage::getThemes();
     m_pThemeCombo->addItems(themes);
@@ -131,8 +156,14 @@ UIPrefsPage::UIPrefsPage(QWidget *parent) : QWidget(parent)
     {
         m_pThemeCombo->setCurrentIndex(index);
     }
-    mainLayout->addWidget(pThemeLabel, 0,0);
-    mainLayout->addWidget(m_pThemeCombo, 0,1);
+    pThemeLayout->addWidget(pThemeLabel, 0,0);
+    pThemeLayout->addWidget(m_pThemeCombo, 0,1);
+    pThemeBox->setLayout(pThemeLayout);
+    QVBoxLayout *mainLayout = new QVBoxLayout();
+    mainLayout->addWidget(pThemeBox);
+    mainLayout->addSpacing(80);
+    setLayout(mainLayout);
+
     connect(m_pThemeCombo, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), (PrefsDialog*)parentWidget(), &PrefsDialog::changeTheme);
 }
 
