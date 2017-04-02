@@ -1,4 +1,6 @@
 #include "historyview.h"
+#include "src/gbl/gbl_historymodel.h"
+
 #include <QDebug>
 #include <QScrollBar>
 
@@ -23,6 +25,9 @@ void HistoryView::resizeEvent(QResizeEvent *event)
     setColumnWidth(0, nWidth*.6);
     setColumnWidth(1, nWidth*.24);
     setColumnWidth(2, nWidth*.15);
+
+    GBL_HistoryModel *pModel = (GBL_HistoryModel*)model();
+    pModel->layoutChanged();
 }
 
 /*void HistoryView::itemSelectionChanged()

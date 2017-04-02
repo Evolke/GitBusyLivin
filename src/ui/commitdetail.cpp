@@ -75,6 +75,7 @@ CommitDetailScrollArea::CommitDetailScrollArea(QWidget *parent) : QScrollArea(pa
 {
    m_pDetail = new CommitDetail(this);
    //setContentsMargins(0,0,0,0);
+   setBackgroundRole(QPalette::Base);
    setFrameStyle(QFrame::StyledPanel);
    setViewportMargins(0,0,0,0);
 }

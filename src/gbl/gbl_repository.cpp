@@ -7,8 +7,7 @@
 #include "gbl_filemodel.h"
 #include "src/ui/mainwindow.h"
 
-extern char git_buf__initbuf[];
-extern char git_buf__oom[];
+static char git_buf__initbuf[1];
 
 /* Use to initialize buffer structure when git_buf is on stack */
 #define GIT_BUF_INIT { git_buf__initbuf, 0, 0 }
@@ -132,6 +131,8 @@ bool GBL_Repository::get_global_config_info(GBL_Config_Map **out)
     }
     catch(GBL_RepositoryException &e)
     {
+        Q_UNUSED(e);
+
         return false;
     }
 
@@ -151,8 +152,45 @@ bool GBL_Repository::init_repo(QString path, bool bare)
     cleanup();
     /*const QByteArray l8b = path.toUtf8();
     const char* spath = l8b.constData();*/
-    m_iErrorCode = git_repository_init(&m_pRepo, qstring2cc(&path), bare);
-    return m_iErrorCode >= 0;
+    git_signature *sig = NULL;
+    git_index *index = NULL;
+    git_oid tree_id, commit_id;
+    git_tree *tree = NULL;
+
+    try
+    {
+        check_libgit_return(git_repository_init(&m_pRepo, qstring2cc(&path), bare));
+
+        //create initial commit
+        if (!bare)
+        {
+
+            //get the signature to use for commit
+            check_libgit_return(git_signature_default(&sig, m_pRepo));
+
+            check_libgit_return(git_repository_index(&index, m_pRepo));
+            check_libgit_return(git_index_write_tree(&tree_id, index));
+            git_index_free(index);
+            index = NULL;
+            check_libgit_return(git_tree_lookup(&tree, m_pRepo, &tree_id));
+            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, NULL, "Initial Commit", tree, 0));
+            git_tree_free(tree);
+            git_signature_free(sig);
+        }
+
+        return true;
+    }
+    catch(GBL_RepositoryException &e)
+    {
+        Q_UNUSED(e);
+
+        if (index != NULL) git_index_free(index);
+        if (tree != NULL) git_tree_free(tree);
+        if (sig != NULL) git_signature_free(sig);
+
+        return false;
+    }
+
 }
 
 bool GBL_Repository::clone_repo(QString srcUrl, QString dstPath)

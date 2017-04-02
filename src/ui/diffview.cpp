@@ -8,6 +8,8 @@ DiffView::DiffView(QWidget *parent) : QScrollArea(parent)
 {
 
     QGridLayout *mainLayout = new QGridLayout(this);
+    mainLayout->setMargin(0);
+    mainLayout->setSpacing(0);
     m_pDiff = new DiffEdit(this);
     m_pInfo = new DiffInfoWidget(this);
     mainLayout->addWidget(m_pInfo,0,0);
@@ -17,6 +19,8 @@ DiffView::DiffView(QWidget *parent) : QScrollArea(parent)
     mainLayout->setContentsMargins(0,0,0,0);
     m_pDiff->setReadOnly(true);
     m_pDiff->setWordWrapMode(QTextOption::NoWrap);
+    setViewportMargins(0,0,0,0);
+    setContentsMargins(0,0,0,0);
 }
 
 DiffView::~DiffView()
@@ -191,6 +195,11 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
 
 DiffEdit::DiffEdit(QWidget *parent) : QTextEdit(parent)
 {
+#ifdef Q_OS_MAC
     setViewportMargins(5,5,5,5);
+#else
+    setViewportMargins(0,0,0,0);
+    setContentsMargins(0,0,0,0);
+#endif
     setFrameStyle(QFrame::NoFrame);
 }

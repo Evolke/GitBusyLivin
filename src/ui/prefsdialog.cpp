@@ -161,7 +161,7 @@ UIPrefsPage::UIPrefsPage(QWidget *parent) : QWidget(parent)
     pThemeBox->setLayout(pThemeLayout);
     QVBoxLayout *mainLayout = new QVBoxLayout();
     mainLayout->addWidget(pThemeBox);
-    mainLayout->addSpacing(80);
+    mainLayout->addSpacing(100);
     setLayout(mainLayout);
 
     connect(m_pThemeCombo, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), (PrefsDialog*)parentWidget(), &PrefsDialog::changeTheme);
