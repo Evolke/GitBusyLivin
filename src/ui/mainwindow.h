@@ -37,6 +37,9 @@ public:
     void setTheme(const QString &theme);
     QString getTheme() { return m_sTheme; }
 
+    GBL_Repository* getRepo() { return m_qpRepo; }
+
+
 private slots:
     void about();
     void clone();

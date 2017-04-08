@@ -186,6 +186,20 @@ void MainWindow::setupRepoUI(QString repoDir)
         DiffView *pDV = (DiffView*)pDock->widget();
         pDV->reset();
     }
+
+    GBL_File_Array stagedArr, unstagedArr;
+    if (m_qpRepo->get_repo_status(stagedArr, unstagedArr))
+    {
+        QDockWidget *pDock = m_docks["staged"];
+        FileView *pView = (FileView*)pDock->widget();
+        GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
+        pMod->setFileArray(&stagedArr);
+        pDock = m_docks["unstaged"];
+        pView = (FileView*)pDock->widget();
+        pMod = (GBL_FileModel*)pView->model();
+        pMod->setFileArray(&unstagedArr);
+    }
+
     QApplication::restoreOverrideCursor();
 
 }
@@ -217,7 +231,11 @@ void MainWindow::historySelectionChanged(const QItemSelection &selected, const Q
             pDV->reset();
 
             //m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
-            m_qpRepo->get_commit_to_parent_diff_files(pHistItem->hist_oid, pMod);
+            GBL_File_Array histFileArr;
+            if (m_qpRepo->get_commit_to_parent_diff_files(pHistItem->hist_oid, &histFileArr))
+            {
+                pMod->setFileArray(&histFileArr);
+            }
         }
     }
 }

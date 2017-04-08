@@ -69,13 +69,13 @@ void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
     QColor txtClr = palette().color(QPalette::Text);
     QColor bckClr = palette().color(QPalette::Window);
     QString lineNumBgClr = bckClr.darker(115).name(QColor::HexArgb);
-    qDebug() << "text color lightness:" << txtClr.lightness();
-    qDebug() << "back color lightness:" << bckClr.lightness();
+    //qDebug() << "text color lightness:" << txtClr.lightness();
+    //qDebug() << "back color lightness:" << bckClr.lightness();
     int nBCLight = bckClr.lightness();
 
     QString lineStyle("border-right:1px solid ");
     lineStyle += txtClr.name(QColor::HexRgb);
-    qDebug() << lineStyle;
+    //qDebug() << lineStyle;
     QString darkAddStyle("color:#ccc;background-color:#353");
     QString darkDelStyle("color:#ccc;background-color:#533");
     QString lightAddStyle("color:#333;background-color:#D4EACD");
@@ -172,13 +172,13 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
 
     switch (pFileItem->status)
     {
-        case GIT_DELTA_ADDED:
+        case GBL_FILE_STATUS_ADDED:
             m_pPixmap->load(QLatin1String(":/images/add_doc_icon.png"));
             break;
-        case GIT_DELTA_DELETED:
+        case GBL_FILE_STATUS_DELETED:
             m_pPixmap->load(QLatin1String(":/images/remove_doc_icon.png"));
             break;
-        case GIT_DELTA_MODIFIED:
+        case GBL_FILE_STATUS_MODIFIED:
              m_pPixmap->load(QLatin1String(":/images/modify_doc_icon.png"));
             break;
         default:

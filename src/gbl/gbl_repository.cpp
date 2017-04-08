@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QByteArray>
 #include <QFileInfo>
+#include "libgit2/include/git2/sys/repository.h"
 
 #include "gbl_filemodel.h"
 #include "src/ui/mainwindow.h"
@@ -193,6 +194,12 @@ bool GBL_Repository::init_repo(QString path, bool bare)
 
 }
 
+/**
+ * @brief GBL_Repository::clone_repo
+ * @param srcUrl
+ * @param dstPath
+ * @return
+ */
 bool GBL_Repository::clone_repo(QString srcUrl, QString dstPath)
 {
     cleanup();
@@ -205,6 +212,11 @@ bool GBL_Repository::clone_repo(QString srcUrl, QString dstPath)
     return m_iErrorCode >= 0;
 }
 
+/**
+ * @brief GBL_Repository::open_repo
+ * @param path
+ * @return
+ */
 bool GBL_Repository::open_repo(QString path)
 {
     cleanup();
@@ -214,6 +226,11 @@ bool GBL_Repository::open_repo(QString path)
     return m_iErrorCode >= 0;
 }
 
+/**
+ * @brief GBL_Repository::get_history
+ * @param pHist_Arr
+ * @return
+ */
 bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
 {
     git_revwalk *walker;
@@ -259,6 +276,12 @@ bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
     return m_iErrorCode >= 0;
 }
 
+/**
+ * @brief GBL_Repository::get_tree_from_commit_oid
+ * @param oid_str
+ * @param pFileMod
+ * @return
+ */
 bool GBL_Repository::get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod)
 {
 
@@ -285,6 +308,11 @@ bool GBL_Repository::get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pF
    return m_iErrorCode >= 0;
 }
 
+/**
+ * @brief GBL_Repository::tree_walk
+ * @param pTroid
+ * @param pFileMod
+ */
 void GBL_Repository::tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod)
 {
     git_tree *pTree = NULL;
@@ -296,6 +324,13 @@ void GBL_Repository::tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod)
     }
 }
 
+/**
+ * @brief GBL_Repository::tree_walk_callback
+ * @param root
+ * @param entry
+ * @param payload
+ * @return
+ */
 int GBL_Repository::tree_walk_callback(const char *root, const git_tree_entry *entry, void *payload)
 {
     //qDebug() << "root:" << root;
@@ -323,16 +358,38 @@ int GBL_Repository::tree_walk_callback(const char *root, const git_tree_entry *e
     return 1;
 }
 
-bool GBL_Repository::get_commit_to_parent_diff_files(QString oid_str, GBL_FileModel *pFileMod)
+/**
+ * @brief GBL_Repository::get_commit_to_parent_diff_files
+ * @param oid_str
+ * @param pFileMod
+ * @return
+ */
+bool GBL_Repository::get_commit_to_parent_diff_files(QString oid_str, GBL_File_Array *pHistFileArr)
 {
-    return get_commit_to_parent_diff(oid_str, GIT_DIFF_FORMAT_NAME_STATUS,  diff_print_files_callback, pFileMod);
+    return get_commit_to_parent_diff(oid_str, GIT_DIFF_FORMAT_NAME_STATUS,  diff_print_files_callback, pHistFileArr);
 }
 
+/**
+ * @brief GBL_Repository::get_commit_to_parent_diff_lines
+ * @param oid_str
+ * @param pMain
+ * @param path
+ * @return
+ */
 bool GBL_Repository::get_commit_to_parent_diff_lines(QString oid_str, MainWindow *pMain, char *path)
 {
     return get_commit_to_parent_diff(oid_str, GIT_DIFF_FORMAT_PATCH, diff_print_lines_callback, pMain, path);
 }
 
+/**
+ * @brief GBL_Repository::get_commit_to_parent_diff
+ * @param oid_str
+ * @param format
+ * @param callback
+ * @param payload
+ * @param path
+ * @return
+ */
 bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path)
 {
     git_oid oid;
@@ -377,6 +434,14 @@ bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, git_diff_format_
     return m_iErrorCode >= 0;
 }
 
+/**
+ * @brief GBL_Repository::diff_print_files_callback
+ * @param pDelta
+ * @param pHunk
+ * @param pLine
+ * @param payload
+ * @return
+ */
 int GBL_Repository::diff_print_files_callback(const git_diff_delta *pDelta, const git_diff_hunk *pHunk, const git_diff_line *pLine, void *payload)
 {
     //qDebug() << "old_file" << pDelta->old_file.path;
@@ -384,18 +449,64 @@ int GBL_Repository::diff_print_files_callback(const git_diff_delta *pDelta, cons
     Q_UNUSED(pHunk);
     Q_UNUSED(pLine);
 
-    GBL_FileModel *pFileMod = (GBL_FileModel*)payload;
+    GBL_File_Array *pFileArr = (GBL_File_Array*)payload;
 
     GBL_File_Item *pFItem = new GBL_File_Item;
     QFileInfo fi(pDelta->new_file.path);
     pFItem->file_name = QString(fi.fileName());
     pFItem->sub_dir = QString(fi.path());
-    pFItem->status = pDelta->status;
-    pFileMod->addFileItem(pFItem);
+
+    switch (pDelta->status)
+    {
+        case GIT_DELTA_ADDED:
+            pFItem->status = GBL_FILE_STATUS_ADDED;
+            break;
+        case GIT_DELTA_CONFLICTED:
+            pFItem->status = GBL_FILE_STATUS_CONFLICTED;
+            break;
+        case GIT_DELTA_COPIED:
+            pFItem->status = GBL_FILE_STATUS_COPIED;
+            break;
+        case GIT_DELTA_DELETED:
+            pFItem->status = GBL_FILE_STATUS_DELETED;
+            break;
+        case GIT_DELTA_IGNORED:
+            pFItem->status = GBL_FILE_STATUS_IGNORED;
+            break;
+        case GIT_DELTA_MODIFIED:
+            pFItem->status = GBL_FILE_STATUS_MODIFIED;
+            break;
+         case GIT_DELTA_RENAMED:
+            pFItem->status = GBL_FILE_STATUS_RENAMED;
+            break;
+        case GIT_DELTA_TYPECHANGE:
+           pFItem->status = GBL_FILE_STATUS_TYPECHANGE;
+           break;
+        case GIT_DELTA_UNREADABLE:
+           pFItem->status = GBL_FILE_STATUS_UNREADABLE;
+           break;
+        case GIT_DELTA_UNTRACKED:
+           pFItem->status = GBL_FILE_STATUS_UNTRACKED;
+           break;
+        default:
+            pFItem->status = GBL_FILE_STATUS_UNKNOWN;
+
+    }
+
+    //pFItem->status = pDelta->status;
+    pFileArr->append(pFItem);
 
     return 0;
 }
 
+/**
+ * @brief GBL_Repository::diff_print_lines_callback
+ * @param pDelta
+ * @param pHunk
+ * @param pLine
+ * @param payload
+ * @return
+ */
 int GBL_Repository::diff_print_lines_callback(const git_diff_delta *pDelta, const git_diff_hunk *pHunk, const git_diff_line *pLine, void *payload)
 {
     Q_UNUSED(pHunk);
@@ -436,4 +547,86 @@ int GBL_Repository::diff_print_lines_callback(const git_diff_delta *pDelta, cons
     }
 
     return 0;
+}
+
+bool GBL_Repository::get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &unstagedArr)
+{
+    git_status_list *status;
+    git_status_options opts = GIT_STATUS_OPTIONS_INIT;
+
+    try
+    {
+        check_libgit_return(git_status_list_new(&status, m_pRepo, &opts));
+
+        size_t i, maxi = git_status_list_entrycount(status);
+        const git_status_entry *s;
+
+        for (i = 0; i < maxi; ++i)
+        {
+            s = git_status_byindex(status, i);
+
+            //qDebug() << "status" << s->status;
+
+            if (s->head_to_index)
+            {
+                /*qDebug() << "head_to_index";
+                qDebug() << "new_file" << s->head_to_index->new_file.path;
+                qDebug() << "old_file" << s->head_to_index->old_file.path;
+                */
+                GBL_File_Item *pFItem = new GBL_File_Item;
+                QFileInfo fi(s->head_to_index->new_file.path);
+                pFItem->file_name = QString(fi.fileName());
+                pFItem->sub_dir = QString(fi.path());
+
+                if (s->status & GIT_STATUS_INDEX_NEW)
+                    pFItem->status = GBL_FILE_STATUS_ADDED;
+                if (s->status & GIT_STATUS_INDEX_MODIFIED)
+                    pFItem->status = GBL_FILE_STATUS_MODIFIED;
+                if (s->status & GIT_STATUS_INDEX_DELETED)
+                    pFItem->status = GBL_FILE_STATUS_DELETED;
+                if (s->status & GIT_STATUS_INDEX_RENAMED)
+                    pFItem->status = GBL_FILE_STATUS_RENAMED;
+                if (s->status & GIT_STATUS_INDEX_TYPECHANGE)
+                    pFItem->status = GBL_FILE_STATUS_TYPECHANGE;
+                if (s->status & GIT_STATUS_IGNORED)
+                    pFItem->status = GBL_FILE_STATUS_IGNORED;
+
+                stagedArr.append(pFItem);
+            }
+
+            if (s->index_to_workdir)
+            {
+                /*qDebug() << "index_to_workdir";
+                qDebug() << "new_file" << s->index_to_workdir->new_file.path;
+                qDebug() << "old_file" << s->index_to_workdir->old_file.path;
+                */
+                GBL_File_Item *pFItem = new GBL_File_Item;
+                QFileInfo fi(s->index_to_workdir->new_file.path);
+                pFItem->file_name = QString(fi.fileName());
+                pFItem->sub_dir = QString(fi.path());
+                if (s->status & GIT_STATUS_WT_NEW)
+                    pFItem->status = GBL_FILE_STATUS_UNKNOWN;
+                if (s->status & GIT_STATUS_WT_MODIFIED)
+                    pFItem->status = GBL_FILE_STATUS_MODIFIED;
+                if (s->status & GIT_STATUS_WT_DELETED)
+                    pFItem->status = GBL_FILE_STATUS_DELETED;
+                if (s->status & GIT_STATUS_WT_RENAMED)
+                    pFItem->status = GBL_FILE_STATUS_RENAMED;
+                if (s->status & GIT_STATUS_WT_TYPECHANGE)
+                    pFItem->status = GBL_FILE_STATUS_TYPECHANGE;
+                if (s->status & GIT_STATUS_IGNORED)
+                    pFItem->status = GBL_FILE_STATUS_IGNORED;
+                unstagedArr.append(pFItem);
+
+            }
+        }
+
+        git_status_list_free(status);
+        return true;
+    }
+    catch(GBL_RepositoryException &e)
+    {
+    }
+
+    return false;
 }

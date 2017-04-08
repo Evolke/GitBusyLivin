@@ -39,6 +39,18 @@ void GBL_FileModel::addFileItem(GBL_File_Item *pFileItem)
     layoutChanged();
 }
 
+void GBL_FileModel::setFileArray(GBL_File_Array *pArr)
+{
+    cleanFileArray();
+
+    for (int i = 0; i < pArr->size(); i++)
+    {
+        m_pFileArr->append(pArr->at(i));
+    }
+
+    layoutChanged();
+}
+
 GBL_File_Item* GBL_FileModel::getFileItemAt(int index)
 {
     if (m_pFileArr && index >= 0 && index < m_pFileArr->length())
@@ -104,13 +116,13 @@ QVariant GBL_FileModel::data(const QModelIndex &index, int role) const
         GBL_File_Item *pFileItem = m_pFileArr->at(index.row());
         switch (pFileItem->status)
         {
-            case GIT_DELTA_ADDED:
+            case GBL_FILE_STATUS_ADDED:
                 return QVariant::fromValue(m_addDocIcon);
                 break;
-            case GIT_DELTA_DELETED:
+            case GBL_FILE_STATUS_DELETED:
                 return QVariant::fromValue(m_removeDocIcon);
                 break;
-            case GIT_DELTA_MODIFIED:
+            case GBL_FILE_STATUS_MODIFIED:
                 return QVariant::fromValue(m_modifyDocIcon);
                 break;
             default:

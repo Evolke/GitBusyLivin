@@ -6,6 +6,20 @@
 #include <QDateTime>
 #include <QException>
 
+#define GBL_FILE_STATUS_ADDED 'A'
+#define GBL_FILE_STATUS_DELETED 'D'
+#define GBL_FILE_STATUS_MODIFIED 'M'
+#define GBL_FILE_STATUS_RENAMED 'R'
+#define GBL_FILE_STATUS_TYPECHANGE 'T'
+#define GBL_FILE_STATUS_IGNORED 'I'
+#define GBL_FILE_STATUS_COPIED 'C'
+#define GBL_FILE_STATUS_CONFLICTED '!'
+#define GBL_FILE_STATUS_UNTRACKED 'U'
+#define GBL_FILE_STATUS_UNREADABLE '*'
+#define GBL_FILE_STATUS_UNKNOWN '?'
+
+
+
 typedef struct GBL_History_Item {
     QString hist_oid;
     QString hist_summary;
@@ -18,7 +32,7 @@ typedef struct GBL_History_Item {
 typedef QVector<GBL_History_Item*> GBL_History_Array;
 
 typedef struct GBL_File_Item {
-    git_delta_t status;
+    char status;
     QString file_name;
     QString sub_dir;
 } GBL_File_Item;
@@ -67,14 +81,17 @@ public:
     bool init_repo(QString path, bool bare=false);
     bool open_repo(QString path);
     bool clone_repo(QString srcUrl, QString dstPath);
+    bool is_remote_repo(QString path);
 
     bool get_history(GBL_History_Array **pHist_Arr);
     bool get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod);
     void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);
-    bool get_commit_to_parent_diff_files(QString oid_str, GBL_FileModel *pFileMod);
+    bool get_commit_to_parent_diff_files(QString oid_str, GBL_File_Array *pHistFileArr);
     bool get_commit_to_parent_diff_lines(QString oid_str, MainWindow *pMain, char *path);
 
     bool get_global_config_info(GBL_Config_Map **out);
+
+    bool get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &unstagedArr);
 
 signals:
 

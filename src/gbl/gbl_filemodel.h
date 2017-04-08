@@ -23,6 +23,7 @@ public:
 
     void cleanFileArray();
     void addFileItem(GBL_File_Item *pFileItem);
+    void setFileArray(GBL_File_Array *pArr);
     GBL_File_Item* getFileItemAt(int index);
     void setHistoryItem(GBL_History_Item *pHistItem);
     GBL_History_Item* getHistoryItem();
