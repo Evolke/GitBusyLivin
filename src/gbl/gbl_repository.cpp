@@ -255,7 +255,7 @@ bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
                 pHistItem->hist_message = QString(git_commit_message(commit));
                 const git_signature *pGit_Sig = git_commit_author(commit);
                 QString author;
-                QTextStream(&author) << pGit_Sig->name << " <" << pGit_Sig->email << ">";
+                QTextStream(&author) << QString::fromUtf8(pGit_Sig->name) << " <" << pGit_Sig->email << ">";
                 pHistItem->hist_author = author;
                 pHistItem->hist_author_email = QString(pGit_Sig->email);
                 pHistItem->hist_datetime = QDateTime::fromTime_t(pGit_Sig->when.time);
@@ -553,6 +553,7 @@ bool GBL_Repository::get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &
 {
     git_status_list *status;
     git_status_options opts = GIT_STATUS_OPTIONS_INIT;
+    opts.flags = GIT_STATUS_OPT_INCLUDE_UNTRACKED | GIT_STATUS_OPT_RECURSE_UNTRACKED_DIRS;
 
     try
     {
@@ -596,10 +597,10 @@ bool GBL_Repository::get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &
 
             if (s->index_to_workdir)
             {
-                /*qDebug() << "index_to_workdir";
+                qDebug() << "index_to_workdir";
                 qDebug() << "new_file" << s->index_to_workdir->new_file.path;
                 qDebug() << "old_file" << s->index_to_workdir->old_file.path;
-                */
+
                 GBL_File_Item *pFItem = new GBL_File_Item;
                 QFileInfo fi(s->index_to_workdir->new_file.path);
                 pFItem->file_name = QString(fi.fileName());

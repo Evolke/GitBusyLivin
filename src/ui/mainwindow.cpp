@@ -13,6 +13,8 @@
 #include "commitdetail.h"
 #include "prefsdialog.h"
 #include "urlpixmap.h"
+#include "stageddockview.h"
+#include "unstageddockview.h"
 
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
@@ -191,13 +193,11 @@ void MainWindow::setupRepoUI(QString repoDir)
     if (m_qpRepo->get_repo_status(stagedArr, unstagedArr))
     {
         QDockWidget *pDock = m_docks["staged"];
-        FileView *pView = (FileView*)pDock->widget();
-        GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
-        pMod->setFileArray(&stagedArr);
+        StagedDockView *pView = (StagedDockView*)pDock->widget();
+        pView->setFileArray(&stagedArr);
         pDock = m_docks["unstaged"];
-        pView = (FileView*)pDock->widget();
-        pMod = (GBL_FileModel*)pView->model();
-        pMod->setFileArray(&unstagedArr);
+        UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
+        pUSView->setFileArray(&unstagedArr);
     }
 
     QApplication::restoreOverrideCursor();
@@ -443,9 +443,9 @@ void MainWindow::createDocks()
     pDock->setObjectName("MainWindow/Staged");
     addDockWidget(Qt::RightDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
-    pView = new FileView(pDock);
-    pDock->setWidget(pView);
-    pView->setModel(new GBL_FileModel(pView));
+    StagedDockView *pSDView = new StagedDockView(pDock);
+    pDock->setWidget(pSDView);
+    //pView->setModel(new GBL_FileModel(pView));
 
     //setup unstaged dock
     pDock = new QDockWidget(tr("Unstaged"));
@@ -453,9 +453,8 @@ void MainWindow::createDocks()
     pDock->setObjectName("MainWindow/Unstaged");
     addDockWidget(Qt::RightDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
-    pView = new FileView(pDock);
-    pDock->setWidget(pView);
-    pView->setModel(new GBL_FileModel(pView));
+    UnstagedDockView *pUSView = new UnstagedDockView(pDock);
+    pDock->setWidget(pUSView);
 }
 
 void MainWindow::readSettings()

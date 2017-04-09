@@ -25,7 +25,9 @@ SOURCES += src/main.cpp\
     src/gbl/gbl_storage.cpp \
     src/ui/commitdetail.cpp \
     src/ui/diffview.cpp \
-    src/ui/prefsdialog.cpp
+    src/ui/prefsdialog.cpp \
+    src/ui/stageddockview.cpp \
+    src/ui/unstageddockview.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -40,7 +42,9 @@ HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_storage.h \
     src/ui/commitdetail.h \
     src/ui/diffview.h \
-    src/ui/prefsdialog.h
+    src/ui/prefsdialog.h \
+    src/ui/stageddockview.h \
+    src/ui/unstageddockview.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
