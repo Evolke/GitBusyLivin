@@ -434,6 +434,26 @@ bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, git_diff_format_
     return m_iErrorCode >= 0;
 }
 
+bool GBL_Repository::get_index_to_work_diff(MainWindow *pMain, char *path)
+{
+    git_diff *diff = NULL;
+    git_diff_options diffopts = GIT_DIFF_OPTIONS_INIT;
+    if (path)
+    {
+        diffopts.pathspec.strings = &path;
+        diffopts.pathspec.count = 1;
+    }
+
+
+    m_iErrorCode = git_diff_index_to_workdir(&diff, m_pRepo, NULL, &diffopts);
+    if (m_iErrorCode >= 0)
+    {
+        m_iErrorCode = git_diff_print(diff, GIT_DIFF_FORMAT_PATCH, diff_print_lines_callback, pMain);
+        git_diff_free(diff);
+    }
+    return m_iErrorCode >= 0;
+}
+
 /**
  * @brief GBL_Repository::diff_print_files_callback
  * @param pDelta
@@ -509,6 +529,7 @@ int GBL_Repository::diff_print_files_callback(const git_diff_delta *pDelta, cons
  */
 int GBL_Repository::diff_print_lines_callback(const git_diff_delta *pDelta, const git_diff_hunk *pHunk, const git_diff_line *pLine, void *payload)
 {
+    Q_UNUSED(pDelta);
     Q_UNUSED(pHunk);
 
     //qDebug() << "old_file" << pDelta->old_file.path;

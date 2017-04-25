@@ -51,6 +51,7 @@ private slots:
     void toggleStatusBar();
     void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void historyFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void closeEvent(QCloseEvent *event);
     void updateRecentRepoActions();
     void openRecentRepo();
@@ -62,6 +63,7 @@ private:
     void cleanupDocks();
     void createActions();
     void createDocks();
+    void createHistoryTable();
     void readSettings();
     void writeSettings();
     void setupRepoUI(QString repoDir);
@@ -81,6 +83,7 @@ private:
     QAction *m_pRecentRepoActs[MaxRecentRepos];
     QAction *m_pRecentRepoSeparator;
     QAction *m_pRecentRepoSubMenuAct;
+    QAction *m_pOpenAct;
 
 };
 

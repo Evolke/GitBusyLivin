@@ -171,7 +171,9 @@ int GBL_HistoryModel::rowCount(const QModelIndex &parent) const
 int GBL_HistoryModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return 3;
+    if (m_pHistArr) return 3;
+
+    return 0;
 }
 
 GBL_History_Item* GBL_HistoryModel::getHistoryItemAt(int index)

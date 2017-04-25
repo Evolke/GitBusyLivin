@@ -152,6 +152,11 @@ QPushButton:disabled {
     background-color: #eee;
 }
 
+StagedButton, UnstagedButton {
+    padding: 2px 4px;
+    border-radius: 0px;
+}
+
 QToolBar {
     border: none;
     border-bottom: 1px solid #BBBBBB;

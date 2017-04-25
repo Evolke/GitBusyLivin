@@ -161,6 +161,11 @@ void MainWindow::openRecentRepo()
 
 void MainWindow::setupRepoUI(QString repoDir)
 {
+    if (m_docks.isEmpty())
+    {
+        createDocks();
+    }
+
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 
     QFileInfo fi(repoDir);
@@ -175,6 +180,7 @@ void MainWindow::setupRepoUI(QString repoDir)
     {
         m_pHistModel->setModelData(pHistArr);
         m_pHistView->reset();
+        m_pHistView->scrollToTop();
         QDockWidget *pDock = m_docks["history_details"];
         QSplitter *pSplit = (QSplitter*)pDock->widget();
         CommitDetailScrollArea *pDetailSA = (CommitDetailScrollArea*)pSplit->widget(0);
@@ -280,6 +286,46 @@ void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, con
     }
 }
 
+void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    Q_UNUSED(deselected);
+    QModelIndexList mil = selected.indexes();
+
+    //single row selection
+    if (mil.count() > 0)
+    {
+        QModelIndex mi = mil.at(0);
+        int row = mi.row();
+        QDockWidget *pDock = m_docks["unstaged"];
+        UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
+        FileView *pView = pUSView->getFileView();
+        GBL_FileModel *pFileMod = (GBL_FileModel*)pView->model();
+        GBL_File_Item *pFileItem = pFileMod->getFileItemAt(row);
+        if (pFileItem)
+        {
+            QString path;
+            QString sub;
+            if (pFileItem->sub_dir != '.')
+            {
+                sub = pFileItem->sub_dir;
+                sub += '/';
+            }
+            QTextStream(&path) << sub << pFileItem->file_name;
+            QByteArray baPath = path.toUtf8();
+            GBL_History_Item *pHistItem = pFileMod->getHistoryItem();
+            QDockWidget *pDock = m_docks["file_diff"];
+            DiffView *pDV = (DiffView*)pDock->widget();
+            pDV->reset();
+
+            if (m_qpRepo->get_index_to_work_diff(this, baPath.data()))
+            {
+                pDV->setDiffFromLines(pFileItem);
+            }
+
+        }
+    }
+}
+
 void MainWindow::addToDiffView(GBL_Line_Item *pLineItem)
 {
     QDockWidget *pDock = m_docks["file_diff"];
@@ -342,7 +388,8 @@ void MainWindow::init()
     m_pToolBar->setObjectName("MainWindow/Toolbar");
     m_pToolBar->setIconSize(QSize(20,20));
     createActions();
-    createDocks();
+    createHistoryTable();
+    //createDocks();
     setWindowTitle(tr(GBL_APP_NAME));
     statusBar()->showMessage(tr("Ready"));
     readSettings();
@@ -355,7 +402,7 @@ void MainWindow::createActions()
     newMenu->addAction(tr("&Local Repository..."), this, &MainWindow::new_local_repo);
     newMenu->addAction(tr("&Network Repository..."), this, &MainWindow::new_network_repo);
     fileMenu->addAction(tr("&Clone..."), this, &MainWindow::clone);
-    fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
+    m_pOpenAct = fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
     fileMenu->addSeparator();
 
     QMenu *recentMenu = fileMenu->addMenu(tr("Recent"));
@@ -398,7 +445,7 @@ void MainWindow::createActions()
     helpMenu->addAction(tr("&About GitBusyLivin"), this, &MainWindow::about);
 }
 
-void MainWindow::createDocks()
+void MainWindow::createHistoryTable()
 {
     m_pHistModel = new GBL_HistoryModel(NULL, this);
     m_pHistView = new HistoryView(this);
@@ -411,7 +458,11 @@ void MainWindow::createDocks()
     m_pHistView->setAlternatingRowColors(true);
     connect(m_pHistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historySelectionChanged);
     setCentralWidget(m_pHistView);
+    m_pHistView->setObjectName("MainWindow/HistoryTable");
+}
 
+void MainWindow::createDocks()
+{
     //setup history details dock
     QDockWidget *pDock = new QDockWidget(tr("History - Details"), this);
     QSplitter *pDetailSplit = new QSplitter(Qt::Vertical, pDock);
@@ -445,7 +496,7 @@ void MainWindow::createDocks()
     m_pViewMenu->addAction(pDock->toggleViewAction());
     StagedDockView *pSDView = new StagedDockView(pDock);
     pDock->setWidget(pSDView);
-    //pView->setModel(new GBL_FileModel(pView));
+    m_pViewMenu->addAction(pDock->toggleViewAction());
 
     //setup unstaged dock
     pDock = new QDockWidget(tr("Unstaged"));
@@ -455,11 +506,28 @@ void MainWindow::createDocks()
     m_pViewMenu->addAction(pDock->toggleViewAction());
     UnstagedDockView *pUSView = new UnstagedDockView(pDock);
     pDock->setWidget(pUSView);
+    m_pViewMenu->addAction(pDock->toggleViewAction());
+    connect(pUSView->getFileView()->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::workingFileSelectionChanged);
+
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    const QByteArray state = settings.value("MainWindow/WindowState", QByteArray()).toByteArray();
+    if (!state.isEmpty())
+    {
+        restoreState(state);
+    }
+
 }
 
 void MainWindow::readSettings()
 {
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+
+    const QByteArray state = settings.value("MainWindow/WindowState", QByteArray()).toByteArray();
+    if (!state.isEmpty())
+    {
+        restoreState(state);
+    }
+
     const QByteArray geometry = settings.value("MainWindow/Geometry", QByteArray()).toByteArray();
     if (geometry.isEmpty()) {
         const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
@@ -468,12 +536,6 @@ void MainWindow::readSettings()
              (availableGeometry.height() - height()) / 2);
     } else {
         restoreGeometry(geometry);
-    }
-
-    const QByteArray state = settings.value("MainWindow/WindowState", QByteArray()).toByteArray();
-    if (!state.isEmpty())
-    {
-        restoreState(state);
     }
 
     m_pNetAM = new QNetworkAccessManager();
@@ -504,6 +566,10 @@ void MainWindow::readSettings()
     QPalette pal = option.palette;
     QColor txtClr = pal.color(QPalette::Text);
     QString sBorderClr = txtClr.name(QColor::HexRgb);
+
+    svgpix.loadSVGResource(":/images/open_toolbar_icon.svg", sBorderClr);
+    m_pOpenAct->setIcon(QIcon(*svgpix.getPixmap()));
+    m_pToolBar->addAction(m_pOpenAct);
 
     svgpix.loadSVGResource(":/images/push_toolbar_icon.svg", sBorderClr);
 

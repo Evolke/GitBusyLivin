@@ -32,7 +32,8 @@ QTableView {
     alternate-background-color: #404040;
     selection-color: #444444;
     selection-background-color: #999999;
-    outline: 0
+    outline: 0;
+    border: 1px solid #444;
 }
 
 QTableView::item {
@@ -79,6 +80,7 @@ QTextEdit, QTreeView {
 
 QTreeView {
     outline: 0;
+    border: 1px solid #444;
 }
 
 QTreeView::item {
@@ -150,6 +152,10 @@ QGroupBox {
     border-radius: 8px;
 }
 
+QSplitter {
+    border: 1px solid #444;
+}
+
 QSplitter::handle:vertical {
     background-color: #333333;
     border-top: 1px solid #444444;
@@ -164,6 +170,10 @@ QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QWidget {
     background-color:#333333;
 }
 
+QScrollArea {
+    border: 1px solid #444;
+}
+
 QLabel {
     background: none;
 }
@@ -172,6 +182,7 @@ QLabel {
 QDockWidget {
     titlebar-close-icon: url(:/images/light_dock_close_icon.png);
     titlebar-normal-icon: url(:/images/light_dock_max_icon.png);
+    border: 1px solid #444;
 }
 
 QLineEdit {
@@ -202,6 +213,11 @@ QPushButton:hover {
 QPushButton:disabled {
     color: #555555;
     background-color: #333333;
+}
+
+StagedButton, UnstagedButton {
+    padding: 2px 4px;
+    border-radius: 0px;
 }
 
 QToolBar {

@@ -23,5 +23,6 @@
         <file>images/ui_pref_icon.svg</file>
         <file>images/pull_toolbar_icon.svg</file>
         <file>images/push_toolbar_icon.svg</file>
+        <file>images/open_toolbar_icon.svg</file>
     </qresource>
 </RCC>

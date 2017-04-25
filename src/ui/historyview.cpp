@@ -6,6 +6,8 @@
 
 HistoryView::HistoryView(QWidget *parent) : QTableView(parent)
 {
+    setContentsMargins(0,0,0,0);
+    setMinimumWidth(300);
 }
 
 HistoryView::~HistoryView()

@@ -16,7 +16,7 @@ DiffView::DiffView(QWidget *parent) : QScrollArea(parent)
     mainLayout->addWidget(m_pDiff,1,0);
     mainLayout->setSpacing(0);
     setFrameStyle(QFrame::StyledPanel);
-    mainLayout->setContentsMargins(0,0,0,0);
+    mainLayout->setMargin(0);
     m_pDiff->setReadOnly(true);
     m_pDiff->setWordWrapMode(QTextOption::NoWrap);
     setViewportMargins(0,0,0,0);
@@ -82,21 +82,23 @@ void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
     QString lightDelStyle("color:#333;background-color:#F0D6D6");
     QString addStyle = nBCLight > 150 ? lightAddStyle : darkAddStyle;
     QString delStyle = nBCLight > 150 ? lightDelStyle : darkDelStyle;
+    QString sBackClrAttr;
+    QTextStream(&sBackClrAttr) << "bgcolor=\'" << lineNumBgClr << "\'";
 
-    QString sHtml("<table cellpadding=\'5\' cellspacing=\'0\' style=\'border: 1px solid #000\'>");
+    QString sHtml("<html><body margin=\'0\'><table cellpadding=\'5\' cellspacing=\'0\' >");
     for (int i = 0; i < m_diff_arr.size(); i++)
     {
         GBL_Line_Item *pLI = (GBL_Line_Item*)m_diff_arr.at(i);
         htmlContent = pLI->content.toHtmlEscaped();
         sHtml += "<tr>";
-        sHtml += "<td bgcolor=\'";
-        sHtml += lineNumBgClr;
-        sHtml +="\' align=\'right\'>";
+        sHtml += "<td ";
+        sHtml += sBackClrAttr;
+        sHtml +=" align=\'right\'>";
         if (pLI->old_line_num > 0) sHtml += num.setNum(pLI->old_line_num);
         sHtml += "</td>";
-        sHtml += "<td bgcolor=\'";
-        sHtml += lineNumBgClr;
-        sHtml +="\' align=\'right\'>";
+        sHtml += "<td ";
+        sHtml += sBackClrAttr;
+        sHtml +=" align=\'right\'>";
         if (pLI->new_line_num > 0) sHtml += num.setNum(pLI->new_line_num);
         sHtml += "</td>";
         if (pLI->line_change_type == GIT_DIFF_LINE_ADDITION || pLI->line_change_type == GIT_DIFF_LINE_DELETION)
@@ -115,8 +117,13 @@ void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
             sHtml += "</td>";
         }
         else {
-            sHtml += "<td></td><td>";
             bool bHeader = pLI->line_change_type == GIT_DIFF_LINE_FILE_HDR || pLI->line_change_type == GIT_DIFF_LINE_HUNK_HDR;
+            QString sAttr = bHeader ? sBackClrAttr : "";
+            sHtml += "<td ";
+            sHtml += sAttr;
+            sHtml += "></td><td ";
+            sHtml += sAttr;
+            sHtml += ">";
             sHtml += bHeader ? "<i>" : "";
             sHtml += htmlContent;
             sHtml += bHeader ? "</i>" : "";
@@ -125,7 +132,7 @@ void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
 
         sHtml += "</tr>";
     }
-    sHtml += "</table>";
+    sHtml += "</table></body></html>";
     m_pDiff->setHtml(sHtml);
 }
 
@@ -196,7 +203,7 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
 DiffEdit::DiffEdit(QWidget *parent) : QTextEdit(parent)
 {
 #ifdef Q_OS_MAC
-    setViewportMargins(5,5,5,5);
+    setViewportMargins(0,0,0,8);
 #else
     setViewportMargins(0,0,0,0);
     setContentsMargins(0,0,0,0);

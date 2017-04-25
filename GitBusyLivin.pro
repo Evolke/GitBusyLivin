@@ -27,7 +27,8 @@ SOURCES += src/main.cpp\
     src/ui/diffview.cpp \
     src/ui/prefsdialog.cpp \
     src/ui/stageddockview.cpp \
-    src/ui/unstageddockview.cpp
+    src/ui/unstageddockview.cpp \
+    src/ui/singleapplication.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -44,7 +45,8 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/diffview.h \
     src/ui/prefsdialog.h \
     src/ui/stageddockview.h \
-    src/ui/unstageddockview.h
+    src/ui/unstageddockview.h \
+    src/ui/singleapplication.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
@@ -95,7 +97,7 @@ DISTFILES += \
 #CUSTOM CODE HERE
 VERSION_MAJOR = 0
 VERSION_MINOR = 0
-VERSION_BUILD = 14
+VERSION_BUILD = 15
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
        "VERSION_MINOR=$$VERSION_MINOR"\
