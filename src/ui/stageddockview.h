@@ -1,9 +1,14 @@
 #ifndef STAGEDDOCKVIEW_H
 #define STAGEDDOCKVIEW_H
 
+#define COMMIT_BTN 1
+#define PUSH_BTN 2
+#define UNSTAGE_ALL_BTN 3
+#define UNSTAGE_SELECTED_BTN 4
+
 #include <QSplitter>
 #include <QScrollArea>
-#include <QPushButton>
+#include <QToolButton>
 
 #include "src/gbl/gbl_repository.h"
 
@@ -13,11 +18,27 @@ class QTextEdit;
 class QPushButton;
 QT_END_NAMESPACE
 
-class StagedButton : public QPushButton
+class StagedButton : public QToolButton
 {
     Q_OBJECT
 public:
-    explicit StagedButton(const QString &text, QWidget *parent = Q_NULLPTR) : QPushButton(text, parent) {}
+    explicit StagedButton(const QString &text, QWidget *parent = Q_NULLPTR);
+};
+
+class StagedButtonBar : public QFrame
+{
+    Q_OBJECT
+public:
+    explicit StagedButtonBar(QWidget *parent = 0);
+
+    StagedButton* getButton(int nBtnID);
+
+signals:
+
+public slots:
+
+private:
+    StagedButton *m_pCommitBtn, *m_pPushBtn, *m_pUnstageAllBtn, *m_pUnstageSelBtn;
 };
 
 class StagedCommitView : public QScrollArea
@@ -26,6 +47,8 @@ class StagedCommitView : public QScrollArea
 public:
     explicit StagedCommitView(QWidget *parent = 0);
 
+    StagedButtonBar* getButtonBar() { return m_pBtnBar; }
+
 signals:
 
 public slots:
@@ -33,8 +56,7 @@ public slots:
 
 private:
     QTextEdit *m_pCommitEdit;
-    StagedButton *m_pCommitBtn, *m_pPushBtn, *m_pUnstageAllBtn, *m_pUnstageSelBtn;
-    QWidget *m_pWrap;
+    StagedButtonBar *m_pBtnBar;
 };
 
 class StagedDockView : public QSplitter

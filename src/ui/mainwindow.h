@@ -38,7 +38,9 @@ public:
     QString getTheme() { return m_sTheme; }
 
     GBL_Repository* getRepo() { return m_qpRepo; }
-
+    QToolBar* getToolBar() { return m_pToolBar; }
+    static MainWindow* getInstance() { return m_pSingleInst; }
+    static void setInstance(MainWindow* pInst) { m_pSingleInst = pInst; }
 
 private slots:
     void about();
@@ -83,8 +85,9 @@ private:
     QAction *m_pRecentRepoActs[MaxRecentRepos];
     QAction *m_pRecentRepoSeparator;
     QAction *m_pRecentRepoSubMenuAct;
-    QAction *m_pOpenAct;
+    QAction *m_pOpenAct, *m_pCloneAct;
 
+    static MainWindow *m_pSingleInst;
 };
 
 #endif // MAINWINDOW_H

@@ -22,7 +22,7 @@ public:
     void setPixmapData(QByteArray ba);
     QPixmap* getPixmap();
     QPixmap* getSmallPixmap(int size);
-    void loadSVGResource(QString sRes, QString sStrokeColor = "");
+    void loadSVGResource(QString sRes, QString sColor, QSize size);
 
 signals:
     void downloaded();

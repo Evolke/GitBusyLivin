@@ -1,9 +1,13 @@
 #include "unstageddockview.h"
 #include "fileview.h"
 #include "src/gbl/gbl_filemodel.h"
+#include "urlpixmap.h"
+#include "mainwindow.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QToolBar>
+#include <QDebug>
 
 UnstagedDockView::UnstagedDockView(QWidget *parent) : QScrollArea(parent)
 {
@@ -32,13 +36,32 @@ void UnstagedDockView::setFileArray(GBL_File_Array *pArr)
 
 UnstagedButtonBar::UnstagedButtonBar(QWidget *parent) : QFrame(parent)
 {
+
     setContentsMargins(0,0,0,0);
     m_pAddAllBtn = new UnstagedButton(tr("Add All"),this);
     m_pAddSelBtn = new UnstagedButton(tr("Add Selected"),this);
+
+    UrlPixmap svgpix(NULL);
+    MainWindow *pMain = MainWindow::getInstance();
+    QToolBar *pToolBar = pMain->getToolBar();
+    /*QStyleOptionToolBar option;
+    option.initFrom(pToolBar);
+    QPalette pal = option.palette;*/
+    QPalette pal = pToolBar->palette();
+    QColor txtClr = pal.color(QPalette::Text);
+    QString sBorderClr = txtClr.name(QColor::HexRgb);
+    qDebug() << "unstaged:borderclr:"<<sBorderClr;
+
     setMaximumHeight(30);
     m_pAddAllBtn->setDisabled(true);
+    svgpix.loadSVGResource(":/images/add_all_icon.svg", sBorderClr, QSize(16,16));
+    m_pAddAllBtn->setIcon(QIcon(*svgpix.getPixmap()));
+
     m_pAddAllBtn->setMaximumSize(100,20);
     m_pAddSelBtn->setDisabled(true);
+    svgpix.loadSVGResource(":/images/add_sel_icon.svg", sBorderClr, QSize(16,16));
+    m_pAddSelBtn->setIcon(QIcon(*svgpix.getPixmap()));
+
     m_pAddSelBtn->setMaximumSize(120,20);
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->addWidget(m_pAddAllBtn, Qt::AlignVCenter);
@@ -65,3 +88,10 @@ UnstagedButton* UnstagedButtonBar::getButton(int nBtnID)
 
     return pRet;
 }
+
+UnstagedButton::UnstagedButton(const QString &text, QWidget *parent) : QToolButton(parent)
+{
+    setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    setText(text);
+}
+

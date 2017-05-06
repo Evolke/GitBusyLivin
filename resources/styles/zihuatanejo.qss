@@ -162,6 +162,11 @@ QToolBar {
     border-bottom: 1px solid #BBBBBB;
 }
 
+QToolButton:hover {
+    border: 1px solid #aaa;
+    background-color: #ddd;
+}
+
 QStatusBar {
     border-top: 1px solid #BBB;
 }

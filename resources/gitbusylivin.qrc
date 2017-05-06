@@ -24,5 +24,12 @@
         <file>images/pull_toolbar_icon.svg</file>
         <file>images/push_toolbar_icon.svg</file>
         <file>images/open_toolbar_icon.svg</file>
+        <file>images/clone_toolbar_icon.svg</file>
+        <file>images/add_all_icon.svg</file>
+        <file>images/add_sel_icon.svg</file>
+        <file>images/commit_icon.svg</file>
+        <file>images/unstage_sel_icon.svg</file>
+        <file>images/unstage_all_icon.svg</file>
+        <file>images/commit_push_icon.svg</file>
     </qresource>
 </RCC>

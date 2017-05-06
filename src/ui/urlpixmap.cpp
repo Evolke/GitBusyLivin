@@ -69,10 +69,10 @@ QPixmap* UrlPixmap::getSmallPixmap(int size)
     return m_pSmallPixmap;
 }
 
-void UrlPixmap::loadSVGResource(QString sRes, QString sStrokeColor)
+void UrlPixmap::loadSVGResource(QString sRes, QString sColor, QSize size)
 {
      QSvgRenderer svg;
-    if (sStrokeColor.isEmpty())
+    if (sColor.isEmpty())
     {
       svg.load(sRes);
     }
@@ -81,17 +81,20 @@ void UrlPixmap::loadSVGResource(QString sRes, QString sStrokeColor)
         QFile file(sRes);
         file.open(QIODevice::ReadOnly);
         QString sSvgFile = QString::fromUtf8(file.readAll());
-        QString sStrokeReplace ("stroke:");
-        sStrokeReplace += sStrokeColor;
-        QString sNewSvgFile = sSvgFile.replace(QString("stroke:#000"),sStrokeReplace);
+        //QString sStrokeReplace ("stroke:");
+        QString sNewSvgFile = sSvgFile.replace(QString("#000000"),sColor);
+        sNewSvgFile = sNewSvgFile.replace(QString("#000"),sColor);
+        qDebug() << "svg:" << sNewSvgFile;
+
         svg.load(sNewSvgFile.toUtf8());
     }
-    QPixmap pix(svg.defaultSize());
+    QPixmap pix(size);
 
     pix.fill(Qt::transparent);
     QPainter pixPainter(&pix);
+    pixPainter.setRenderHint(QPainter::Antialiasing, false);
     svg.render(&pixPainter);
-    qDebug() << pix.size();
+    qDebug() << "svg size:" << pix.size();
     qDebug() << "is null:" << pix.isNull();
     m_pPixmap->swap(pix);
 }

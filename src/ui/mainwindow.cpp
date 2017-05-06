@@ -22,6 +22,9 @@
 #include <QFileInfo>
 #include <QSplitter>
 
+MainWindow* MainWindow::m_pSingleInst = NULL;
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -30,6 +33,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_pHistView = NULL;
     m_pNetAM = NULL;
     m_pNetCache = NULL;
+
+    setInstance(this);
 
     init();
 }
@@ -401,7 +406,7 @@ void MainWindow::createActions()
     QMenu *newMenu = fileMenu->addMenu(tr("&New"));
     newMenu->addAction(tr("&Local Repository..."), this, &MainWindow::new_local_repo);
     newMenu->addAction(tr("&Network Repository..."), this, &MainWindow::new_network_repo);
-    fileMenu->addAction(tr("&Clone..."), this, &MainWindow::clone);
+    m_pCloneAct = fileMenu->addAction(tr("&Clone..."), this, &MainWindow::clone);
     m_pOpenAct = fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
     fileMenu->addSeparator();
 
@@ -567,22 +572,28 @@ void MainWindow::readSettings()
     QColor txtClr = pal.color(QPalette::Text);
     QString sBorderClr = txtClr.name(QColor::HexRgb);
 
-    svgpix.loadSVGResource(":/images/open_toolbar_icon.svg", sBorderClr);
+    m_pToolBar->setIconSize(QSize(16,16));
+
+    svgpix.loadSVGResource(":/images/open_toolbar_icon.svg", sBorderClr, QSize(16,16));
     m_pOpenAct->setIcon(QIcon(*svgpix.getPixmap()));
     m_pToolBar->addAction(m_pOpenAct);
 
-    svgpix.loadSVGResource(":/images/push_toolbar_icon.svg", sBorderClr);
+
+    svgpix.loadSVGResource(":/images/clone_toolbar_icon.svg", sBorderClr, QSize(16,16));
+    m_pCloneAct->setIcon(QIcon(*svgpix.getPixmap()));
+    m_pToolBar->addAction(m_pCloneAct);
+
+    svgpix.loadSVGResource(":/images/push_toolbar_icon.svg", sBorderClr, QSize(16,16));
 
     QAction *pushAct = new QAction(QIcon(*svgpix.getPixmap()), tr("&Push"), this);
     m_pRepoMenu->addAction(pushAct);
     m_pToolBar->addAction(pushAct);
 
-    svgpix.loadSVGResource(":/images/pull_toolbar_icon.svg", sBorderClr);
+    svgpix.loadSVGResource(":/images/pull_toolbar_icon.svg", sBorderClr, QSize(16,16));
 
     QAction *pullAct = new QAction(QIcon(*svgpix.getPixmap()), tr("&Pull"), this);
     m_pRepoMenu->addAction(pullAct);
     m_pToolBar->addAction(pullAct);
-    m_pToolBar->setIconSize(QSize(16,16));
 
 }
 

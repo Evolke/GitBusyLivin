@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <QByteArray>
 #include <QFileInfo>
-#include "libgit2/include/git2/sys/repository.h"
+//#include "libgit2/include/git2/sys/repository.h"
 
 #include "gbl_filemodel.h"
 #include "src/ui/mainwindow.h"
@@ -618,9 +618,9 @@ bool GBL_Repository::get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &
 
             if (s->index_to_workdir)
             {
-                qDebug() << "index_to_workdir";
-                qDebug() << "new_file" << s->index_to_workdir->new_file.path;
-                qDebug() << "old_file" << s->index_to_workdir->old_file.path;
+                //qDebug() << "index_to_workdir";
+                //qDebug() << "new_file" << s->index_to_workdir->new_file.path;
+                //qDebug() << "old_file" << s->index_to_workdir->old_file.path;
 
                 GBL_File_Item *pFItem = new GBL_File_Item;
                 QFileInfo fi(s->index_to_workdir->new_file.path);

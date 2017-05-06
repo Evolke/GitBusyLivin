@@ -56,6 +56,7 @@ PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
     createListItems();
     m_pTabs->setCurrentRow(0);
 
+    setWindowTitle(tr("Preferences"));
 }
 
 void PrefsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
@@ -83,14 +84,14 @@ void PrefsDialog::createListItems()
     QString sBorderClr = txtClr.name(QColor::HexRgb);
     qDebug() << sBorderClr;
 
-    svgPm.loadSVGResource(":/images/general_pref_icon.svg", sBorderClr);
+    svgPm.loadSVGResource(":/images/general_pref_icon.svg", sBorderClr, QSize(32,32));
     configButton->setIcon(QIcon(*svgPm.getPixmap()));
     configButton->setText(tr("General"));
     configButton->setTextAlignment(Qt::AlignHCenter);
     configButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
     configButton = new QListWidgetItem(m_pTabs);
-    svgPm.loadSVGResource(":/images/ui_pref_icon.svg", sBorderClr);
+    svgPm.loadSVGResource(":/images/ui_pref_icon.svg", sBorderClr, QSize(32,32));
     configButton->setIcon(QIcon(*svgPm.getPixmap()));
     configButton->setText(tr("User Interface"));
     configButton->setTextAlignment(Qt::AlignHCenter);

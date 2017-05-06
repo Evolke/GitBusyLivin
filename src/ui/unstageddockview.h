@@ -2,7 +2,7 @@
 #define UNSTAGEDDOCKVIEW_H
 
 #include <QScrollArea>
-#include <QPushButton>
+#include <QToolButton>
 #include "src/gbl/gbl_repository.h"
 
 #define ADD_ALL_BTN 1
@@ -10,14 +10,13 @@
 
 QT_BEGIN_NAMESPACE
 class FileView;
-class QPushButton;
 QT_END_NAMESPACE
 
-class UnstagedButton : public QPushButton
+class UnstagedButton : public QToolButton
 {
     Q_OBJECT
 public:
-    explicit UnstagedButton(const QString &text, QWidget *parent = Q_NULLPTR) : QPushButton(text, parent) {}
+    explicit UnstagedButton(const QString &text, QWidget *parent = Q_NULLPTR);
 };
 
 class UnstagedButtonBar : public QFrame

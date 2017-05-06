@@ -223,6 +223,7 @@ StagedButton, UnstagedButton {
 QToolBar {
     border: none;
     border-bottom: 1px solid #444;
+    color: #aaa;
 }
 
 QToolButton:hover {
