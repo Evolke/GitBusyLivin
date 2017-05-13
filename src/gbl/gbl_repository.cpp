@@ -276,6 +276,112 @@ bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
     return m_iErrorCode >= 0;
 }
 
+bool GBL_Repository::add_to_index(QStringList *pList)
+{
+    git_index *index = NULL;
+    git_strarray array = {0};
+
+    try
+    {
+        check_libgit_return(git_repository_index(&index,m_pRepo));
+
+        array.count = pList->size();
+        array.strings = (char**)::malloc(sizeof(char*) * array.count);
+
+        QByteArrayList baList;
+        for (int i = 0; i < pList->size(); i++)
+        {
+            QString path = pList->at(i);
+            QByteArray baPath = path.toUtf8();
+            baList.append(baPath);
+            array.strings[i] = (char*)baList.at(i).data();
+        }
+
+        git_index_add_all(index,&array,0, (git_index_matched_path_cb)staged_cb,NULL);
+        git_index_write(index);
+    }
+    catch(GBL_RepositoryException &e)
+    {
+
+    }
+
+    if (index) git_index_free(index);
+
+    return m_iErrorCode >= 0;
+}
+
+int GBL_Repository::staged_cb(const char *path, const char *matched_pathspec, void *payload)
+{
+    qDebug() << "staged_path:" << path << "staged_pathspec:" << matched_pathspec;
+
+    return 0;
+}
+
+bool GBL_Repository::remove_from_index(QStringList *pList)
+{
+    git_index *index = NULL;
+    git_strarray array = {0};
+
+    try
+    {
+        check_libgit_return(git_repository_index(&index,m_pRepo));
+
+        array.count = pList->size();
+        array.strings = (char**)::malloc(sizeof(char*) * array.count);
+
+        QByteArrayList baList;
+        for (int i = 0; i < pList->size(); i++)
+        {
+            QString path = pList->at(i);
+            QByteArray baPath = path.toUtf8();
+            baList.append(baPath);
+            array.strings[i] = (char*)baList.at(i).data();
+        }
+
+        git_index_remove_all(index, &array, NULL, NULL);
+        git_index_write(index);
+    }
+    catch(GBL_RepositoryException &e)
+    {
+
+    }
+
+    if (index) git_index_free(index);
+
+    return m_iErrorCode >= 0;
+}
+
+bool GBL_Repository::commit_index(QString sMessage)
+{
+    git_index *index = NULL;
+    git_signature *sig = NULL;
+    git_oid tree_id, commit_id, head_id;
+    git_tree *tree = NULL;
+    git_commit *parent = NULL;
+
+    try
+    {
+        check_libgit_return(git_signature_default(&sig, m_pRepo));
+        check_libgit_return(git_repository_index(&index, m_pRepo));
+        check_libgit_return(git_index_write_tree(&tree_id, index));
+        check_libgit_return(git_tree_lookup(&tree, m_pRepo, &tree_id));
+        check_libgit_return(git_reference_name_to_id(&head_id, m_pRepo, "HEAD"));
+        check_libgit_return(git_commit_lookup(&parent,m_pRepo,&head_id));
+        check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, "UTF-8", qstring2cc(&sMessage), tree, 1, parent));
+    }
+    catch(GBL_RepositoryException &e)
+    {
+
+    }
+
+    if (index) git_index_free(index);
+    if (sig) git_signature_free(sig);
+    if (tree) git_tree_free(tree);
+    if (parent) git_commit_free(parent);
+
+    return m_iErrorCode >= 0;
+}
+
 /**
  * @brief GBL_Repository::get_tree_from_commit_oid
  * @param oid_str

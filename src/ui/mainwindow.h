@@ -42,6 +42,13 @@ public:
     static MainWindow* getInstance() { return m_pSingleInst; }
     static void setInstance(MainWindow* pInst) { m_pSingleInst = pInst; }
 
+public slots:
+    void stageAll();
+    void stageSelected();
+    void unstageAll();
+    void unstageSelected();
+    void commit();
+
 private slots:
     void about();
     void clone();
@@ -57,6 +64,8 @@ private slots:
     void closeEvent(QCloseEvent *event);
     void updateRecentRepoActions();
     void openRecentRepo();
+    void timerEvent(QTimerEvent *event);
+
 
 private:
     enum { MaxRecentRepos = 10 };
@@ -72,7 +81,10 @@ private:
     static bool hasRecentRepos();
     void prependToRecentRepos(const QString &dirName);
     void setRecentReposVisible(bool visible);
+    void updateStatus();
+
     GBL_Repository *m_qpRepo;
+    QString m_sRepoPath;
     HistoryView *m_pHistView;
     QPointer<GBL_HistoryModel> m_pHistModel;
     QMap<QString, QDockWidget*> m_docks;
@@ -88,6 +100,8 @@ private:
     QAction *m_pOpenAct, *m_pCloneAct;
 
     static MainWindow *m_pSingleInst;
+    int m_updateTimer;
+
 };
 
 #endif // MAINWINDOW_H

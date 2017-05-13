@@ -76,13 +76,16 @@ public:
     static int tree_walk_callback(const char *root, const git_tree_entry *entry, void *payload);
     static int diff_print_files_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
     static int diff_print_lines_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
+    static int staged_cb(const char *path, const char *matched_pathspec, void *payload);
 
     QString get_error_msg();
     bool init_repo(QString path, bool bare=false);
     bool open_repo(QString path);
     bool clone_repo(QString srcUrl, QString dstPath);
     bool is_remote_repo(QString path);
-
+    bool add_to_index(QStringList *pList);
+    bool remove_from_index(QStringList *pList);
+    bool commit_index(QString sMessage);
     bool get_history(GBL_History_Array **pHist_Arr);
     bool get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod);
     void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);

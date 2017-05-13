@@ -1,9 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
-<circle fill="none" stroke="#000000" stroke-miterlimit="10" cx="8" cy="8" r="7.5"/>
-<path fill-rule="evenodd" clip-rule="evenodd" fill="none" stroke="#000000" stroke-miterlimit="10" d="M6.472,11.077l-2.845,0.999
-	l0.907-2.875l6.205-6.404c1.387-0.301,2.152,0.442,1.938,1.876L6.472,11.077z"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
+    <title>Group 3</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-3" transform="translate(1.000000, 1.000000)" stroke="#000000">
+            <circle id="Oval" cx="7" cy="7" r="7"></circle>
+            <path d="M6,1.52211302 C6,0.811122701 8,0.84096181 8,1.52211302 C8,2.20326423 8,10.129225 8,10.129225 L7,12.6066065 L6,10.129225 C6,10.129225 6,1.52211302 6,1.52211302 Z" id="Rectangle" transform="translate(7.000000, 6.803303) rotate(45.000000) translate(-7.000000, -6.803303) "></path>
+        </g>
+    </g>
 </svg>

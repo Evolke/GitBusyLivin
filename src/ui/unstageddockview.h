@@ -3,6 +3,7 @@
 
 #include <QScrollArea>
 #include <QToolButton>
+#include <QItemSelection>
 #include "src/gbl/gbl_repository.h"
 
 #define ADD_ALL_BTN 1
@@ -42,12 +43,15 @@ public:
     explicit UnstagedDockView(QWidget *parent = 0);
 
     void setFileArray(GBL_File_Array *pArr);
+    GBL_File_Array* getFileArray();
 
     FileView* getFileView() { return m_pFileView; }
+    void reset();
 
 signals:
 
 public slots:
+    void workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 
 private:
     FileView *m_pFileView;

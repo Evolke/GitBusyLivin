@@ -22,6 +22,8 @@
 #include <QFileInfo>
 #include <QSplitter>
 
+#define UPDATE_STATUS_INTERVAL 30000
+
 MainWindow* MainWindow::m_pSingleInst = NULL;
 
 
@@ -33,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_pHistView = NULL;
     m_pNetAM = NULL;
     m_pNetCache = NULL;
+    m_updateTimer = 0;
 
     setInstance(this);
 
@@ -137,6 +140,10 @@ void MainWindow::open()
         if (m_qpRepo->open_repo(dirName))
         {
             MainWindow::prependToRecentRepos(dirName);
+            m_sRepoPath = dirName;
+            if (m_updateTimer) killTimer(m_updateTimer);
+            m_updateTimer = startTimer(UPDATE_STATUS_INTERVAL);
+
             setupRepoUI(dirName);
         }
         else
@@ -154,6 +161,10 @@ void MainWindow::openRecentRepo()
         if (m_qpRepo->open_repo(dirName))
         {
             MainWindow::prependToRecentRepos(dirName);
+            m_sRepoPath = dirName;
+            if (m_updateTimer) killTimer(m_updateTimer);
+            m_updateTimer = startTimer(UPDATE_STATUS_INTERVAL);
+
             setupRepoUI(dirName);
         }
         else
@@ -200,19 +211,35 @@ void MainWindow::setupRepoUI(QString repoDir)
         pDV->reset();
     }
 
+    updateStatus();
+
+    QApplication::restoreOverrideCursor();
+
+}
+
+void MainWindow::updateStatus()
+{
     GBL_File_Array stagedArr, unstagedArr;
     if (m_qpRepo->get_repo_status(stagedArr, unstagedArr))
     {
         QDockWidget *pDock = m_docks["staged"];
         StagedDockView *pView = (StagedDockView*)pDock->widget();
-        pView->setFileArray(&stagedArr);
         pDock = m_docks["unstaged"];
         UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
+
+        pView->reset();
+        pUSView->reset();
+        pView->setFileArray(&stagedArr);
         pUSView->setFileArray(&unstagedArr);
     }
+}
 
-    QApplication::restoreOverrideCursor();
-
+void MainWindow::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == m_updateTimer)
+    {
+        updateStatus();
+    }
 }
 
 void MainWindow::historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
@@ -296,12 +323,16 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
     Q_UNUSED(deselected);
     QModelIndexList mil = selected.indexes();
 
-    //single row selection
-    if (mil.count() > 0)
+    QDockWidget *pDock = m_docks["file_diff"];
+    DiffView *pDV = (DiffView*)pDock->widget();
+    pDV->reset();
+
+    int count = mil.count();
+    if  (count == 1)
     {
         QModelIndex mi = mil.at(0);
         int row = mi.row();
-        QDockWidget *pDock = m_docks["unstaged"];
+        pDock = m_docks["unstaged"];
         UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
         FileView *pView = pUSView->getFileView();
         GBL_FileModel *pFileMod = (GBL_FileModel*)pView->model();
@@ -318,9 +349,6 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
             QTextStream(&path) << sub << pFileItem->file_name;
             QByteArray baPath = path.toUtf8();
             GBL_History_Item *pHistItem = pFileMod->getHistoryItem();
-            QDockWidget *pDock = m_docks["file_diff"];
-            DiffView *pDV = (DiffView*)pDock->widget();
-            pDV->reset();
 
             if (m_qpRepo->get_index_to_work_diff(this, baPath.data()))
             {
@@ -328,6 +356,161 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
             }
 
         }
+    }
+}
+
+void MainWindow::stageAll()
+{
+    QStringList files;
+    QDockWidget *pDock = m_docks["unstaged"];
+    UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
+    GBL_File_Array *pFileArr = pUSView->getFileArray();
+    QString sPath;
+    for (int i=0; i < pFileArr->size(); i++)
+    {
+        sPath = "/";
+        GBL_File_Item *pFileItem = pFileArr->at(i);
+        if (pFileItem->sub_dir != ".")
+        {
+            sPath += pFileItem->sub_dir;
+            sPath += "/";
+            if (pFileItem->file_name.isEmpty()) sPath += "*";
+        }
+
+        sPath += pFileItem->file_name;
+        qDebug() << "stageAll_path:" << sPath;
+        files.append(sPath);
+    }
+
+    if (m_qpRepo->add_to_index(&files))
+    {
+        updateStatus();
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+    }
+}
+
+void MainWindow::stageSelected()
+{
+    QStringList files;
+    QDockWidget *pDock = m_docks["unstaged"];
+    UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
+    FileView *pFView = pUSView->getFileView();
+    QModelIndexList mil = pFView->selectionModel()->selectedRows();
+    GBL_File_Array *pFileArr = pUSView->getFileArray();
+    QString sPath;
+    for (int i=0; i < mil.size(); i++)
+    {
+
+        sPath = "/";
+        GBL_File_Item *pFileItem = pFileArr->at(mil.at(i).row());
+        if (pFileItem->sub_dir != ".")
+        {
+            sPath += pFileItem->sub_dir;
+            sPath += "/";
+            if (pFileItem->file_name.isEmpty()) sPath += "*";
+        }
+
+        sPath += pFileItem->file_name;
+        qDebug() << "stageSel_path:" << sPath;
+        files.append(sPath);
+    }
+
+    if (m_qpRepo->add_to_index(&files))
+    {
+        updateStatus();
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+    }
+}
+
+
+void MainWindow::unstageAll()
+{
+    QStringList files;
+    QDockWidget *pDock = m_docks["staged"];
+    StagedDockView *pSView = (StagedDockView*)pDock->widget();
+    GBL_File_Array *pFileArr = pSView->getFileArray();
+    QString sPath;
+    for (int i=0; i < pFileArr->size(); i++)
+    {
+        sPath = "/";
+        GBL_File_Item *pFileItem = pFileArr->at(i);
+        if (pFileItem->sub_dir != ".")
+        {
+            sPath += pFileItem->sub_dir;
+            sPath += "/";
+            if (pFileItem->file_name.isEmpty()) sPath += "*";
+        }
+
+        sPath += pFileItem->file_name;
+        //qDebug() << "stageAll_path:" << sPath;
+        files.append(sPath);
+    }
+
+    if (m_qpRepo->remove_from_index(&files))
+    {
+        updateStatus();
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+    }
+}
+
+void MainWindow::unstageSelected()
+{
+    QStringList files;
+    QDockWidget *pDock = m_docks["staged"];
+    StagedDockView *pSView = (StagedDockView*)pDock->widget();
+    GBL_File_Array *pFileArr = pSView->getFileArray();
+    FileView *pFView = pSView->getFileView();
+    QModelIndexList mil = pFView->selectionModel()->selectedRows();
+
+    QString sPath;
+    for (int i=0; i < mil.size(); i++)
+    {
+        sPath = "/";
+        GBL_File_Item *pFileItem = pFileArr->at(mil.at(i).row());
+        if (pFileItem->sub_dir != ".")
+        {
+            sPath += pFileItem->sub_dir;
+            sPath += "/";
+            if (pFileItem->file_name.isEmpty()) sPath += "*";
+        }
+
+        sPath += pFileItem->file_name;
+        //qDebug() << "stageAll_path:" << sPath;
+        files.append(sPath);
+    }
+
+    if (m_qpRepo->remove_from_index(&files))
+    {
+        updateStatus();
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+    }
+}
+
+void MainWindow::commit()
+{
+    QDockWidget *pDock = m_docks["staged"];
+    StagedDockView *pSView = (StagedDockView*)pDock->widget();
+    QString msg = pSView->getCommitMessage();
+
+    if (m_qpRepo->commit_index(msg))
+    {
+        setupRepoUI(m_sRepoPath);
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Creation Error"), m_qpRepo->get_error_msg());
     }
 }
 

@@ -9,9 +9,6 @@ GitBusyLivin.iconset/icon_32x32.png
 GitBusyLivin.iconset/icon_32x32@2x.png
 GitBusyLivin.iconset/icon_512x512.png
 GitBusyLivin.iconset/icon_512x512@2x.png
-libs/libgit2.0.25.0.dylib
-libs/libgit2.25.dylib
-libs/libgit2.dylib
 
 *.user
 *.exp

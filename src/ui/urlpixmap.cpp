@@ -84,7 +84,7 @@ void UrlPixmap::loadSVGResource(QString sRes, QString sColor, QSize size)
         //QString sStrokeReplace ("stroke:");
         QString sNewSvgFile = sSvgFile.replace(QString("#000000"),sColor);
         sNewSvgFile = sNewSvgFile.replace(QString("#000"),sColor);
-        qDebug() << "svg:" << sNewSvgFile;
+        //qDebug() << "svg:" << sNewSvgFile;
 
         svg.load(sNewSvgFile.toUtf8());
     }

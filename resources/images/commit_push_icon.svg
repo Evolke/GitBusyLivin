@@ -1,12 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
-<g>
-	<polyline fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
-		12.746,5.014 15.444,6.984 12.571,6.983 12.568,13.966 3.426,13.963 3.428,6.98 0.556,6.979 8.002,1.667 9.711,2.834 	"/>
-	<path fill-rule="evenodd" clip-rule="evenodd" fill="none" stroke="#000000" stroke-miterlimit="10" d="M7.62,9.688l-2.976,1.046
-		l0.949-3.007l6.486-6.699c1.45-0.314,2.251,0.463,2.026,1.963L7.62,9.688z"/>
-</g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="15px" viewBox="0 0 16 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
+    <title>commit push</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-85.000000, -85.000000)" stroke="#000000">
+            <g id="commit-push" transform="translate(86.000000, 85.000000)">
+                <path d="M7.81066187,0.529471629 C7.81066187,-0.181518688 9.81066187,-0.15167958 9.81066187,0.529471629 C9.81066187,1.21062284 9.81066187,9.13658361 9.81066187,9.13658361 L8.81066187,11.6139651 L7.81066187,9.13658361 C7.81066187,9.13658361 7.81066187,0.529471629 7.81066187,0.529471629 Z" id="Rectangle-Copy" transform="translate(8.810662, 5.810662) rotate(45.000000) translate(-8.810662, -5.810662) "></path>
+                <polyline id="push-icon" transform="translate(7.000000, 7.000000) rotate(-90.000000) translate(-7.000000, -7.000000) " points="11.6151428 9.38485718 14 7 7 0 7 3.5 7 3.5 0 3.5 0 10.5 7 10.5 7 14 8.80871582 12.1912842"></polyline>
+            </g>
+        </g>
+    </g>
 </svg>

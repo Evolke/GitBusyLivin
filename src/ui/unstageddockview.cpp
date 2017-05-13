@@ -8,6 +8,7 @@
 #include <QHBoxLayout>
 #include <QToolBar>
 #include <QDebug>
+#include <QItemSelection>
 
 UnstagedDockView::UnstagedDockView(QWidget *parent) : QScrollArea(parent)
 {
@@ -15,7 +16,7 @@ UnstagedDockView::UnstagedDockView(QWidget *parent) : QScrollArea(parent)
     setContentsMargins(0,0,0,0);
     m_pFileView = new FileView(this);
     m_pFileView->setModel(new GBL_FileModel(m_pFileView));
-
+    m_pFileView->setSelectionMode(QAbstractItemView::MultiSelection);
     m_pBtnBar = new UnstagedButtonBar(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(m_pFileView);
@@ -23,6 +24,9 @@ UnstagedDockView::UnstagedDockView(QWidget *parent) : QScrollArea(parent)
     setLayout(mainLayout);
     mainLayout->setMargin(0);
     mainLayout->setSpacing(2);
+
+    connect(m_pFileView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &UnstagedDockView::workingFileSelectionChanged);
+
 }
 
 void UnstagedDockView::setFileArray(GBL_File_Array *pArr)
@@ -33,6 +37,27 @@ void UnstagedDockView::setFileArray(GBL_File_Array *pArr)
     pBtn->setDisabled(pArr->size() == 0);
 }
 
+
+GBL_File_Array* UnstagedDockView::getFileArray()
+{
+    GBL_FileModel *pMod = (GBL_FileModel*)m_pFileView->model();
+    return pMod->getFileArray();
+}
+
+void UnstagedDockView::reset()
+{
+    m_pFileView->reset();
+}
+
+void UnstagedDockView::workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    UnstagedButton *pBtn = m_pBtnBar->getButton(ADD_SELECTED_BTN);
+    Q_UNUSED(deselected);
+    QModelIndexList mil = selected.indexes();
+
+    pBtn->setDisabled(mil.size() == 0);
+
+}
 
 UnstagedButtonBar::UnstagedButtonBar(QWidget *parent) : QFrame(parent)
 {
@@ -56,6 +81,7 @@ UnstagedButtonBar::UnstagedButtonBar(QWidget *parent) : QFrame(parent)
     m_pAddAllBtn->setDisabled(true);
     svgpix.loadSVGResource(":/images/add_all_icon.svg", sBorderClr, QSize(16,16));
     m_pAddAllBtn->setIcon(QIcon(*svgpix.getPixmap()));
+    connect(m_pAddAllBtn,&UnstagedButton::clicked, pMain, &MainWindow::stageAll);
 
     m_pAddAllBtn->setMaximumSize(100,20);
     m_pAddSelBtn->setDisabled(true);
@@ -63,6 +89,9 @@ UnstagedButtonBar::UnstagedButtonBar(QWidget *parent) : QFrame(parent)
     m_pAddSelBtn->setIcon(QIcon(*svgpix.getPixmap()));
 
     m_pAddSelBtn->setMaximumSize(120,20);
+    connect(m_pAddSelBtn,&UnstagedButton::clicked, pMain, &MainWindow::stageSelected);
+
+
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->addWidget(m_pAddAllBtn, Qt::AlignVCenter);
     mainLayout->addWidget(m_pAddSelBtn, Qt::AlignVCenter);

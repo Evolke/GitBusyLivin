@@ -9,6 +9,7 @@
 #include <QSplitter>
 #include <QScrollArea>
 #include <QToolButton>
+#include <QItemSelection>
 
 #include "src/gbl/gbl_repository.h"
 
@@ -48,6 +49,9 @@ public:
     explicit StagedCommitView(QWidget *parent = 0);
 
     StagedButtonBar* getButtonBar() { return m_pBtnBar; }
+    QString getCommitMessage();
+
+    void reset();
 
 signals:
 
@@ -66,10 +70,15 @@ public:
     explicit StagedDockView(QWidget *parent = 0);
 
     void setFileArray(GBL_File_Array *pArr);
+    GBL_File_Array* getFileArray();
+    void reset();
+    FileView* getFileView() { return m_pFileView; }
+    QString getCommitMessage();
 
 signals:
 
 public slots:
+    void stagedFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 
 
 private:

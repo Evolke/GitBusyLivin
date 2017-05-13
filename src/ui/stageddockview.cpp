@@ -13,6 +13,7 @@
 
 #define COMMIT_MIN_WIDTH 330
 #define COMMIT_MIN_HEIGHT 60
+#define DEFAULT_COMMIT_MESSAGE "no commit message"
 
 StagedDockView::StagedDockView(QWidget *parent) : QSplitter(Qt::Vertical,parent)
 {
@@ -20,8 +21,12 @@ StagedDockView::StagedDockView(QWidget *parent) : QSplitter(Qt::Vertical,parent)
     m_pFileView = new FileView(this);
     m_pFileView->setModel(new GBL_FileModel(m_pFileView));
     addWidget(m_pFileView);
+    m_pFileView->setSelectionMode(QAbstractItemView::MultiSelection);
+
     m_pCommitView = new StagedCommitView(this);
     addWidget(m_pCommitView);
+
+    connect(m_pFileView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &StagedDockView::stagedFileSelectionChanged);
 }
 
 void StagedDockView::setFileArray(GBL_File_Array *pArr)
@@ -33,10 +38,50 @@ void StagedDockView::setFileArray(GBL_File_Array *pArr)
     StagedButtonBar *pBtnBar = pView->getButtonBar();
     StagedButton *pBtn = pBtnBar->getButton(COMMIT_BTN);
     pBtn->setDisabled(pArr->size() == 0);
+    pBtn = pBtnBar->getButton(UNSTAGE_ALL_BTN);
+    pBtn->setDisabled(pArr->size() == 0);
+}
+
+GBL_File_Array* StagedDockView::getFileArray()
+{
+    GBL_FileModel *pMod = (GBL_FileModel*)m_pFileView->model();
+    return pMod->getFileArray();
+}
+
+void StagedDockView::reset()
+{
+    m_pFileView->reset();
+    m_pCommitView->reset();
+}
+
+void StagedDockView::stagedFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    StagedCommitView *pView = (StagedCommitView*)widget(1);
+    StagedButtonBar *pBtnBar = pView->getButtonBar();
+
+    StagedButton *pBtn = pBtnBar->getButton(UNSTAGE_SELECTED_BTN);
+    Q_UNUSED(deselected);
+    QModelIndexList mil = selected.indexes();
+
+    pBtn->setDisabled(mil.size() == 0);
 
 }
 
+QString StagedDockView::getCommitMessage()
+{
+    return m_pCommitView->getCommitMessage();
+}
 
+/**
+ *****************************************************************************************
+ *                           StagedCoomitView
+ *****************************************************************************************
+*/
+
+/**
+ * @brief StagedCommitView::StagedCommitView
+ * @param parent
+ */
 StagedCommitView::StagedCommitView(QWidget *parent) : QScrollArea(parent)
 {
     setBackgroundRole(QPalette::Base);
@@ -45,7 +90,7 @@ StagedCommitView::StagedCommitView(QWidget *parent) : QScrollArea(parent)
     //setViewportMargins(0,0,0,0);
     //setWidgetResizable(true);
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    m_pCommitEdit = new QTextEdit(tr("no commit message"), this);
+    m_pCommitEdit = new QTextEdit(tr(DEFAULT_COMMIT_MESSAGE), this);
     //m_pCommitEdit->setGeometry(0,0,COMMIT_MIN_WIDTH,30);
     m_pCommitEdit->setFrameStyle(QFrame::NoFrame);
     m_pBtnBar = new StagedButtonBar(this);
@@ -59,6 +104,16 @@ StagedCommitView::StagedCommitView(QWidget *parent) : QScrollArea(parent)
     //mainLayout->setRowStretch(0,1);
     //mainLayout->setRowStretch(1,0);
 
+}
+
+QString StagedCommitView::getCommitMessage()
+{
+    return m_pCommitEdit->toPlainText();
+}
+
+void StagedCommitView::reset()
+{
+    m_pCommitEdit->setText(tr(DEFAULT_COMMIT_MESSAGE));
 }
 
 void StagedCommitView::resizeEvent(QResizeEvent *event)
@@ -97,6 +152,7 @@ StagedButtonBar::StagedButtonBar(QWidget *parent) : QFrame(parent)
     m_pUnstageAllBtn = new StagedButton(tr("Unstage All"), this);
     m_pUnstageAllBtn->setDisabled(true);
     m_pUnstageAllBtn->setMaximumSize(100,20);
+
     //mainLayout->addWidget(m_pUnstageAllBtn,1,2,1,1,Qt::AlignBottom);
     m_pUnstageSelBtn = new StagedButton(tr("Unstage Selected"), this);
     m_pUnstageSelBtn->setDisabled(true);
@@ -130,6 +186,11 @@ StagedButtonBar::StagedButtonBar(QWidget *parent) : QFrame(parent)
     mainLayout->addWidget(m_pPushBtn, Qt::AlignVCenter);
     mainLayout->addWidget(m_pUnstageAllBtn, Qt::AlignVCenter);
     mainLayout->addWidget(m_pUnstageSelBtn, Qt::AlignVCenter);
+
+    connect(m_pUnstageAllBtn,&StagedButton::clicked, pMain, &MainWindow::unstageAll);
+    connect(m_pUnstageSelBtn,&StagedButton::clicked, pMain, &MainWindow::unstageSelected);
+    connect(m_pCommitBtn,&StagedButton::clicked, pMain, &MainWindow::commit);
+
 
     mainLayout->setContentsMargins(0,0,0,0);
     mainLayout->setMargin(3);
