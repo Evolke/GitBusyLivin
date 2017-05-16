@@ -61,10 +61,12 @@ private slots:
     void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void historyFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void stagedFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void closeEvent(QCloseEvent *event);
     void updateRecentRepoActions();
     void openRecentRepo();
     void timerEvent(QTimerEvent *event);
+    void refresh();
 
 
 private:

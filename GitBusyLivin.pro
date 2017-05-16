@@ -71,7 +71,6 @@ win32 {
 macx:LIBS += /usr/lib/libiconv.dylib \
     /usr/lib/libSystem.dylib \
     /usr/lib/libcrypto.dylib \
-    /usr/local/opt/openssl/lib/libssl.dylib \
     /usr/lib/libz.dylib \
     -framework CoreFoundation \
     -framework Security \

@@ -85,13 +85,15 @@ public:
     bool is_remote_repo(QString path);
     bool add_to_index(QStringList *pList);
     bool remove_from_index(QStringList *pList);
+    bool index_unstage(QStringList *pList);
     bool commit_index(QString sMessage);
     bool get_history(GBL_History_Array **pHist_Arr);
     bool get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod);
     void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);
     bool get_commit_to_parent_diff_files(QString oid_str, GBL_File_Array *pHistFileArr);
     bool get_commit_to_parent_diff_lines(QString oid_str, MainWindow *pMain, char *path);
-    bool get_index_to_work_diff(MainWindow *pMain, char *path);
+    bool get_index_to_work_diff(MainWindow *pMain, QStringList *pList);
+    bool get_index_to_head_diff(MainWindow *pMain, QStringList *pList);
 
     bool get_global_config_info(GBL_Config_Map **out);
 

@@ -44,10 +44,10 @@ void UrlPixmap::setPixmapData(QByteArray ba)
 void UrlPixmap::fileDownloaded(QNetworkReply *pReply)
 {
     QByteArray baImg = pReply->readAll();
-    qDebug() << this;
+    //qDebug() << this;
     m_pPixmap->loadFromData(baImg);
-    qDebug() << m_pPixmap->size();
-    qDebug() << pReply->url();
+    //qDebug() << m_pPixmap->size();
+    //qDebug() << pReply->url();
     pReply->deleteLater();
     emit downloaded();
 }

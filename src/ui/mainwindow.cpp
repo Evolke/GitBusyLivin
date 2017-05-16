@@ -321,40 +321,111 @@ void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, con
 void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
     Q_UNUSED(deselected);
-    QModelIndexList mil = selected.indexes();
+    Q_UNUSED(selected);
 
     QDockWidget *pDock = m_docks["file_diff"];
     DiffView *pDV = (DiffView*)pDock->widget();
     pDV->reset();
 
-    int count = mil.count();
-    if  (count == 1)
+    pDock = m_docks["unstaged"];
+    UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
+    FileView *pFView = pUSView->getFileView();
+    QModelIndexList mil = pFView->selectionModel()->selectedRows();
+
+   /* QMap<int,int> rowMap;
+    for (int i=0; i<mil.size(); i++)
     {
-        QModelIndex mi = mil.at(0);
-        int row = mi.row();
+        rowMap[mil.at(i).row()] = 1;
+    }
+
+    int count = rowMap.size();*/
+    if  (mil.size())
+    {
+        QStringList files;
+        QString sPath;
         pDock = m_docks["unstaged"];
         UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
-        FileView *pView = pUSView->getFileView();
-        GBL_FileModel *pFileMod = (GBL_FileModel*)pView->model();
-        GBL_File_Item *pFileItem = pFileMod->getFileItemAt(row);
-        if (pFileItem)
+        GBL_File_Array *pFileArr = pUSView->getFileArray();
+        GBL_File_Item *pFileItem = NULL;
+
+        QMap<int,int> rowMap;
+        for (int i=0; i < mil.size(); i++)
         {
-            QString path;
-            QString sub;
-            if (pFileItem->sub_dir != '.')
-            {
-                sub = pFileItem->sub_dir;
-                sub += '/';
-            }
-            QTextStream(&path) << sub << pFileItem->file_name;
-            QByteArray baPath = path.toUtf8();
-            GBL_History_Item *pHistItem = pFileMod->getHistoryItem();
+            sPath = "";
+            int row = mil.at(i).row();
+            if (rowMap.contains(row)) continue;
 
-            if (m_qpRepo->get_index_to_work_diff(this, baPath.data()))
+            rowMap[row] = 1;
+            pFileItem = pFileArr->at(row);
+            if (pFileItem->sub_dir != ".")
             {
-                pDV->setDiffFromLines(pFileItem);
+                sPath += pFileItem->sub_dir;
+                sPath += "/";
+                if (pFileItem->file_name.isEmpty()) sPath += "*";
             }
 
+            sPath += pFileItem->file_name;
+            qDebug() << sPath;
+            files.append(sPath);
+        }
+
+            //qDebug() << path;
+
+        if (m_qpRepo->get_index_to_work_diff(this,&files))
+        {
+            pDV->setDiffFromLines(pFileItem);
+        }
+    }
+}
+
+void MainWindow::stagedFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    Q_UNUSED(deselected);
+    Q_UNUSED(selected);
+
+    QDockWidget *pDock = m_docks["file_diff"];
+    DiffView *pDV = (DiffView*)pDock->widget();
+    pDV->reset();
+
+    pDock = m_docks["staged"];
+    StagedDockView *pSView = (StagedDockView*)pDock->widget();
+    FileView *pFView = pSView->getFileView();
+    QModelIndexList mil = pFView->selectionModel()->selectedRows();
+
+    if  (mil.size())
+    {
+        QStringList files;
+        QString sPath;
+        pDock = m_docks["staged"];
+        StagedDockView *pSView = (StagedDockView*)pDock->widget();
+        GBL_File_Array *pFileArr = pSView->getFileArray();
+        GBL_File_Item *pFileItem = NULL;
+
+        QMap<int,int> rowMap;
+        for (int i=0; i < mil.size(); i++)
+        {
+            sPath = "";
+            int row = mil.at(i).row();
+            if (rowMap.contains(row)) continue;
+
+            rowMap[row] = 1;
+            pFileItem = pFileArr->at(row);
+            if (pFileItem->sub_dir != ".")
+            {
+                sPath += pFileItem->sub_dir;
+                sPath += "/";
+                if (pFileItem->file_name.isEmpty()) sPath += "*";
+            }
+
+            sPath += pFileItem->file_name;
+            qDebug() << sPath;
+            files.append(sPath);
+        }
+
+
+        if (m_qpRepo->get_index_to_head_diff(this, &files))
+        {
+            pDV->setDiffFromLines(pFileItem);
         }
     }
 }
@@ -368,7 +439,7 @@ void MainWindow::stageAll()
     QString sPath;
     for (int i=0; i < pFileArr->size(); i++)
     {
-        sPath = "/";
+        sPath = "";
         GBL_File_Item *pFileItem = pFileArr->at(i);
         if (pFileItem->sub_dir != ".")
         {
@@ -404,7 +475,7 @@ void MainWindow::stageSelected()
     for (int i=0; i < mil.size(); i++)
     {
 
-        sPath = "/";
+        sPath = "";
         GBL_File_Item *pFileItem = pFileArr->at(mil.at(i).row());
         if (pFileItem->sub_dir != ".")
         {
@@ -438,7 +509,7 @@ void MainWindow::unstageAll()
     QString sPath;
     for (int i=0; i < pFileArr->size(); i++)
     {
-        sPath = "/";
+        sPath = "";
         GBL_File_Item *pFileItem = pFileArr->at(i);
         if (pFileItem->sub_dir != ".")
         {
@@ -452,7 +523,7 @@ void MainWindow::unstageAll()
         files.append(sPath);
     }
 
-    if (m_qpRepo->remove_from_index(&files))
+    if (m_qpRepo->index_unstage(&files))
     {
         updateStatus();
     }
@@ -474,7 +545,7 @@ void MainWindow::unstageSelected()
     QString sPath;
     for (int i=0; i < mil.size(); i++)
     {
-        sPath = "/";
+        sPath = "";
         GBL_File_Item *pFileItem = pFileArr->at(mil.at(i).row());
         if (pFileItem->sub_dir != ".")
         {
@@ -488,7 +559,7 @@ void MainWindow::unstageSelected()
         files.append(sPath);
     }
 
-    if (m_qpRepo->remove_from_index(&files))
+    if (m_qpRepo->index_unstage(&files))
     {
         updateStatus();
     }
@@ -569,6 +640,11 @@ void MainWindow::toggleToolBar()
     }
 }
 
+void MainWindow::refresh()
+{
+    updateStatus();
+}
+
 void MainWindow::init()
 {
     m_qpRepo = new GBL_Repository();
@@ -620,6 +696,12 @@ void MainWindow::createActions()
     editMenu->addAction(tr("&Preferences..."), this, &MainWindow::preferences);
 
     m_pRepoMenu = menuBar()->addMenu(tr("&Repository"));
+    QAction *refreshAct = m_pRepoMenu->addAction(tr("&Refresh"),this, &MainWindow::refresh);
+#ifdef Q_OS_MAC
+    refreshAct->setShortcut(QKeySequence(QKeySequence::Refresh));
+#else
+#endif
+
     m_pViewMenu = menuBar()->addMenu(tr("&View"));
     QAction *tbAct = m_pViewMenu->addAction(tr("&Toolbar"));
     QAction *sbAct = m_pViewMenu->addAction(tr("&Statusbar"));
@@ -685,6 +767,7 @@ void MainWindow::createDocks()
     StagedDockView *pSDView = new StagedDockView(pDock);
     pDock->setWidget(pSDView);
     m_pViewMenu->addAction(pDock->toggleViewAction());
+    connect(pSDView->getFileView()->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::stagedFileSelectionChanged);
 
     //setup unstaged dock
     pDock = new QDockWidget(tr("Unstaged"));

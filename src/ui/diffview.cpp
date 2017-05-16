@@ -62,7 +62,7 @@ void DiffView::addLine(GBL_Line_Item *pLI)
 
 void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
 {
-    m_pInfo->setFileItem(pFileItem);
+    if (pFileItem) m_pInfo->setFileItem(pFileItem);
     QString num;
     QString htmlContent;
 
