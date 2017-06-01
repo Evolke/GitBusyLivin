@@ -15,7 +15,6 @@ TEMPLATE = app
 SOURCES += src/main.cpp\
         src/ui/mainwindow.cpp \
     src/gbl/gbl_repository.cpp \
-    src/ui/qaboutdialog.cpp \
     src/gbl/gbl_historymodel.cpp \
     src/ui/historyview.cpp \
     src/gbl/gbl_filemodel.cpp \
@@ -28,11 +27,11 @@ SOURCES += src/main.cpp\
     src/ui/prefsdialog.cpp \
     src/ui/stageddockview.cpp \
     src/ui/unstageddockview.cpp \
-    src/ui/singleapplication.cpp
+    src/ui/singleapplication.cpp \
+    src/ui/aboutdialog.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
-    src/ui/qaboutdialog.h \
     src/gbl/gbl_historymodel.h \
     src/gbl/gbl_version.h \
     src/ui/historyview.h \
@@ -46,7 +45,8 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/prefsdialog.h \
     src/ui/stageddockview.h \
     src/ui/unstageddockview.h \
-    src/ui/singleapplication.h
+    src/ui/singleapplication.h \
+    src/ui/aboutdialog.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc

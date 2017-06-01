@@ -21,9 +21,13 @@ QMenu {
     padding: 0;
 }
 
-QMenu:selected {
+QMenu:selected, QMenu::item:selected {
     background: #222;
     color: #eee;
+}
+
+QMenu::item:disabled {
+    color: #999;
 }
 
 QTableView {

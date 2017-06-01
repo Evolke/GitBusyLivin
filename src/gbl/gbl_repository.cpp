@@ -14,6 +14,7 @@ static char git_buf__initbuf[1];
 #define GIT_BUF_INIT { git_buf__initbuf, 0, 0 }
 
 static QByteArray g_temp_ba;
+static QByteArrayList g_temp_balist;
 
 GBL_Repository::GBL_Repository(QObject *parent) : QObject(parent)
 {
@@ -288,13 +289,13 @@ bool GBL_Repository::add_to_index(QStringList *pList)
         array.count = pList->size();
         array.strings = (char**)::malloc(sizeof(char*) * array.count);
 
-        QByteArrayList baList;
+        g_temp_balist.clear();
         for (int i = 0; i < pList->size(); i++)
         {
             QString path = pList->at(i);
             QByteArray baPath = path.toUtf8();
-            baList.append(baPath);
-            array.strings[i] = (char*)baList.at(i).data();
+            g_temp_balist.append(baPath);
+            array.strings[i] = (char*)g_temp_balist.at(i).data();
         }
 
         git_index_add_all(index,&array,0, (git_index_matched_path_cb)staged_cb,NULL);
@@ -329,13 +330,13 @@ bool GBL_Repository::remove_from_index(QStringList *pList)
         array.count = pList->size();
         array.strings = (char**)::malloc(sizeof(char*) * array.count);
 
-        QByteArrayList baList;
+        g_temp_balist.clear();
         for (int i = 0; i < pList->size(); i++)
         {
             QString path = pList->at(i);
             QByteArray baPath = path.toUtf8();
-            baList.append(baPath);
-            array.strings[i] = (char*)baList.at(i).data();
+            g_temp_balist.append(baPath);
+            array.strings[i] = (char*)g_temp_balist.at(i).data();
         }
 
         git_index_remove_all(index, &array, NULL, NULL);
@@ -360,13 +361,13 @@ bool GBL_Repository::index_unstage(QStringList *pList)
     farr.count = pList->size();
     farr.strings = (char**)::malloc(sizeof(char*) * farr.count);
 
-    QByteArrayList baList;
+    g_temp_balist.clear();
     for (int i = 0; i < pList->size(); i++)
     {
         QString path = pList->at(i);
         QByteArray baPath = path.toUtf8();
-        baList.append(baPath);
-        farr.strings[i] = (char*)baList.at(i).data();
+        g_temp_balist.append(baPath);
+        farr.strings[i] = (char*)g_temp_balist.at(i).data();
     }
 
     try
@@ -591,13 +592,13 @@ bool GBL_Repository::get_index_to_work_diff(MainWindow *pMain, QStringList *pLis
         diffopts.pathspec.strings = (char**)::malloc(sizeof(char*) * pList->size());
         diffopts.flags = GIT_DIFF_INCLUDE_UNTRACKED|GIT_DIFF_SHOW_UNTRACKED_CONTENT|GIT_DIFF_RECURSE_UNTRACKED_DIRS;
 
-        QByteArrayList baList;
+        g_temp_balist.clear();
         for (int i = 0; i < pList->size(); i++)
         {
             QString path = pList->at(i);
             QByteArray baPath = path.toUtf8();
-            baList.append(baPath);
-            diffopts.pathspec.strings[i] = (char*)baList.at(i).data();
+            g_temp_balist.append(baPath);
+            diffopts.pathspec.strings[i] = (char*)g_temp_balist.at(i).data();
         }
 
         //diffopts.pathspec.count = pList->size();
@@ -629,13 +630,13 @@ bool GBL_Repository::get_index_to_head_diff(MainWindow *pMain, QStringList *pLis
         diffopts.pathspec.strings = (char**)::malloc(sizeof(char*) * pList->size());
         //diffopts.flags = GIT_DIFF_INCLUDE_UNTRACKED|GIT_DIFF_SHOW_UNTRACKED_CONTENT|GIT_DIFF_RECURSE_UNTRACKED_DIRS;
 
-        QByteArrayList baList;
+        g_temp_balist.clear();
         for (int i = 0; i < pList->size(); i++)
         {
             QString path = pList->at(i);
             QByteArray baPath = path.toUtf8();
-            baList.append(baPath);
-            diffopts.pathspec.strings[i] = (char*)baList.at(i).data();
+            g_temp_balist.append(baPath);
+            diffopts.pathspec.strings[i] = (char*)g_temp_balist.at(i).data();
         }
 
         //diffopts.pathspec.count = pList->size();

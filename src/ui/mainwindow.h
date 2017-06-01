@@ -58,6 +58,7 @@ private slots:
     void preferences();
     void toggleToolBar();
     void toggleStatusBar();
+    void sslVersion();
     void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void historyFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
@@ -99,7 +100,7 @@ private:
     QAction *m_pRecentRepoActs[MaxRecentRepos];
     QAction *m_pRecentRepoSeparator;
     QAction *m_pRecentRepoSubMenuAct;
-    QAction *m_pOpenAct, *m_pCloneAct;
+    QMap<QString, QAction*> m_actionMap;
 
     static MainWindow *m_pSingleInst;
     int m_updateTimer;

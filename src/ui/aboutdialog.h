@@ -1,15 +1,15 @@
-#ifndef QABOUTDIALOG_H
-#define QABOUTDIALOG_H
+#ifndef ABOUTDIALOG_H
+#define ABOUTDIALOG_H
 
 #include <QDialog>
 #include <QPixmap>
 
-class QAboutDialog : public QDialog
+class AboutDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit QAboutDialog(QWidget *parent = 0, Qt::WindowFlags f = Qt::FramelessWindowHint|Qt::Dialog);
-    ~QAboutDialog();
+    explicit AboutDialog(QWidget *parent = 0, Qt::WindowFlags f = Qt::FramelessWindowHint|Qt::Dialog);
+    ~AboutDialog();
 
 
 signals:
@@ -26,4 +26,4 @@ private:
     int m_timer;
 };
 
-#endif // QABOUTDIALOG_H
+#endif // ABOUTDIALOG_H

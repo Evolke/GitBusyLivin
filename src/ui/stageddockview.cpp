@@ -21,7 +21,7 @@ StagedDockView::StagedDockView(QWidget *parent) : QSplitter(Qt::Vertical,parent)
     m_pFileView = new FileView(this);
     m_pFileView->setModel(new GBL_FileModel(m_pFileView));
     addWidget(m_pFileView);
-    m_pFileView->setSelectionMode(QAbstractItemView::MultiSelection);
+    m_pFileView->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     m_pCommitView = new StagedCommitView(this);
     addWidget(m_pCommitView);
@@ -63,7 +63,7 @@ void StagedDockView::stagedFileSelectionChanged(const QItemSelection &selected, 
     Q_UNUSED(deselected);
     QModelIndexList mil = selected.indexes();
 
-    pBtn->setDisabled(mil.size() == 0);
+    pBtn->setDisabled(mil.size() <= 1);
 
 }
 
@@ -141,20 +141,20 @@ StagedButtonBar::StagedButtonBar(QWidget *parent) : QFrame(parent)
 {
     setContentsMargins(0,0,0,0);
     setMaximumHeight(30);
-    m_pCommitBtn = new StagedButton(tr("Commit"), this);
+    m_pCommitBtn = new StagedButton(tr("Commit"), this, 60);
     m_pCommitBtn->setDisabled(true);
     m_pCommitBtn->setMaximumSize(100,20);
     //mainLayout->addWidget(m_pCommitBtn,1,0,1,1,Qt::AlignBottom);
-    m_pPushBtn = new StagedButton(tr("Push"), this);
+    m_pPushBtn = new StagedButton(tr("Push"), this, 50);
     m_pPushBtn->setDisabled(true);
     m_pPushBtn->setMaximumSize(80,20);
     //mainLayout->addWidget(m_pPushBtn,1,1,1,1,Qt::AlignBottom);
-    m_pUnstageAllBtn = new StagedButton(tr("Unstage All"), this);
+    m_pUnstageAllBtn = new StagedButton(tr("Unstage All"), this, 80);
     m_pUnstageAllBtn->setDisabled(true);
     m_pUnstageAllBtn->setMaximumSize(100,20);
 
     //mainLayout->addWidget(m_pUnstageAllBtn,1,2,1,1,Qt::AlignBottom);
-    m_pUnstageSelBtn = new StagedButton(tr("Unstage Selected"), this);
+    m_pUnstageSelBtn = new StagedButton(tr("Unstage Selected"), this, 115);
     m_pUnstageSelBtn->setDisabled(true);
     m_pUnstageSelBtn->setMaximumSize(120,20);
 
@@ -225,8 +225,29 @@ StagedButton* StagedButtonBar::getButton(int nBtnID)
 }
 
 
-StagedButton::StagedButton(const QString &text, QWidget *parent) : QToolButton(parent)
+StagedButton::StagedButton(const QString &text, QWidget *parent, int nMinWidthWithText) : QToolButton(parent)
 {
+    m_nMinWidthWithText = nMinWidthWithText;
+
     setText(text);
+    setToolTip(text);
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 }
+
+
+void StagedButton::resizeEvent(QResizeEvent *event)
+{
+    Q_UNUSED(event);
+
+    int nWidth = width();
+
+    if (nWidth < m_nMinWidthWithText)
+    {
+        setToolButtonStyle(Qt::ToolButtonIconOnly);
+    }
+    else
+    {
+        setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    }
+}
+

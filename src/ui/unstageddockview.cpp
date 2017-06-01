@@ -16,7 +16,7 @@ UnstagedDockView::UnstagedDockView(QWidget *parent) : QScrollArea(parent)
     setContentsMargins(0,0,0,0);
     m_pFileView = new FileView(this);
     m_pFileView->setModel(new GBL_FileModel(m_pFileView));
-    m_pFileView->setSelectionMode(QAbstractItemView::MultiSelection);
+    m_pFileView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_pBtnBar = new UnstagedButtonBar(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(m_pFileView);
@@ -55,7 +55,7 @@ void UnstagedDockView::workingFileSelectionChanged(const QItemSelection &selecte
     Q_UNUSED(deselected);
     QModelIndexList mil = selected.indexes();
 
-    pBtn->setDisabled(mil.size() == 0);
+    pBtn->setDisabled(mil.size() <= 1);
 
 }
 
@@ -63,8 +63,8 @@ UnstagedButtonBar::UnstagedButtonBar(QWidget *parent) : QFrame(parent)
 {
 
     setContentsMargins(0,0,0,0);
-    m_pAddAllBtn = new UnstagedButton(tr("Add All"),this);
-    m_pAddSelBtn = new UnstagedButton(tr("Add Selected"),this);
+    m_pAddAllBtn = new UnstagedButton(tr("Add All"),this, 60);
+    m_pAddSelBtn = new UnstagedButton(tr("Add Selected"),this, 90);
 
     UrlPixmap svgpix(NULL);
     MainWindow *pMain = MainWindow::getInstance();
@@ -80,13 +80,13 @@ UnstagedButtonBar::UnstagedButtonBar(QWidget *parent) : QFrame(parent)
     setMaximumHeight(30);
     m_pAddAllBtn->setDisabled(true);
     svgpix.loadSVGResource(":/images/add_all_icon.svg", sBorderClr, QSize(16,16));
-    m_pAddAllBtn->setIcon(QIcon(*svgpix.getPixmap()));
+    m_pAddAllBtn->setIcon(QIcon(*svgpix.getSmallPixmap(16)));
     connect(m_pAddAllBtn,&UnstagedButton::clicked, pMain, &MainWindow::stageAll);
 
     m_pAddAllBtn->setMaximumSize(100,20);
     m_pAddSelBtn->setDisabled(true);
     svgpix.loadSVGResource(":/images/add_sel_icon.svg", sBorderClr, QSize(16,16));
-    m_pAddSelBtn->setIcon(QIcon(*svgpix.getPixmap()));
+    m_pAddSelBtn->setIcon(QIcon(*svgpix.getSmallPixmap(16)));
 
     m_pAddSelBtn->setMaximumSize(120,20);
     connect(m_pAddSelBtn,&UnstagedButton::clicked, pMain, &MainWindow::stageSelected);
@@ -118,9 +118,26 @@ UnstagedButton* UnstagedButtonBar::getButton(int nBtnID)
     return pRet;
 }
 
-UnstagedButton::UnstagedButton(const QString &text, QWidget *parent) : QToolButton(parent)
+UnstagedButton::UnstagedButton(const QString &text, QWidget *parent, int nMinWidthWithText) : QToolButton(parent)
 {
+    m_nMinWidthWithText = nMinWidthWithText;
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     setText(text);
+    setToolTip(text);
 }
 
+void UnstagedButton::resizeEvent(QResizeEvent *event)
+{
+    Q_UNUSED(event);
+
+    int nWidth = width();
+
+    if (nWidth < m_nMinWidthWithText)
+    {
+        setToolButtonStyle(Qt::ToolButtonIconOnly);
+    }
+    else
+    {
+        setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    }
+}

@@ -1,7 +1,7 @@
 #include <QtWidgets>
 
 #include "mainwindow.h"
-#include "qaboutdialog.h"
+#include "aboutdialog.h"
 #include "src/gbl/gbl_version.h"
 #include "src/gbl/gbl_historymodel.h"
 #include "src/gbl/gbl_filemodel.h"
@@ -78,7 +78,7 @@ void MainWindow::about()
 {
    /*QMessageBox::about(this, tr("About GitBusyLivin"),
             tr("Hope is a good thing, maybe the best of things, and no good thing ever dies."));*/
-   QAboutDialog about(this);
+   AboutDialog about(this);
    about.exec();
 }
 
@@ -90,6 +90,8 @@ void MainWindow::clone()
         QString src = cloneDlg.getSource();
         QString dst = cloneDlg.getDestination();
 
+        QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+
         if (m_qpRepo->clone_repo(src, dst))
         {
             setupRepoUI(dst);
@@ -98,6 +100,8 @@ void MainWindow::clone()
         {
             QMessageBox::warning(this, tr("Clone Error"), m_qpRepo->get_error_msg());
         }
+
+        QApplication::restoreOverrideCursor();
     }
 }
 
@@ -191,6 +195,8 @@ void MainWindow::setupRepoUI(QString repoDir)
 
     GBL_History_Array *pHistArr = NULL;
     m_qpRepo->get_history(&pHistArr);
+
+    m_actionMap["refresh"]->setDisabled(false);
 
     if (pHistArr != NULL && !pHistArr->isEmpty())
     {
@@ -665,8 +671,8 @@ void MainWindow::createActions()
     QMenu *newMenu = fileMenu->addMenu(tr("&New"));
     newMenu->addAction(tr("&Local Repository..."), this, &MainWindow::new_local_repo);
     newMenu->addAction(tr("&Network Repository..."), this, &MainWindow::new_network_repo);
-    m_pCloneAct = fileMenu->addAction(tr("&Clone..."), this, &MainWindow::clone);
-    m_pOpenAct = fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
+    m_actionMap["clone"] = fileMenu->addAction(tr("&Clone..."), this, &MainWindow::clone);
+    m_actionMap["open"] = fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
     fileMenu->addSeparator();
 
     QMenu *recentMenu = fileMenu->addMenu(tr("Recent"));
@@ -697,9 +703,13 @@ void MainWindow::createActions()
 
     m_pRepoMenu = menuBar()->addMenu(tr("&Repository"));
     QAction *refreshAct = m_pRepoMenu->addAction(tr("&Refresh"),this, &MainWindow::refresh);
-#ifdef Q_OS_MAC
     refreshAct->setShortcut(QKeySequence(QKeySequence::Refresh));
-#else
+    refreshAct->setDisabled(true);
+    m_actionMap["refresh"] = refreshAct;
+
+#ifdef QT_DEBUG
+    QMenu *dbgMenu = menuBar()->addMenu(tr("&Debug"));
+    dbgMenu->addAction(tr("&ssl version..."), this, &MainWindow::sslVersion);
 #endif
 
     m_pViewMenu = menuBar()->addMenu(tr("&View"));
@@ -713,6 +723,11 @@ void MainWindow::createActions()
     connect(sbAct, &QAction::toggled, this, &MainWindow::toggleStatusBar);
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(tr("&About GitBusyLivin"), this, &MainWindow::about);
+}
+
+void MainWindow::sslVersion()
+{
+    QMessageBox::information(this,tr("ssl version"), QSslSocket::sslLibraryBuildVersionString());
 }
 
 void MainWindow::createHistoryTable()
@@ -841,25 +856,31 @@ void MainWindow::readSettings()
     m_pToolBar->setIconSize(QSize(16,16));
 
     svgpix.loadSVGResource(":/images/open_toolbar_icon.svg", sBorderClr, QSize(16,16));
-    m_pOpenAct->setIcon(QIcon(*svgpix.getPixmap()));
-    m_pToolBar->addAction(m_pOpenAct);
+    QAction *pOpenAct = m_actionMap["open"];
+    pOpenAct->setIcon(QIcon(*svgpix.getSmallPixmap(16)));
+    m_pToolBar->addAction(pOpenAct);
 
 
     svgpix.loadSVGResource(":/images/clone_toolbar_icon.svg", sBorderClr, QSize(16,16));
-    m_pCloneAct->setIcon(QIcon(*svgpix.getPixmap()));
-    m_pToolBar->addAction(m_pCloneAct);
+    QAction *pCloneAct = m_actionMap["clone"];
+    pCloneAct->setIcon(QIcon(*svgpix.getSmallPixmap(16)));
+    m_pToolBar->addAction(pCloneAct);
 
     svgpix.loadSVGResource(":/images/push_toolbar_icon.svg", sBorderClr, QSize(16,16));
 
-    QAction *pushAct = new QAction(QIcon(*svgpix.getPixmap()), tr("&Push"), this);
+    QAction *pushAct = new QAction(QIcon(*svgpix.getSmallPixmap(16)), tr("&Push"), this);
     m_pRepoMenu->addAction(pushAct);
     m_pToolBar->addAction(pushAct);
+    pushAct->setDisabled(true);
+    m_actionMap["push"] = pushAct;
 
     svgpix.loadSVGResource(":/images/pull_toolbar_icon.svg", sBorderClr, QSize(16,16));
 
-    QAction *pullAct = new QAction(QIcon(*svgpix.getPixmap()), tr("&Pull"), this);
+    QAction *pullAct = new QAction(QIcon(*svgpix.getSmallPixmap(16)), tr("&Pull"), this);
     m_pRepoMenu->addAction(pullAct);
     m_pToolBar->addAction(pullAct);
+    pullAct->setDisabled(true);
+    m_actionMap["pull"] = pullAct;
 
 }
 

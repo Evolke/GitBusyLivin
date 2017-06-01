@@ -1,9 +1,12 @@
 #include "src/gbl/gbl_version.h"
-#include "qaboutdialog.h"
+#include "AboutDialog.h"
 #include <QPainter>
 #include <QTextStream>
+#include <QSvgRenderer>
 
-QAboutDialog::QAboutDialog(QWidget *parent, Qt::WindowFlags f) : QDialog(parent, f)
+//static QSvgRenderer testsvg;
+
+AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags f) : QDialog(parent, f)
 {
     int nWidth = 500;
     int nHeight = 400;
@@ -18,26 +21,28 @@ QAboutDialog::QAboutDialog(QWidget *parent, Qt::WindowFlags f) : QDialog(parent,
     //setAutoFillBackground(false);
     m_hue = (int)rand()%360;
     m_timer = startTimer(10000);
+
+    //testsvg.load(QString(":/images/push_toolbar_icon.svg"));
 }
 
-QAboutDialog::~QAboutDialog()
+AboutDialog::~AboutDialog()
 {
     killTimer(m_timer);
     delete m_pix;
 }
 
-void QAboutDialog::mousePressEvent(QMouseEvent *event)
+void AboutDialog::mousePressEvent(QMouseEvent *event)
 {
     Q_UNUSED(event);
 }
 
-void QAboutDialog::mouseReleaseEvent(QMouseEvent *event)
+void AboutDialog::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_UNUSED(event);
     close();
 }
 
-void QAboutDialog::timerEvent(QTimerEvent *event)
+void AboutDialog::timerEvent(QTimerEvent *event)
 {
     Q_UNUSED(event);
     m_hue += 10;
@@ -45,7 +50,7 @@ void QAboutDialog::timerEvent(QTimerEvent *event)
     update();
 }
 
-void QAboutDialog::paintEvent(QPaintEvent *event)
+void AboutDialog::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
     QPainter p(this);
@@ -81,5 +86,16 @@ void QAboutDialog::paintEvent(QPaintEvent *event)
     QTextStream(&vers) << "version: " << GBL_APP_VERSION;
     p.setPen(QColor(0,0,0));
     p.drawText(QPointF(20,80), vers);
+
+
+    /*QSize svg_size = testsvg.defaultSize();
+    QSize pm_size = svg_size * 2;
+    QPixmap pix(pm_size);
+
+    pix.fill(Qt::transparent);
+    QPainter pixPainter(&pix);
+    pixPainter.setRenderHint(QPainter::TextAntialiasing, false);
+    testsvg.render(&pixPainter);
+    p.drawPixmap(100,100,svg_size.width(), svg_size.height(), pix);*/
 }
 

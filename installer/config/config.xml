@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>GitBusyLivin</Name>
+    <Version>0.0.16</Version>
+    <Title>GitBusyLivin Installer</Title>
+    <Publisher>Evolke</Publisher>
+    <StartMenuDir>GitBusyLivin</StartMenuDir>
+    <TargetDir>@ApplicationsDir@/GitBusyLivin</TargetDir>
+</Installer>

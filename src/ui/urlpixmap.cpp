@@ -88,13 +88,18 @@ void UrlPixmap::loadSVGResource(QString sRes, QString sColor, QSize size)
 
         svg.load(sNewSvgFile.toUtf8());
     }
-    QPixmap pix(size);
+
+    QSize svg_size = svg.defaultSize();
+
+    QPixmap pix(svg_size*2);
 
     pix.fill(Qt::transparent);
     QPainter pixPainter(&pix);
-    pixPainter.setRenderHint(QPainter::Antialiasing, false);
+    //pixPainter.setRenderHint(QPainter::Antialiasing, false);
     svg.render(&pixPainter);
     qDebug() << "svg size:" << pix.size();
     qDebug() << "is null:" << pix.isNull();
     m_pPixmap->swap(pix);
+    delete m_pSmallPixmap;
+    m_pSmallPixmap = new QPixmap();
 }
