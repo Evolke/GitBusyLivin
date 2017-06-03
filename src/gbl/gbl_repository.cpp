@@ -158,10 +158,18 @@ bool GBL_Repository::init_repo(QString path, bool bare)
     git_index *index = NULL;
     git_oid tree_id, commit_id;
     git_tree *tree = NULL;
+    git_repository_init_options opts = GIT_REPOSITORY_INIT_OPTIONS_INIT;
 
     try
     {
-        check_libgit_return(git_repository_init(&m_pRepo, qstring2cc(&path), bare));
+        opts.flags |= GIT_REPOSITORY_INIT_MKPATH | GIT_REPOSITORY_INIT_MKDIR;
+        if (bare)
+        {
+            opts.flags |= GIT_REPOSITORY_INIT_BARE;
+            opts.mode = GIT_REPOSITORY_INIT_SHARED_ALL;
+        }
+
+        check_libgit_return(git_repository_init_ext(&m_pRepo, qstring2cc(&path), &opts));
 
         //create initial commit
         if (!bare)
@@ -224,6 +232,22 @@ bool GBL_Repository::open_repo(QString path)
     /*const QByteArray l8b = path.toUtf8();
     const char* spath = l8b.constData();*/
     m_iErrorCode = git_repository_open(&m_pRepo, qstring2cc(&path));
+    return m_iErrorCode >= 0;
+}
+
+
+bool GBL_Repository::get_remotes(QStringList &remote_list)
+{
+    git_strarray remotes = {0};
+    m_iErrorCode = git_remote_list(&remotes, m_pRepo);
+
+    qDebug() << "get_remotes:" << remotes.count;
+
+    for (int i=0; i < remotes.count; i++)
+    {
+        qDebug() << remotes.strings[i];
+    }
+
     return m_iErrorCode >= 0;
 }
 
@@ -401,9 +425,17 @@ bool GBL_Repository::commit_index(QString sMessage)
         check_libgit_return(git_repository_index(&index, m_pRepo));
         check_libgit_return(git_index_write_tree(&tree_id, index));
         check_libgit_return(git_tree_lookup(&tree, m_pRepo, &tree_id));
-        check_libgit_return(git_reference_name_to_id(&head_id, m_pRepo, "HEAD"));
-        check_libgit_return(git_commit_lookup(&parent,m_pRepo,&head_id));
-        check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, "UTF-8", qstring2cc(&sMessage), tree, 1, parent));
+        int error = git_reference_name_to_id(&head_id, m_pRepo, "HEAD");
+        bool bHead = error >= 0;
+        if (bHead)
+        {
+            check_libgit_return(git_commit_lookup(&parent,m_pRepo,&head_id));
+            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, "UTF-8", qstring2cc(&sMessage), tree, 1, parent));
+        }
+        else
+        {
+            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, NULL, qstring2cc(&sMessage), tree, 0));
+        }
     }
     catch(GBL_RepositoryException &e)
     {

@@ -87,6 +87,7 @@ public:
     bool remove_from_index(QStringList *pList);
     bool index_unstage(QStringList *pList);
     bool commit_index(QString sMessage);
+    bool get_remotes(QStringList &remote_list);
     bool get_history(GBL_History_Array **pHist_Arr);
     bool get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod);
     void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);
