@@ -97,6 +97,7 @@ public:
     bool get_index_to_head_diff(MainWindow *pMain, QStringList *pList);
 
     bool get_global_config_info(GBL_Config_Map **out);
+    bool set_global_config_info(GBL_Config_Map *cfgMap);
 
     bool get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &unstagedArr);
 

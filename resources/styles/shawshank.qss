@@ -92,7 +92,7 @@ QTreeView::item {
 }
 
 
-QTreeView::item:selected {
+QTreeView::item:selected, QTreeView::item:selected:hover {
     color: #eee;
     background-color: #222;
 }
@@ -101,6 +101,7 @@ QTreeView::item:hover {
     color: #cccccc;
     background-color: #333333;
 }
+
 
 QListView {
     border: 1px solid #555;

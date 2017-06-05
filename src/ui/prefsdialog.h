@@ -21,6 +21,8 @@ class GeneralPrefsPage : public QWidget
 public:
     explicit GeneralPrefsPage(QWidget *parent = 0);
 
+    QString getName();
+    QString getEmail();
     void setName(QString sName);
     void setEmail(QString sEmail);
 
@@ -35,8 +37,10 @@ class UIPrefsPage : public QWidget
 public:
     explicit UIPrefsPage(QWidget *parent = 0);
 
+    QComboBox* getToolbarCombo();
+
 private:
-    QComboBox *m_pThemeCombo;
+    QComboBox *m_pThemeCombo, *m_pToolbarCombo;
 };
 
 /**
@@ -49,6 +53,10 @@ public:
     explicit PrefsDialog(QWidget *parent = 0);
 
     void setConfigMap(GBL_Config_Map *pMap);
+    void getConfigMap(GBL_Config_Map *pMap);
+
+    int getUIToolbarButtonType();
+
 signals:
 
 public slots:

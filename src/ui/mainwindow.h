@@ -20,6 +20,7 @@ class QNetworkAccessManager;
 class QNetworkDiskCache;
 class QAction;
 struct GBL_Line_Item;
+class FileView;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -91,6 +92,7 @@ private:
     HistoryView *m_pHistView;
     QPointer<GBL_HistoryModel> m_pHistModel;
     QMap<QString, QDockWidget*> m_docks;
+    QMap<QString, FileView*> m_fileviews;
     QMenu *m_pViewMenu, *m_pRepoMenu;
     QToolBar *m_pToolBar;
     QNetworkAccessManager *m_pNetAM;

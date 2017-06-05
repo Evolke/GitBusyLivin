@@ -289,9 +289,15 @@ void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, con
     Q_UNUSED(deselected);
     QModelIndexList mil = selected.indexes();
 
+
     //single row selection
     if (mil.count() > 0)
     {
+        FileView *pFView = m_fileviews["unstaged"];
+        pFView->selectionModel()->clearSelection();
+        pFView = m_fileviews["staged"];
+        pFView->selectionModel()->clearSelection();
+
         QModelIndex mi = mil.at(0);
         int row = mi.row();
         QDockWidget *pDock = m_docks["history_details"];
@@ -329,13 +335,12 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
     Q_UNUSED(deselected);
     Q_UNUSED(selected);
 
+
     QDockWidget *pDock = m_docks["file_diff"];
     DiffView *pDV = (DiffView*)pDock->widget();
     pDV->reset();
 
-    pDock = m_docks["unstaged"];
-    UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
-    FileView *pFView = pUSView->getFileView();
+    FileView *pFView = m_fileviews["unstaged"];
     QModelIndexList mil = pFView->selectionModel()->selectedRows();
 
    /* QMap<int,int> rowMap;
@@ -347,6 +352,11 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
     int count = rowMap.size();*/
     if  (mil.size())
     {
+        pFView = m_fileviews["history"];
+        pFView->selectionModel()->clearSelection();
+        pFView = m_fileviews["staged"];
+        pFView->selectionModel()->clearSelection();
+
         QStringList files;
         QString sPath;
         pDock = m_docks["unstaged"];
@@ -393,13 +403,17 @@ void MainWindow::stagedFileSelectionChanged(const QItemSelection &selected, cons
     DiffView *pDV = (DiffView*)pDock->widget();
     pDV->reset();
 
-    pDock = m_docks["staged"];
-    StagedDockView *pSView = (StagedDockView*)pDock->widget();
-    FileView *pFView = pSView->getFileView();
+    FileView *pFView = m_fileviews["staged"];
     QModelIndexList mil = pFView->selectionModel()->selectedRows();
 
     if  (mil.size())
     {
+        pFView = m_fileviews["history"];
+        pFView->selectionModel()->clearSelection();
+        pFView = m_fileviews["unstaged"];
+        pFView->selectionModel()->clearSelection();
+
+
         QStringList files;
         QString sPath;
         pDock = m_docks["staged"];
@@ -615,6 +629,27 @@ void MainWindow::preferences()
     {
         QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
         settings.setValue("UI/Theme", m_sTheme);
+
+        int nTBType = prefsDlg.getUIToolbarButtonType();
+        settings.setValue("UI/Toolbar_text", nTBType);
+        switch (nTBType)
+        {
+            case 0:
+                m_pToolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+                break;
+            case 1:
+                m_pToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+                break;
+        }
+
+        //check if global config matches
+        GBL_Config_Map cfgMap;
+        prefsDlg.getConfigMap(&cfgMap);
+
+        if (cfgMap != *pConfigMap)
+        {
+            m_qpRepo->set_global_config_info(&cfgMap);
+        }
     }
     else
     {
@@ -656,7 +691,8 @@ void MainWindow::init()
     m_qpRepo = new GBL_Repository();
     m_pToolBar = addToolBar(tr(GBL_APP_NAME));
     m_pToolBar->setObjectName("MainWindow/Toolbar");
-    m_pToolBar->setIconSize(QSize(20,20));
+    m_pToolBar->setIconSize(QSize(16,16));
+    //m_pToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     createActions();
     createHistoryTable();
     //createDocks();
@@ -754,6 +790,7 @@ void MainWindow::createDocks()
     pDetailSplit->setFrameStyle(QFrame::StyledPanel);
     CommitDetailScrollArea *pScroll = new CommitDetailScrollArea(pDetailSplit);
     FileView *pView = new FileView(pDetailSplit);
+    m_fileviews["history"] = pView;
     pDetailSplit->addWidget(pScroll);
     pDetailSplit->addWidget(pView);
     pDock->setWidget(pDetailSplit);
@@ -782,7 +819,9 @@ void MainWindow::createDocks()
     StagedDockView *pSDView = new StagedDockView(pDock);
     pDock->setWidget(pSDView);
     m_pViewMenu->addAction(pDock->toggleViewAction());
-    connect(pSDView->getFileView()->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::stagedFileSelectionChanged);
+    pView = pSDView->getFileView();
+    m_fileviews["staged"] = pView;
+    connect(pView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::stagedFileSelectionChanged);
 
     //setup unstaged dock
     pDock = new QDockWidget(tr("Unstaged"));
@@ -793,7 +832,9 @@ void MainWindow::createDocks()
     UnstagedDockView *pUSView = new UnstagedDockView(pDock);
     pDock->setWidget(pUSView);
     m_pViewMenu->addAction(pDock->toggleViewAction());
-    connect(pUSView->getFileView()->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::workingFileSelectionChanged);
+    pView = pUSView->getFileView();
+    m_fileviews["unstaged"] = pView;
+    connect(pView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::workingFileSelectionChanged);
 
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
     const QByteArray state = settings.value("MainWindow/WindowState", QByteArray()).toByteArray();
@@ -841,6 +882,17 @@ void MainWindow::readSettings()
     QString sTheme = settings.value("UI/Theme", "none").toString();
 
     setTheme(sTheme);
+
+    int nTBType = settings.value("UI/Toolbar_text",0).toInt();
+    switch (nTBType)
+    {
+        case 0:
+            m_pToolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+            break;
+        case 1:
+            m_pToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+            break;
+    }
 
 
    /**/

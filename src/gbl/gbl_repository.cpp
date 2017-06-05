@@ -135,12 +135,43 @@ bool GBL_Repository::get_global_config_info(GBL_Config_Map **out)
     {
         Q_UNUSED(e);
 
-        return false;
     }
 
     git_buf_free(&buf);
     if (cfg != NULL) git_config_free(cfg);
-    return true;
+
+    return m_iErrorCode >= 0;
+}
+
+bool GBL_Repository::set_global_config_info(GBL_Config_Map *cfgMap)
+{
+    git_config *cfg = NULL;
+    git_buf buf = GIT_BUF_INIT;
+    //const char *name, *email;
+    try
+    {
+        check_libgit_return(git_config_find_global(&buf));
+        check_libgit_return(git_config_open_ondisk(&cfg, buf.ptr));
+
+        QMapIterator<QString, QString> i(*cfgMap);
+        QString sKey, sVal;
+        while (i.hasNext()) {
+            i.next();
+            sKey = i.key();
+            sVal = i.value();
+            check_libgit_return(git_config_set_string(cfg, qstring2cc(&sKey), qstring2cc(&sVal)));
+        }
+
+    }
+    catch(GBL_RepositoryException &e)
+    {
+        Q_UNUSED(e);
+
+    }
+
+    if (cfg) git_config_free(cfg);
+
+    return m_iErrorCode >= 0;
 }
 
 /**

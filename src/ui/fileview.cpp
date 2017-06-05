@@ -5,7 +5,7 @@
 FileView::FileView(QWidget *parent) : QTreeView(parent)
 {
     setIndentation(0);
-    //setAllColumnsShowFocus(true);
+    setAllColumnsShowFocus(true);
 }
 
 FileView::~FileView()

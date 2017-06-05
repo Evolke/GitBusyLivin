@@ -85,7 +85,7 @@ void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
     QString sBackClrAttr;
     QTextStream(&sBackClrAttr) << "bgcolor=\'" << lineNumBgClr << "\'";
 
-    QString sHtml("<html><body margin=\'0\'><table cellpadding=\'5\' cellspacing=\'0\' >");
+    QString sHtml("<html><body style=\'margin:0;padding:0;\'><table cellpadding=\'5\' cellspacing=\'0\' >");
     for (int i = 0; i < m_diff_arr.size(); i++)
     {
         GBL_Line_Item *pLI = (GBL_Line_Item*)m_diff_arr.at(i);
@@ -204,6 +204,7 @@ DiffEdit::DiffEdit(QWidget *parent) : QTextEdit(parent)
 {
 #ifdef Q_OS_MAC
     setViewportMargins(0,0,0,8);
+    setContentsMargins(0,0,0,0);
 #else
     setViewportMargins(0,0,0,0);
     setContentsMargins(0,0,0,0);

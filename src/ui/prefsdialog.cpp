@@ -13,6 +13,7 @@
 #include <QDebug>
 #include <QComboBox>
 #include <QGroupBox>
+#include <QToolBar>
 
 
 /**
@@ -108,6 +109,23 @@ void PrefsDialog::setConfigMap(GBL_Config_Map *pMap)
     pPage->setEmail(pMap->value("global.user.email"));
 }
 
+void PrefsDialog::getConfigMap(GBL_Config_Map *pMap)
+{
+    GeneralPrefsPage *pPage = (GeneralPrefsPage*)m_pPages->widget(0);
+
+    pMap->insert("user.name", pPage->getName());
+    pMap->insert("user.email", pPage->getEmail());
+}
+
+int PrefsDialog::getUIToolbarButtonType()
+{
+    UIPrefsPage *pPage = (UIPrefsPage*)m_pPages->widget(1);
+
+    QComboBox *pTBBox = pPage->getToolbarCombo();
+
+    return pTBBox->currentIndex();
+}
+
 /******************* GeneralPrefsPage ***************/
 GeneralPrefsPage::GeneralPrefsPage(QWidget *parent) : QWidget(parent)
 {
@@ -130,9 +148,19 @@ GeneralPrefsPage::GeneralPrefsPage(QWidget *parent) : QWidget(parent)
     setLayout(mainLayout);
 }
 
+QString GeneralPrefsPage::getName()
+{
+    return m_pNameEdit->text();
+}
+
 void GeneralPrefsPage::setName(QString sName)
 {
     m_pNameEdit->setText(sName);
+}
+
+QString GeneralPrefsPage::getEmail()
+{
+    return m_pEmailEdit->text();
 }
 
 void GeneralPrefsPage::setEmail(QString sEmail)
@@ -143,8 +171,8 @@ void GeneralPrefsPage::setEmail(QString sEmail)
 /******************* UIPrefsPage ***************/
 UIPrefsPage::UIPrefsPage(QWidget *parent) : QWidget(parent)
 {
-    QGroupBox *pThemeBox = new QGroupBox();
-    QGridLayout *pThemeLayout = new QGridLayout(this);
+    QGroupBox *pUIBox = new QGroupBox();
+    QGridLayout *pUILayout = new QGridLayout(this);
     QLabel *pThemeLabel = new QLabel(tr("Theme:"));
     pThemeLabel->setMaximumWidth(60);
     m_pThemeCombo = new QComboBox(this);
@@ -157,14 +185,44 @@ UIPrefsPage::UIPrefsPage(QWidget *parent) : QWidget(parent)
     {
         m_pThemeCombo->setCurrentIndex(index);
     }
-    pThemeLayout->addWidget(pThemeLabel, 0,0);
-    pThemeLayout->addWidget(m_pThemeCombo, 0,1);
-    pThemeBox->setLayout(pThemeLayout);
+    pUILayout->addWidget(pThemeLabel, 0,0);
+    pUILayout->addWidget(m_pThemeCombo, 0,1);
+
+    // QGridLayout *pTBLayout = new QGridLayout(this);
+    QLabel *pTBLabel = new QLabel(tr("Toolbar Buttons:"));
+    pTBLabel->setMaximumWidth(100);
+    m_pToolbarCombo = new QComboBox(this);
+    m_pToolbarCombo->addItem(tr("Icon Only"));
+    m_pToolbarCombo->addItem(tr("Icon with Text"));
+    QToolBar *pToolbar = pMain->getToolBar();
+    switch (pToolbar->toolButtonStyle())
+    {
+        case Qt::ToolButtonTextBesideIcon:
+            m_pToolbarCombo->setCurrentIndex(1);
+            break;
+
+        default:
+            m_pToolbarCombo->setCurrentIndex(0);
+            break;
+    }
+
+    pUILayout->addWidget(pTBLabel,1,0);
+    pUILayout->addWidget(m_pToolbarCombo,1,1);
+
+    pUIBox->setLayout(pUILayout);
+
     QVBoxLayout *mainLayout = new QVBoxLayout();
-    mainLayout->addWidget(pThemeBox);
-    mainLayout->addSpacing(100);
+    mainLayout->addWidget(pUIBox);
+    //mainLayout->addWidget(pTBBox);
+    mainLayout->addSpacing(60);
     setLayout(mainLayout);
 
     connect(m_pThemeCombo, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), (PrefsDialog*)parentWidget(), &PrefsDialog::changeTheme);
+}
+
+QComboBox* UIPrefsPage::getToolbarCombo()
+{
+    return m_pToolbarCombo;
+
 }
 
