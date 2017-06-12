@@ -1,6 +1,8 @@
 #ifndef GBL_REPOSITORY_H
 #define GBL_REPOSITORY_H
 
+#include "gbl_string.h"
+
 #include <QObject>
 #include <git2.h>
 #include <QDateTime>
@@ -72,27 +74,27 @@ public:
     explicit GBL_Repository(QObject *parent = 0);
     ~GBL_Repository();
 
-    static const char* qstring2cc(QString *pQStr);
     static int tree_walk_callback(const char *root, const git_tree_entry *entry, void *payload);
     static int diff_print_files_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
     static int diff_print_lines_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
     static int staged_cb(const char *path, const char *matched_pathspec, void *payload);
 
     QString get_error_msg();
-    bool init_repo(QString path, bool bare=false);
-    bool open_repo(QString path);
-    bool clone_repo(QString srcUrl, QString dstPath);
-    bool is_remote_repo(QString path);
+    bool init_repo(GBL_String path, bool bare=false);
+    bool open_repo(GBL_String path);
+    bool clone_repo(GBL_String srcUrl, GBL_String dstPath);
+    bool is_remote_repo(GBL_String path);
     bool add_to_index(QStringList *pList);
     bool remove_from_index(QStringList *pList);
     bool index_unstage(QStringList *pList);
-    bool commit_index(QString sMessage);
+    bool commit_index(GBL_String sMessage);
     bool get_remotes(QStringList &remote_list);
+    bool get_references(QStringList &ref_list);
     bool get_history(GBL_History_Array **pHist_Arr);
-    bool get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod);
+    bool get_tree_from_commit_oid(GBL_String oid_str, GBL_FileModel *pFileMod);
     void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);
-    bool get_commit_to_parent_diff_files(QString oid_str, GBL_File_Array *pHistFileArr);
-    bool get_commit_to_parent_diff_lines(QString oid_str, MainWindow *pMain, char *path);
+    bool get_commit_to_parent_diff_files(GBL_String oid_str, GBL_File_Array *pHistFileArr);
+    bool get_commit_to_parent_diff_lines(GBL_String oid_str, MainWindow *pMain, char *path);
     bool get_index_to_work_diff(MainWindow *pMain, QStringList *pList);
     bool get_index_to_head_diff(MainWindow *pMain, QStringList *pList);
 
@@ -109,7 +111,7 @@ private:
     void cleanup();
     void cleanup_history();
     void check_libgit_return(int ret);
-    bool get_commit_to_parent_diff(QString oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path=Q_NULLPTR);
+    bool get_commit_to_parent_diff(GBL_String oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path=Q_NULLPTR);
 
     git_repository *m_pRepo;
     int m_iErrorCode;

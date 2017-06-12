@@ -1,4 +1,6 @@
 #include "diffview.h"
+#include "mainwindow.h"
+
 #include <QDebug>
 #include <QTextEdit>
 #include <QLabel>
@@ -62,7 +64,7 @@ void DiffView::addLine(GBL_Line_Item *pLI)
 
 void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
 {
-    if (pFileItem) m_pInfo->setFileItem(pFileItem);
+    m_pInfo->setFileItem(pFileItem);
     QString num;
     QString htmlContent;
 
@@ -141,19 +143,24 @@ DiffInfoWidget::DiffInfoWidget(QWidget *parent) : QFrame(parent)
 {
     setFrameStyle(QFrame::StyledPanel);
     QGridLayout *mainLayout = new QGridLayout(this);
+    m_pTypeLabel = new DiffInfoTypeLabel(this);
     m_pFileImgLabel = new QLabel(this);
     m_pFilePathLabel = new QLabel(this);
 
-    mainLayout->addWidget(m_pFileImgLabel, 0,0);
-    mainLayout->addWidget(m_pFilePathLabel, 0,1);
+    mainLayout->addWidget(m_pTypeLabel, 0,0);
+    mainLayout->addWidget(m_pFileImgLabel, 0,1);
+    mainLayout->addWidget(m_pFilePathLabel, 0,2);
     mainLayout->setSpacing(0);
     mainLayout->setContentsMargins(0,0,0,0);
     setMaximumHeight(25);
+    m_pTypeLabel->setMaximumWidth(80);
+    m_pTypeLabel->setMargin(2);
     m_pFileImgLabel->setMaximumWidth(30);
     //m_pFileImgLabel->resize(25,25);
     //m_pFileImgLabel->setMinimumHeight(25);
     //m_pFilePathLabel->resize(200,25);
     m_pFilePathLabel->setMinimumHeight(25);
+    m_pTypeLabel->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
     m_pFileImgLabel->setAlignment(Qt::AlignHCenter|Qt::AlignCenter);
     m_pFilePathLabel->setAlignment(Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -162,6 +169,7 @@ DiffInfoWidget::DiffInfoWidget(QWidget *parent) : QFrame(parent)
 
 void DiffInfoWidget::reset()
 {
+    m_pTypeLabel->clear();
     m_pFileImgLabel->clear();
     m_pFilePathLabel->clear();
 }
@@ -170,33 +178,49 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
 {
     QString path;
     QString sub;
-    if (pFileItem->sub_dir != '.')
-    {
-        sub = pFileItem->sub_dir;
-        sub += '/';
-    }
-    QTextStream(&path) << sub << pFileItem->file_name;
 
-    switch (pFileItem->status)
+    if (pFileItem)
     {
-        case GBL_FILE_STATUS_ADDED:
-            m_pPixmap->load(QLatin1String(":/images/add_doc_icon.png"));
-            break;
-        case GBL_FILE_STATUS_DELETED:
-            m_pPixmap->load(QLatin1String(":/images/remove_doc_icon.png"));
-            break;
-        case GBL_FILE_STATUS_MODIFIED:
-             m_pPixmap->load(QLatin1String(":/images/modify_doc_icon.png"));
-            break;
-        default:
-             m_pPixmap->load(QLatin1String(":/images/unknown_doc_icon.png"));
-            break;
+        if (pFileItem->sub_dir != '.')
+        {
+            sub = pFileItem->sub_dir;
+            sub += '/';
+        }
+        QTextStream(&path) << sub << pFileItem->file_name;
+
+        switch (pFileItem->status)
+        {
+            case GBL_FILE_STATUS_ADDED:
+                m_pPixmap->load(QLatin1String(":/images/add_doc_icon.png"));
+                break;
+            case GBL_FILE_STATUS_DELETED:
+                m_pPixmap->load(QLatin1String(":/images/remove_doc_icon.png"));
+                break;
+            case GBL_FILE_STATUS_MODIFIED:
+                 m_pPixmap->load(QLatin1String(":/images/modify_doc_icon.png"));
+                break;
+            default:
+                 m_pPixmap->load(QLatin1String(":/images/unknown_doc_icon.png"));
+                break;
+        }
+        m_pFileImgLabel->setPixmap(*m_pPixmap);
+    }
+    else
+    {
+        path = "...";
     }
 
-    m_pFileImgLabel->setPixmap(*m_pPixmap);
+    MainWindow *pMain = MainWindow::getInstance();
+    QString sType = pMain->getSelectedCode();
+
+    m_pTypeLabel->setText("<i>"+sType+"</i>");
     //qDebug() << m_pFileImgLabel->geometry();
     m_pFilePathLabel->setText(path);
     //qDebug() << m_pFilePathLabel->geometry();
+}
+
+DiffInfoTypeLabel::DiffInfoTypeLabel(QWidget *parent) : QLabel(parent)
+{
 }
 
 

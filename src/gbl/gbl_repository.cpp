@@ -85,19 +85,6 @@ QString GBL_Repository::get_error_msg()
 }
 
 /**
- * @brief GBL_Repository::qstring2cc
- * @param pQStr
- * @return
- */
-const char* GBL_Repository::qstring2cc(QString *pQStr)
-{
-    g_temp_ba = pQStr->toUtf8();
-    const char* str = g_temp_ba.constData();
-
-    return str;
-}
-
-/**
  * @brief GBL_Repository::check_libgit_return
  * @param ret
  */
@@ -154,12 +141,12 @@ bool GBL_Repository::set_global_config_info(GBL_Config_Map *cfgMap)
         check_libgit_return(git_config_open_ondisk(&cfg, buf.ptr));
 
         QMapIterator<QString, QString> i(*cfgMap);
-        QString sKey, sVal;
+        GBL_String sKey, sVal;
         while (i.hasNext()) {
             i.next();
             sKey = i.key();
             sVal = i.value();
-            check_libgit_return(git_config_set_string(cfg, qstring2cc(&sKey), qstring2cc(&sVal)));
+            check_libgit_return(git_config_set_string(cfg, sKey.toConstChar(), sVal.toConstChar()));
         }
 
     }
@@ -180,7 +167,7 @@ bool GBL_Repository::set_global_config_info(GBL_Config_Map *cfgMap)
  * @param bare
  * @return
  */
-bool GBL_Repository::init_repo(QString path, bool bare)
+bool GBL_Repository::init_repo(GBL_String path, bool bare)
 {
     cleanup();
     /*const QByteArray l8b = path.toUtf8();
@@ -200,7 +187,7 @@ bool GBL_Repository::init_repo(QString path, bool bare)
             opts.mode = GIT_REPOSITORY_INIT_SHARED_ALL;
         }
 
-        check_libgit_return(git_repository_init_ext(&m_pRepo, qstring2cc(&path), &opts));
+        check_libgit_return(git_repository_init_ext(&m_pRepo, path.toConstChar(), &opts));
 
         //create initial commit
         if (!bare)
@@ -240,14 +227,10 @@ bool GBL_Repository::init_repo(QString path, bool bare)
  * @param dstPath
  * @return
  */
-bool GBL_Repository::clone_repo(QString srcUrl, QString dstPath)
+bool GBL_Repository::clone_repo(GBL_String srcUrl, GBL_String dstPath)
 {
     cleanup();
-    QByteArray baUrl = srcUrl.toUtf8();
-    const char* strUrl = baUrl.constData();
-    QByteArray baPath = dstPath.toUtf8();
-    const char* strPath = baPath.constData();
-    m_iErrorCode = git_clone(&m_pRepo, strUrl, strPath, NULL);
+    m_iErrorCode = git_clone(&m_pRepo, srcUrl.toConstChar(), dstPath.toConstChar(), NULL);
 
     return m_iErrorCode >= 0;
 }
@@ -257,12 +240,12 @@ bool GBL_Repository::clone_repo(QString srcUrl, QString dstPath)
  * @param path
  * @return
  */
-bool GBL_Repository::open_repo(QString path)
+bool GBL_Repository::open_repo(GBL_String path)
 {
     cleanup();
     /*const QByteArray l8b = path.toUtf8();
     const char* spath = l8b.constData();*/
-    m_iErrorCode = git_repository_open(&m_pRepo, qstring2cc(&path));
+    m_iErrorCode = git_repository_open(&m_pRepo, path.toConstChar());
     return m_iErrorCode >= 0;
 }
 
@@ -277,9 +260,26 @@ bool GBL_Repository::get_remotes(QStringList &remote_list)
     for (int i=0; i < remotes.count; i++)
     {
         qDebug() << remotes.strings[i];
+        remote_list.append(QString(remotes.strings[i]));
     }
 
     return m_iErrorCode >= 0;
+}
+
+
+bool GBL_Repository::get_references(QStringList &ref_list)
+{
+    git_strarray refs = {0};
+    m_iErrorCode = git_reference_list(&refs, m_pRepo);
+
+    qDebug() << "get_references:" << refs.count;
+
+    for (int i=0; i < refs.count; i++)
+    {
+        qDebug() << refs.strings[i];
+        ref_list.append(QString(refs.strings[i]));
+    }
+
 }
 
 /**
@@ -442,7 +442,7 @@ bool GBL_Repository::index_unstage(QStringList *pList)
     return m_iErrorCode >= 0;
 }
 
-bool GBL_Repository::commit_index(QString sMessage)
+bool GBL_Repository::commit_index(GBL_String sMessage)
 {
     git_index *index = NULL;
     git_signature *sig = NULL;
@@ -461,11 +461,11 @@ bool GBL_Repository::commit_index(QString sMessage)
         if (bHead)
         {
             check_libgit_return(git_commit_lookup(&parent,m_pRepo,&head_id));
-            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, "UTF-8", qstring2cc(&sMessage), tree, 1, parent));
+            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, "UTF-8", sMessage.toConstChar(), tree, 1, parent));
         }
         else
         {
-            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, NULL, qstring2cc(&sMessage), tree, 0));
+            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, NULL, sMessage.toConstChar(), tree, 0));
         }
     }
     catch(GBL_RepositoryException &e)
@@ -487,11 +487,11 @@ bool GBL_Repository::commit_index(QString sMessage)
  * @param pFileMod
  * @return
  */
-bool GBL_Repository::get_tree_from_commit_oid(QString oid_str, GBL_FileModel *pFileMod)
+bool GBL_Repository::get_tree_from_commit_oid(GBL_String oid_str, GBL_FileModel *pFileMod)
 {
 
    git_oid oid;
-   const char* str = qstring2cc(&oid_str);
+   const char* str = oid_str.toConstChar();
    m_iErrorCode = git_oid_fromstr(&oid, str);
    if (m_iErrorCode >= 0)
    {
@@ -569,7 +569,7 @@ int GBL_Repository::tree_walk_callback(const char *root, const git_tree_entry *e
  * @param pFileMod
  * @return
  */
-bool GBL_Repository::get_commit_to_parent_diff_files(QString oid_str, GBL_File_Array *pHistFileArr)
+bool GBL_Repository::get_commit_to_parent_diff_files(GBL_String oid_str, GBL_File_Array *pHistFileArr)
 {
     return get_commit_to_parent_diff(oid_str, GIT_DIFF_FORMAT_NAME_STATUS,  diff_print_files_callback, pHistFileArr);
 }
@@ -581,7 +581,7 @@ bool GBL_Repository::get_commit_to_parent_diff_files(QString oid_str, GBL_File_A
  * @param path
  * @return
  */
-bool GBL_Repository::get_commit_to_parent_diff_lines(QString oid_str, MainWindow *pMain, char *path)
+bool GBL_Repository::get_commit_to_parent_diff_lines(GBL_String oid_str, MainWindow *pMain, char *path)
 {
     return get_commit_to_parent_diff(oid_str, GIT_DIFF_FORMAT_PATCH, diff_print_lines_callback, pMain, path);
 }
@@ -595,7 +595,7 @@ bool GBL_Repository::get_commit_to_parent_diff_lines(QString oid_str, MainWindow
  * @param path
  * @return
  */
-bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path)
+bool GBL_Repository::get_commit_to_parent_diff(GBL_String oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path)
 {
     git_oid oid;
     git_tree *pTree = NULL, *pParentTree = NULL;
@@ -610,7 +610,7 @@ bool GBL_Repository::get_commit_to_parent_diff(QString oid_str, git_diff_format_
 
     git_diff *pDiff = NULL;
 
-    const char* str = qstring2cc(&oid_str);
+    const char* str = oid_str.toConstChar();
     m_iErrorCode = git_oid_fromstr(&oid, str);
     if (m_iErrorCode >= 0)
     {

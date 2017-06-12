@@ -3,6 +3,8 @@
 
 #include <QScrollArea>
 #include <QTextEdit>
+#include <QLabel>
+
 #include "src/gbl/gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
@@ -11,6 +13,13 @@ struct GBL_File_Item;
 class QLabel;
 class QTextEdit;
 QT_END_NAMESPACE
+
+class DiffInfoTypeLabel : public QLabel
+{
+    Q_OBJECT
+public:
+    explicit DiffInfoTypeLabel(QWidget *parent = 0);
+};
 
 class DiffInfoWidget : public QFrame
 {
@@ -24,6 +33,8 @@ public:
 
 private:
     QLabel *m_pFileImgLabel, *m_pFilePathLabel;
+    DiffInfoTypeLabel *m_pTypeLabel;
+
     QPixmap *m_pPixmap;
 };
 

@@ -1,5 +1,5 @@
 #include "src/gbl/gbl_version.h"
-#include "AboutDialog.h"
+#include "aboutDialog.h"
 #include <QPainter>
 #include <QTextStream>
 #include <QSvgRenderer>

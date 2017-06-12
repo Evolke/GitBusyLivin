@@ -28,7 +28,10 @@ SOURCES += src/main.cpp\
     src/ui/stageddockview.cpp \
     src/ui/unstageddockview.cpp \
     src/ui/singleapplication.cpp \
-    src/ui/aboutdialog.cpp
+    src/ui/aboutdialog.cpp \
+    src/ui/toolbarcombo.cpp \
+    src/gbl/gbl_string.cpp \
+    src/ui/badgetoolbutton.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -46,7 +49,10 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/stageddockview.h \
     src/ui/unstageddockview.h \
     src/ui/singleapplication.h \
-    src/ui/aboutdialog.h
+    src/ui/aboutdialog.h \
+    src/ui/toolbarcombo.h \
+    src/gbl/gbl_string.h \
+    src/ui/badgetoolbutton.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc

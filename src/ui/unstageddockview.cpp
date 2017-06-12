@@ -122,6 +122,7 @@ UnstagedButton::UnstagedButton(const QString &text, QWidget *parent, int nMinWid
 {
     m_nMinWidthWithText = nMinWidthWithText;
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+
     setText(text);
     setToolTip(text);
 }

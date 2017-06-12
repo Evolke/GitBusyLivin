@@ -89,7 +89,7 @@ QTreeView::item {
 }
 
 
-QTreeView::item:selected {
+QTreeView::item:selected, QTreeView::item:selected:hover {
     color: #BBBBBB;
     background-color: #666666;
 }
@@ -175,6 +175,11 @@ QComboBox {
     border: 1px solid #bbb;
     border-radius: 4px;
     padding: 3px 20px 3px 5px;
+    background: #eee;
+}
+
+QComboBox::item:selected {
+    background: #555;
 }
 
 QComboBox::drop-down {
@@ -199,6 +204,14 @@ QComboBox::down-arrow:on {
 QComboBox QAbstractItemView {
     selection-color: #fff;
     selection-background-color: #aaa;
+}
+
+ToolbarCombo {
+    border-radius: none;
+}
+
+ToolbarCombo::drop-down {
+    border: none;
 }
 
 QGroupBox {
@@ -305,7 +318,13 @@ DiffView {
 
 DiffInfoWidget {
     color: #333;
-    background-color: #ccc;
+    background-color: #ddd;
     border: none;
     border-bottom: 1px solid #bbb;
+}
+
+DiffInfoTypeLabel {
+    color: #444;
+    background-color: #ccc;
+    border-right: 1px solid #aaa;
 }

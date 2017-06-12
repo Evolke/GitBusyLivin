@@ -152,6 +152,14 @@ QComboBox QAbstractItemView {
     border-radius: none;
 }
 
+ToolbarCombo {
+    border-radius: none;
+}
+
+ToolbarCombo::drop-down {
+    border: none;
+}
+
 QGroupBox {
     border: 1px solid #555;
     border-radius: 8px;
@@ -340,4 +348,10 @@ DiffInfoWidget {
     color: #DDDDDD;
     background-color: #222222;
     border: none;
+}
+
+DiffInfoTypeLabel {
+    color: #aaa;
+    background-color: #111;
+    border-right: 1px solid #555;
 }

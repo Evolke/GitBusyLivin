@@ -15,6 +15,8 @@
 #include "urlpixmap.h"
 #include "stageddockview.h"
 #include "unstageddockview.h"
+#include "toolbarcombo.h"
+#include "badgetoolbutton.h"
 
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
@@ -184,6 +186,10 @@ void MainWindow::setupRepoUI(QString repoDir)
     if (m_docks.isEmpty())
     {
         createDocks();
+        m_pBranchCombo = new ToolbarCombo(m_pToolBar);
+        //m_pBranchCombo->addItem(tr("Master"));
+        m_pToolBar->addSeparator();
+        m_pToolBar->addWidget(m_pBranchCombo);
     }
 
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
@@ -197,6 +203,10 @@ void MainWindow::setupRepoUI(QString repoDir)
     m_qpRepo->get_history(&pHistArr);
 
     m_actionMap["refresh"]->setDisabled(false);
+
+    QStringList remotes, refs;
+    m_qpRepo->get_remotes(remotes);
+    m_qpRepo->get_references(refs);
 
     if (pHistArr != NULL && !pHistArr->isEmpty())
     {
@@ -271,9 +281,11 @@ void MainWindow::historySelectionChanged(const QItemSelection &selected, const Q
             pMod->cleanFileArray();
             pMod->setHistoryItem(pHistItem);
             pDock = m_docks["file_diff"];
-            DiffView *pDV = (DiffView*)pDock->widget();
-            pDV->reset();
-
+            if (m_sSelectedCode == "history")
+            {
+                DiffView *pDV = (DiffView*)pDock->widget();
+                pDV->reset();
+            }
             //m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
             GBL_File_Array histFileArr;
             if (m_qpRepo->get_commit_to_parent_diff_files(pHistItem->hist_oid, &histFileArr))
@@ -293,6 +305,7 @@ void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, con
     //single row selection
     if (mil.count() > 0)
     {
+        m_sSelectedCode = "history";
         FileView *pFView = m_fileviews["unstaged"];
         pFView->selectionModel()->clearSelection();
         pFView = m_fileviews["staged"];
@@ -352,6 +365,7 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
     int count = rowMap.size();*/
     if  (mil.size())
     {
+        m_sSelectedCode = "unstaged";
         pFView = m_fileviews["history"];
         pFView->selectionModel()->clearSelection();
         pFView = m_fileviews["staged"];
@@ -389,6 +403,7 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
 
         if (m_qpRepo->get_index_to_work_diff(this,&files))
         {
+            if (mil.size() > 1) { pFileItem = NULL; }
             pDV->setDiffFromLines(pFileItem);
         }
     }
@@ -408,6 +423,7 @@ void MainWindow::stagedFileSelectionChanged(const QItemSelection &selected, cons
 
     if  (mil.size())
     {
+        m_sSelectedCode = "staged";
         pFView = m_fileviews["history"];
         pFView->selectionModel()->clearSelection();
         pFView = m_fileviews["unstaged"];
@@ -445,6 +461,7 @@ void MainWindow::stagedFileSelectionChanged(const QItemSelection &selected, cons
 
         if (m_qpRepo->get_index_to_head_diff(this, &files))
         {
+            if (mil.size() > 1) { pFileItem = NULL; }
             pDV->setDiffFromLines(pFileItem);
         }
     }
@@ -632,15 +649,20 @@ void MainWindow::preferences()
 
         int nTBType = prefsDlg.getUIToolbarButtonType();
         settings.setValue("UI/Toolbar_text", nTBType);
+        Qt::ToolButtonStyle nTBStyle;
         switch (nTBType)
         {
-            case 0:
-                m_pToolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
-                break;
             case 1:
-                m_pToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+                nTBStyle = Qt::ToolButtonTextBesideIcon;
+                break;
+            default:
+                nTBStyle = Qt::ToolButtonIconOnly;
                 break;
         }
+
+        m_pToolBar->setToolButtonStyle(nTBStyle);
+        m_pPullBtn->setToolButtonStyle(nTBStyle);
+        m_pPushBtn->setToolButtonStyle(nTBStyle);
 
         //check if global config matches
         GBL_Config_Map cfgMap;
@@ -884,16 +906,18 @@ void MainWindow::readSettings()
     setTheme(sTheme);
 
     int nTBType = settings.value("UI/Toolbar_text",0).toInt();
+    Qt::ToolButtonStyle nTBStyle;
     switch (nTBType)
     {
-        case 0:
-            m_pToolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
-            break;
         case 1:
-            m_pToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+            nTBStyle = Qt::ToolButtonTextBesideIcon;
+            break;
+        default:
+            nTBStyle = Qt::ToolButtonIconOnly;
             break;
     }
 
+    m_pToolBar->setToolButtonStyle(nTBStyle);
 
    /**/
     UrlPixmap svgpix(NULL);
@@ -922,17 +946,29 @@ void MainWindow::readSettings()
 
     QAction *pushAct = new QAction(QIcon(*svgpix.getSmallPixmap(16)), tr("&Push"), this);
     m_pRepoMenu->addAction(pushAct);
-    m_pToolBar->addAction(pushAct);
+    //m_pToolBar->addAction(pushAct);
     pushAct->setDisabled(true);
     m_actionMap["push"] = pushAct;
+    m_pPushBtn = new BadgeToolButton(m_pToolBar);
+    m_pPushBtn->setBadge(QString("99"));
+    m_pPushBtn->setDefaultAction(pushAct);
+    m_pPushBtn->setToolButtonStyle(nTBStyle);
+    //m_pPushBtn->setIcon(*svgpix.getSmallPixmap(16));
+    m_pToolBar->addWidget(m_pPushBtn);
+
 
     svgpix.loadSVGResource(":/images/pull_toolbar_icon.svg", sBorderClr, QSize(16,16));
 
     QAction *pullAct = new QAction(QIcon(*svgpix.getSmallPixmap(16)), tr("&Pull"), this);
     m_pRepoMenu->addAction(pullAct);
-    m_pToolBar->addAction(pullAct);
+    //m_pToolBar->addAction(pullAct);
     pullAct->setDisabled(true);
     m_actionMap["pull"] = pullAct;
+    m_pPullBtn = new BadgeToolButton(m_pToolBar);
+    m_pPullBtn->setDefaultAction(pullAct);
+    m_pPullBtn->setBadge(QString("99"));
+    m_pPullBtn->setToolButtonStyle(nTBStyle);
+    m_pToolBar->addWidget(m_pPullBtn);
 
 }
 

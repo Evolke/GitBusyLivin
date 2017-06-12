@@ -21,6 +21,8 @@ class QNetworkDiskCache;
 class QAction;
 struct GBL_Line_Item;
 class FileView;
+class ToolbarCombo;
+class BadgeToolButton;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -37,6 +39,7 @@ public:
     void addToDiffView(GBL_Line_Item *pLineItem);
     void setTheme(const QString &theme);
     QString getTheme() { return m_sTheme; }
+    QString getSelectedCode() { return m_sSelectedCode; }
 
     GBL_Repository* getRepo() { return m_qpRepo; }
     QToolBar* getToolBar() { return m_pToolBar; }
@@ -95,6 +98,7 @@ private:
     QMap<QString, FileView*> m_fileviews;
     QMenu *m_pViewMenu, *m_pRepoMenu;
     QToolBar *m_pToolBar;
+    ToolbarCombo *m_pBranchCombo;
     QNetworkAccessManager *m_pNetAM;
     QNetworkDiskCache *m_pNetCache;
     QString m_sTheme;
@@ -103,9 +107,11 @@ private:
     QAction *m_pRecentRepoSeparator;
     QAction *m_pRecentRepoSubMenuAct;
     QMap<QString, QAction*> m_actionMap;
+    BadgeToolButton *m_pPullBtn, *m_pPushBtn;
 
     static MainWindow *m_pSingleInst;
     int m_updateTimer;
+    QString m_sSelectedCode;
 
 };
 
