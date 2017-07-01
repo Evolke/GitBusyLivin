@@ -16,7 +16,7 @@ QMenuBar::item:selected {
 
 QMenu {
     background: none;
-    background-color: #CCCCCC;
+    background-color: #eee;
     color: #333333;
     padding: 0;
 }
@@ -32,28 +32,30 @@ QTableView {
     alternate-background-color: #267B8D;
     selection-color: #BBBBBB;
     selection-background-color: #666666;
+    outline: none;
 }
 
 QTableView::item {
     border: 0;
     padding: 2px 0;
-    background-color: #267BD9;
-    color: #ddd;
+    background-color: #eee;
+    color: #444;
+    outline: none;
 }
 
 QTableView::item:alternate {
-    background-color: #267B8D;
+    background-color: #ddd;
 }
 
-QTableView::item:selected {
-    color: #BBBBBB;
+QTableView::item:selected, QTableView::item:selected:hover {
+    color: #ddd;
     background-color: #666666;
     border-top: 1 solid #999;
     border-bottom: 1 solid #999;
 }
 
 QTableView::item:hover {
-    color: #fff;
+    color: #222;
 }
 
 QHeaderView, QHeaderView::section {
@@ -82,16 +84,25 @@ QTextEdit, QTreeView {
 }
 
 QTreeView {
-    outline: 0;
+    outline: none;
+}
+
+QTreeView:focus {
+    outline: none;
 }
 
 QTreeView::item {
+    outline: none;
 }
 
+QTreeView::item:focus {
+    outline: none;
+}
 
 QTreeView::item:selected, QTreeView::item:selected:hover {
-    color: #BBBBBB;
+    color: #ddd ;
     background-color: #666666;
+    outline: none;
 }
 
 QTreeView::item:hover {
@@ -110,7 +121,7 @@ QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-b
 QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QFrame {
     color:#333333;
     background: none;
-    background-color:#eee;
+    background-color:#fff;
 }
 
 QLabel {

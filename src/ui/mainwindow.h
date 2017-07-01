@@ -70,6 +70,7 @@ private slots:
     void closeEvent(QCloseEvent *event);
     void updateRecentRepoActions();
     void openRecentRepo();
+    void cleaningRepo();
     void timerEvent(QTimerEvent *event);
     void refresh();
 

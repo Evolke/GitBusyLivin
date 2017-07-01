@@ -40,6 +40,7 @@ private:
     QMap<QString, UrlPixmap*> m_avatarMap;
     QMap<QString, QString> m_gravMap;
     QList<QString> m_emailList;
+    QMap<QString, int> m_colMap;
 };
 
 #endif // GBL_HISTORYMODEL_H

@@ -24,6 +24,7 @@ CommitDetail::CommitDetail(QWidget *parent) : QFrame(parent)
     mainLayout->addWidget(m_pAvatar,0,0);
     mainLayout->addWidget(m_pDetails,0,1);
     mainLayout->setSpacing(0);
+    mainLayout->setMargin(2);
     m_pAvatar->setMaximumWidth(42);
     m_pAvatar->setAlignment(Qt::AlignHCenter|Qt::AlignTop);
     //m_pDetails->setAlignment(Qt::AlignLeft|Qt::AlignTop);
@@ -46,6 +47,14 @@ void CommitDetail::setDetails(GBL_History_Item *pHistItem, QPixmap *pAvatar)
     //QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
     QString sHtml("<table cellpadding=\'2\'><tr><td><i>Commit:</i></td><td>");
     sHtml += m_pHistItem->hist_oid;
+    sHtml += "</td></tr><td><i>Parents:</i></td><td>";
+    int nParentCount = m_pHistItem->hist_parents.size();
+    for (int i = 0; i < nParentCount; i++)
+    {
+        sHtml += m_pHistItem->hist_parents.at(i).left(7);
+        if (i < (nParentCount-1)) sHtml += ", ";
+    }
+
     sHtml += "</td></tr><tr><td><i>Author:</i></td><td>";
     sHtml += m_pHistItem->hist_author;
     sHtml += "</td></tr><tr><td><i>Email:</i></td><td>";
@@ -74,7 +83,7 @@ void CommitDetail::setDetails(GBL_History_Item *pHistItem, QPixmap *pAvatar)
 CommitDetailScrollArea::CommitDetailScrollArea(QWidget *parent) : QScrollArea(parent)
 {
    m_pDetail = new CommitDetail(this);
-   //setContentsMargins(0,0,0,0);
+   setContentsMargins(0,0,0,0);
    setBackgroundRole(QPalette::Base);
    setFrameStyle(QFrame::StyledPanel);
    setViewportMargins(0,0,0,0);

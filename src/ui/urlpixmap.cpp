@@ -91,7 +91,7 @@ void UrlPixmap::loadSVGResource(QString sRes, QString sColor, QSize size)
 
     QSize svg_size = svg.defaultSize();
 
-    QPixmap pix(svg_size*2);
+    QPixmap pix(svg_size);
 
     pix.fill(Qt::transparent);
     QPainter pixPainter(&pix);

@@ -5,8 +5,10 @@
 #include "src/gbl/gbl_version.h"
 #include "src/gbl/gbl_historymodel.h"
 #include "src/gbl/gbl_filemodel.h"
+#include "src/gbl/gbl_refsmodel.h"
 #include "src/ui/historyview.h"
 #include "src/ui/fileview.h"
+#include "referencesview.h"
 #include "diffview.h"
 #include "clonedialog.h"
 #include "src/gbl/gbl_storage.h"
@@ -195,8 +197,8 @@ void MainWindow::setupRepoUI(QString repoDir)
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 
     QFileInfo fi(repoDir);
-    QString title(GBL_APP_NAME);
-    QTextStream(&title) << " - " << fi.fileName();
+    QString title(fi.fileName());
+    QTextStream(&title) << " - " << GBL_APP_NAME;
     setWindowTitle(title);
 
     GBL_History_Array *pHistArr = NULL;
@@ -204,27 +206,23 @@ void MainWindow::setupRepoUI(QString repoDir)
 
     m_actionMap["refresh"]->setDisabled(false);
 
-    QStringList remotes, refs;
+    QStringList remotes;
     m_qpRepo->get_remotes(remotes);
-    m_qpRepo->get_references(refs);
+    if (m_qpRepo->fill_references())
+    {
+        m_pBranchCombo->clear();
+        m_pBranchCombo->addItems(m_qpRepo->getBranchNames());
+        m_pBranchCombo->adjustSize();
+
+       QDockWidget *pDock =  m_docks["refs"];
+       ReferencesView *pRefView = (ReferencesView*)pDock->widget();
+       pRefView->setRefRoot(m_qpRepo->get_references());
+    }
+
 
     if (pHistArr != NULL && !pHistArr->isEmpty())
     {
         m_pHistModel->setModelData(pHistArr);
-        m_pHistView->reset();
-        m_pHistView->scrollToTop();
-        QDockWidget *pDock = m_docks["history_details"];
-        QSplitter *pSplit = (QSplitter*)pDock->widget();
-        CommitDetailScrollArea *pDetailSA = (CommitDetailScrollArea*)pSplit->widget(0);
-        pDetailSA->reset();
-        FileView *pView = (FileView*)pSplit->widget(1);
-        pView->reset();
-        GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
-        pMod->cleanFileArray();
-
-        pDock = m_docks["file_diff"];
-        DiffView *pDV = (DiffView*)pDock->widget();
-        pDV->reset();
     }
 
     updateStatus();
@@ -711,6 +709,7 @@ void MainWindow::refresh()
 void MainWindow::init()
 {
     m_qpRepo = new GBL_Repository();
+    connect(m_qpRepo,&GBL_Repository::cleaningRepo,this,&MainWindow::cleaningRepo);
     m_pToolBar = addToolBar(tr(GBL_APP_NAME));
     m_pToolBar->setObjectName("MainWindow/Toolbar");
     m_pToolBar->setIconSize(QSize(16,16));
@@ -721,16 +720,53 @@ void MainWindow::init()
     setWindowTitle(tr(GBL_APP_NAME));
     statusBar()->showMessage(tr("Ready"));
     readSettings();
+
+    setWindowIcon(QIcon(QPixmap(QLatin1String(":/images/git_busy_livin_logo_16.png"))));
+}
+
+void MainWindow::cleaningRepo()
+{
+    qDebug() << "cleaning Repo";
+
+    if (!m_docks.isEmpty())
+    {
+        m_pHistModel->setModelData(NULL);
+        m_pHistView->reset();
+        m_pHistView->scrollToTop();
+        QDockWidget *pDock = m_docks["history_details"];
+        QSplitter *pSplit = (QSplitter*)pDock->widget();
+        CommitDetailScrollArea *pDetailSA = (CommitDetailScrollArea*)pSplit->widget(0);
+        pDetailSA->reset();
+        FileView *pView = (FileView*)pSplit->widget(1);
+        pView->reset();
+        GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
+        pMod->cleanFileArray();
+
+        pDock = m_docks["file_diff"];
+        DiffView *pDV = (DiffView*)pDock->widget();
+        pDV->reset();
+
+        pDock = m_docks["refs"];
+        ReferencesView* pRefView = (ReferencesView*)pDock->widget();
+        pRefView->setRefRoot(NULL);
+        pRefView->reset();
+    }
 }
 
 void MainWindow::createActions()
 {
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     QMenu *newMenu = fileMenu->addMenu(tr("&New"));
-    newMenu->addAction(tr("&Local Repository..."), this, &MainWindow::new_local_repo);
-    newMenu->addAction(tr("&Network Repository..."), this, &MainWindow::new_network_repo);
-    m_actionMap["clone"] = fileMenu->addAction(tr("&Clone..."), this, &MainWindow::clone);
-    m_actionMap["open"] = fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
+    QAction *act = newMenu->addAction(tr("&Local Repository..."), this, &MainWindow::new_local_repo);
+    act->setStatusTip(tr("Create New Local Repository"));
+    act = newMenu->addAction(tr("&Network Repository..."), this, &MainWindow::new_network_repo);
+    act->setStatusTip(tr("Create New Bare Remote Repository"));
+    act = fileMenu->addAction(tr("&Clone..."), this, &MainWindow::clone);
+    act->setStatusTip(tr("Clone a Repository"));
+    m_actionMap["clone"] = act;
+    act = fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
+    m_actionMap["open"] = act;
+    act->setStatusTip(tr("Open a Repository"));
     fileMenu->addSeparator();
 
     QMenu *recentMenu = fileMenu->addMenu(tr("Recent"));
@@ -793,6 +829,7 @@ void MainWindow::createHistoryTable()
     m_pHistModel = new GBL_HistoryModel(NULL, this);
     m_pHistView = new HistoryView(this);
     m_pHistView->setModel(m_pHistModel);
+    m_pHistView->setItemDelegateForColumn(0,new HistoryDelegate(m_pHistView));
     m_pHistView->verticalHeader()->hide();
     //m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -858,6 +895,15 @@ void MainWindow::createDocks()
     m_fileviews["unstaged"] = pView;
     connect(pView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::workingFileSelectionChanged);
 
+    //setup refs dock
+    pDock = new QDockWidget(tr("References"));
+    m_docks["refs"] = pDock;
+    pDock->setObjectName("MainWindow/Refs");
+    addDockWidget(Qt::LeftDockWidgetArea, pDock);
+    ReferencesView *pRefView = new ReferencesView(pDock);
+    pDock->setWidget(pRefView);
+    pRefView->setModel(new GBL_RefsModel(pRefView));
+    m_pViewMenu->addAction(pDock->toggleViewAction());
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
     const QByteArray state = settings.value("MainWindow/WindowState", QByteArray()).toByteArray();
     if (!state.isEmpty())
@@ -950,7 +996,8 @@ void MainWindow::readSettings()
     pushAct->setDisabled(true);
     m_actionMap["push"] = pushAct;
     m_pPushBtn = new BadgeToolButton(m_pToolBar);
-    m_pPushBtn->setBadge(QString("99"));
+    //m_pPushBtn->setBadge(QString("39"));
+    m_pPushBtn->setArrowType(1);
     m_pPushBtn->setDefaultAction(pushAct);
     m_pPushBtn->setToolButtonStyle(nTBStyle);
     //m_pPushBtn->setIcon(*svgpix.getSmallPixmap(16));
@@ -966,7 +1013,8 @@ void MainWindow::readSettings()
     m_actionMap["pull"] = pullAct;
     m_pPullBtn = new BadgeToolButton(m_pToolBar);
     m_pPullBtn->setDefaultAction(pullAct);
-    m_pPullBtn->setBadge(QString("99"));
+    //m_pPullBtn->setBadge(QString("59"));
+    m_pPullBtn->setArrowType(2);
     m_pPullBtn->setToolButtonStyle(nTBStyle);
     m_pToolBar->addWidget(m_pPullBtn);
 

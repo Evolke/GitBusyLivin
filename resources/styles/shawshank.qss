@@ -352,6 +352,6 @@ DiffInfoWidget {
 
 DiffInfoTypeLabel {
     color: #aaa;
-    background-color: #111;
+    background-color: #222;
     border-right: 1px solid #555;
 }

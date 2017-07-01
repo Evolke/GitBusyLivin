@@ -31,5 +31,10 @@
         <file>images/unstage_sel_icon.svg</file>
         <file>images/unstage_all_icon.svg</file>
         <file>images/commit_push_icon.svg</file>
+        <file>images/tag_icon.svg</file>
+        <file>images/remotes_icon.svg</file>
+        <file>images/branch_icon.svg</file>
+        <file>images/stashes_icon.svg</file>
+        <file>images/git_busy_livin_logo_16.png</file>
     </qresource>
 </RCC>

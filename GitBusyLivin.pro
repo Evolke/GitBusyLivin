@@ -31,7 +31,9 @@ SOURCES += src/main.cpp\
     src/ui/aboutdialog.cpp \
     src/ui/toolbarcombo.cpp \
     src/gbl/gbl_string.cpp \
-    src/ui/badgetoolbutton.cpp
+    src/ui/badgetoolbutton.cpp \
+    src/ui/referencesview.cpp \
+    src/gbl/gbl_refsmodel.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -52,7 +54,9 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/aboutdialog.h \
     src/ui/toolbarcombo.h \
     src/gbl/gbl_string.h \
-    src/ui/badgetoolbutton.h
+    src/ui/badgetoolbutton.h \
+    src/ui/referencesview.h \
+    src/gbl/gbl_refsmodel.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
@@ -102,7 +106,7 @@ DISTFILES += \
 #CUSTOM CODE HERE
 VERSION_MAJOR = 0
 VERSION_MINOR = 0
-VERSION_BUILD = 16
+VERSION_BUILD = 17
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
        "VERSION_MINOR=$$VERSION_MINOR"\

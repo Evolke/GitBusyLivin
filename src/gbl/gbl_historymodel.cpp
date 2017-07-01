@@ -17,9 +17,14 @@
 GBL_HistoryModel::GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent) : QAbstractTableModel(parent)
 {
     m_pHistArr = pHistArr;
-    m_headings.append(QString("Summary"));
-    m_headings.append(QString("Author"));
-    m_headings.append(QString("Date"));
+    m_headings.append(tr("Graph"));
+    m_headings.append(tr("Summary"));
+    m_headings.append(tr("Author"));
+    m_headings.append(tr("Date"));
+    m_colMap["graph"] = 0;
+    m_colMap["summary"] = 1;
+    m_colMap["author"] = 2;
+    m_colMap["date"] = 3;
 }
 
 GBL_HistoryModel::~GBL_HistoryModel()
@@ -44,7 +49,7 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
     m_emailList.clear();
     m_gravMap.clear();
 
-    if (!pHistArr->isEmpty())
+    if (pHistArr && !pHistArr->isEmpty())
     {
         MainWindow *pMain = (MainWindow*)parent();
         QNetworkAccessManager *pNetAM = pMain->getNetworkAccessManager();
@@ -171,7 +176,7 @@ int GBL_HistoryModel::rowCount(const QModelIndex &parent) const
 int GBL_HistoryModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    if (m_pHistArr) return 3;
+    if (m_pHistArr) return m_headings.size();
 
     return 0;
 }
@@ -193,28 +198,28 @@ QVariant GBL_HistoryModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole)
     {
         GBL_History_Item *pHistItem = m_pHistArr->at(index.row());
-        switch (index.column())
-        {
-            case 0:
-                return pHistItem->hist_summary;
-            case 1:
-                return pHistItem->hist_author;
-            case 2:
-                return pHistItem->hist_datetime.toString("M/d/yyyy h:mm ap");
-        }
-    }
-    else if (role == Qt::DecorationRole && index.column() == 1)
-    {
-        GBL_History_Item *pHistItem = m_pHistArr->at(index.row());
-        QString sEmail = pHistItem->hist_author_email.toLower();
-        if (m_avatarMap.contains(sEmail))
-        {
-            UrlPixmap *pUP = m_avatarMap[sEmail];
-            return QVariant::fromValue(*(pUP->getSmallPixmap(20)));
-        }
+        if  (index.column() == m_colMap["summary"])
+            return pHistItem->hist_summary;
+        else if (index.column() == m_colMap["author"])
+            return pHistItem->hist_author;
+        else if (index.column() == m_colMap["date"])
+            return pHistItem->hist_datetime.toString("M/d/yyyy h:mm ap");
 
-        return QVariant();
     }
+    else if (role == Qt::DecorationRole)
+    {
+        if (index.column() == m_colMap["author"])
+        {
+            GBL_History_Item *pHistItem = m_pHistArr->at(index.row());
+            QString sEmail = pHistItem->hist_author_email.toLower();
+            if (m_avatarMap.contains(sEmail))
+            {
+                UrlPixmap *pUP = m_avatarMap[sEmail];
+                return QVariant::fromValue(*(pUP->getSmallPixmap(20)));
+            }
+        }
+    }
+
     return QVariant();
 }
 

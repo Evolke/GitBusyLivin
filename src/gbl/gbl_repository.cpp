@@ -13,7 +13,6 @@ static char git_buf__initbuf[1];
 /* Use to initialize buffer structure when git_buf is on stack */
 #define GIT_BUF_INIT { git_buf__initbuf, 0, 0 }
 
-static QByteArray g_temp_ba;
 static QByteArrayList g_temp_balist;
 
 GBL_Repository::GBL_Repository(QObject *parent) : QObject(parent)
@@ -23,13 +22,16 @@ GBL_Repository::GBL_Repository(QObject *parent) : QObject(parent)
     m_pHist_Arr = Q_NULLPTR;
     m_iErrorCode = 0;
     m_pConfig_Map = new GBL_Config_Map;
+    m_pRef = new GBL_RefItem(QString(),QString());
 }
 
 GBL_Repository::~GBL_Repository()
 {
     delete m_pConfig_Map;
-
     cleanup();
+
+    delete m_pRef;
+
     git_libgit2_shutdown();
 }
 
@@ -38,7 +40,10 @@ GBL_Repository::~GBL_Repository()
  */
 void GBL_Repository::cleanup()
 {
+    emit cleaningRepo();
+
     cleanup_history();
+    m_pRef->cleanup();
 
     if (m_pRepo)
     {
@@ -65,6 +70,24 @@ void GBL_Repository::cleanup_history()
         delete m_pHist_Arr;
         m_pHist_Arr = Q_NULLPTR;
     }
+}
+
+
+void GBL_Repository::init_ref_items()
+{
+    GBL_RefItem *pChildRef = new GBL_RefItem(QString("heads"),QString(),m_pRef);
+    pChildRef->setName(tr("Branches"));
+    m_pRef->addChild(pChildRef);
+    pChildRef = new GBL_RefItem(QString("remotes"),QString(),m_pRef);
+    pChildRef->setName(tr("Remotes"));
+    m_pRef->addChild(pChildRef);
+    pChildRef = new GBL_RefItem(QString("tags"),QString(),m_pRef);
+    pChildRef->setName(tr("Tags"));
+    m_pRef->addChild(pChildRef);
+    pChildRef = new GBL_RefItem(QString("stashes"),QString(),m_pRef);
+    pChildRef->setName(tr("Stashes"));
+    m_pRef->addChild(pChildRef);
+
 }
 
 /**
@@ -267,19 +290,80 @@ bool GBL_Repository::get_remotes(QStringList &remote_list)
 }
 
 
-bool GBL_Repository::get_references(QStringList &ref_list)
+bool GBL_Repository:: fill_references()
 {
     git_strarray refs = {0};
     m_iErrorCode = git_reference_list(&refs, m_pRepo);
 
-    qDebug() << "get_references:" << refs.count;
+    //qDebug() << "get_references:" << refs.count;
 
+    m_pRef->cleanup();
+    init_ref_items();
+
+    QString sRef;
     for (int i=0; i < refs.count; i++)
     {
-        qDebug() << refs.strings[i];
-        ref_list.append(QString(refs.strings[i]));
+        //qDebug() << refs.strings[i];
+       sRef = refs.strings[i];
+       QStringList refPieces = sRef.split('/');
+       if (refPieces.size() >= 3)
+       {
+           GBL_RefItem *pRef = m_pRef;
+           for (int i = 1; i < refPieces.size(); i++)
+           {
+               QString sReference;
+               QString sKey = refPieces.at(i);
+               GBL_RefItem *pChildRef;
+               pChildRef = pRef->findChild(sKey);
+               if (!pChildRef)
+               {
+                   if (i == refPieces.size()-1) sReference = sRef;
+                   pChildRef = new GBL_RefItem(sKey,sReference, pRef);
+                   pRef->addChild(pChildRef);
+               }
+               pRef = pChildRef;
+           }
+       }
     }
 
+    fill_stashes();
+
+    return m_iErrorCode >= 0;
+}
+
+bool GBL_Repository::fill_stashes()
+{
+    GBL_RefItem *pRef = m_pRef->findChild(QString("stashes"));
+
+    m_iErrorCode = git_stash_foreach(m_pRepo, (git_stash_cb)stash_cb, pRef);
+
+    return m_iErrorCode >= 0;
+}
+
+int GBL_Repository::stash_cb(size_t index, const char *message, const int *stash_id, void *payload)
+{
+    qDebug() << "stash_cb_index:" << index;
+    qDebug() << "stash_cb_message" << message;
+    qDebug() << "stash_cb_id:" << stash_id;
+
+    GBL_RefItem *pRef = (GBL_RefItem*)payload;
+    GBL_RefItem *pChildRef = new GBL_RefItem(QString::number(*stash_id),QString(),pRef);
+    pChildRef->setName(message);
+    pRef->addChild(pChildRef);
+
+    return 0;
+}
+
+QStringList GBL_Repository::getBranchNames()
+{
+    QStringList branches;
+    GBL_RefItem *pRef = m_pRef->findChild(QString("heads"));
+    if (pRef)
+    {
+        branches = pRef->getChildrenKeys();
+    }
+
+    return branches;
 }
 
 /**
@@ -291,6 +375,8 @@ bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
 {
     git_revwalk *walker;
     m_iErrorCode = git_revwalk_new(&walker, m_pRepo);
+    int nMaxRevs = 1000;
+    int nCount = 0;
     if (m_iErrorCode >= 0)
     {
         m_iErrorCode = git_revwalk_push_head(walker);
@@ -299,29 +385,45 @@ bool GBL_Repository::get_history(GBL_History_Array **pHist_Arr)
             cleanup_history();
             m_pHist_Arr = new GBL_History_Array;
             git_oid oid;
-            while (!git_revwalk_next(&oid, walker))
+            const git_oid *poid;
+
+            while (!git_revwalk_next(&oid, walker) && nCount < nMaxRevs)
             {
-                git_commit * commit = nullptr;
-                git_commit_lookup(&commit, m_pRepo, &oid);
+                git_commit *pCommit = nullptr, *pParentCommit = nullptr;
+                git_commit_lookup(&pCommit, m_pRepo, &oid);
 
                 QString soid(git_oid_tostr_s(&oid));
                 GBL_History_Item *pHistItem = new GBL_History_Item;
                 pHistItem->hist_oid = soid;
-                pHistItem->hist_summary = QString(git_commit_summary(commit));
-                pHistItem->hist_message = QString(git_commit_message(commit));
-                const git_signature *pGit_Sig = git_commit_author(commit);
+                pHistItem->hist_summary = QString(git_commit_summary(pCommit));
+                pHistItem->hist_message = QString(git_commit_message(pCommit));
+                const git_signature *pGit_Sig = git_commit_author(pCommit);
                 QString author;
                 QTextStream(&author) << QString::fromUtf8(pGit_Sig->name) << " <" << pGit_Sig->email << ">";
                 pHistItem->hist_author = author;
                 pHistItem->hist_author_email = QString(pGit_Sig->email);
                 pHistItem->hist_datetime = QDateTime::fromTime_t(pGit_Sig->when.time);
+
+                int nParentCount = git_commit_parentcount(pCommit);
+                if (nParentCount > 0)
+                {
+                    for (int i = 0; i < nParentCount; i++)
+                    {
+                        git_commit_parent(&pParentCommit, pCommit, i);
+                        poid = git_commit_id(pParentCommit);
+                        pHistItem->hist_parents.append(QString(git_oid_tostr_s(poid)));
+                        git_commit_free(pParentCommit);
+                    }
+                }
+
+
                 m_pHist_Arr->append(pHistItem);
 
                 //qDebug() << pHistItem->hist_summary << pHistItem->hist_author << pHistItem->hist_datetime;
 
                 // free the commit
-                git_commit_free(commit);
-
+                git_commit_free(pCommit);
+                nCount++;
             }
 
             *pHist_Arr = m_pHist_Arr;
@@ -920,4 +1022,80 @@ bool GBL_Repository::get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &
     }
 
     return false;
+}
+
+GBL_RefItem::GBL_RefItem(QString sKey, QString sRef, GBL_RefItem *pParent)
+{
+    m_sKey = sKey;
+    m_sName = sKey;
+    m_sRef = sRef;
+    m_pParentRef = pParent;
+    m_pIcon = NULL;
+}
+
+GBL_RefItem::~GBL_RefItem()
+{
+    cleanup();
+}
+
+void GBL_RefItem::cleanup()
+{
+    for (int i = 0; i < m_refChildren.size(); i++)
+    {
+        GBL_RefItem *pRef = m_refChildren.at(i);
+        delete pRef;
+    }
+
+    m_refChildren.clear();
+
+}
+
+void GBL_RefItem::addChild(GBL_RefItem *pRef)
+{
+    m_refChildren.append(pRef);
+}
+
+GBL_RefItem* GBL_RefItem::findChild(QString sKey)
+{
+    for (int i = 0; i < m_refChildren.size(); i++)
+    {
+        GBL_RefItem *pRef = m_refChildren.at(i);
+        if (pRef->getKey() == sKey) return pRef;
+    }
+
+    return NULL;
+}
+
+GBL_RefItem* GBL_RefItem::getChildAt(int index)
+{
+    if (index >= 0 && index < m_refChildren.size())
+    {
+        return m_refChildren.at(index);
+    }
+
+    return NULL;
+}
+
+QStringList GBL_RefItem::getChildrenKeys()
+{
+    QStringList sKeys;
+
+    for (int i = 0; i < m_refChildren.size(); i++)
+    {
+        GBL_RefItem *pRef = m_refChildren.at(i);
+        sKeys.append(pRef->getKey());
+    }
+
+    return sKeys;
+
+}
+
+int GBL_RefItem::index()
+{
+    if (m_pParentRef)
+    {
+        return m_pParentRef->getChildrenList()->indexOf(this);
+    }
+
+    return -1;
 }

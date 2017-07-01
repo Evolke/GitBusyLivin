@@ -7,6 +7,8 @@
 #include <git2.h>
 #include <QDateTime>
 #include <QException>
+#include <QMap>
+#include <QStringList>
 
 #define GBL_FILE_STATUS_ADDED 'A'
 #define GBL_FILE_STATUS_DELETED 'D'
@@ -29,6 +31,7 @@ typedef struct GBL_History_Item {
     QDateTime hist_datetime;
     QString hist_author;
     QString hist_author_email;
+    QStringList hist_parents;
 } GBL_History_Item;
 
 typedef QVector<GBL_History_Item*> GBL_History_Array;
@@ -49,13 +52,17 @@ typedef struct GBL_Line_Item {
 } GBL_Line_Item;
 
 typedef QVector<GBL_Line_Item*> GBL_Line_Array;
-
 typedef QMap<QString, QString> GBL_Config_Map;
+
 
 QT_BEGIN_NAMESPACE
 class GBL_FileModel;
 class MainWindow;
+class GBL_RefItem;
 QT_END_NAMESPACE
+
+typedef QMap<QString, GBL_RefItem*> GBL_Ref_Map;
+typedef QList<GBL_RefItem*> GBL_Ref_Children;
 
 class GBL_RepositoryException : QException
 {
@@ -63,6 +70,39 @@ class GBL_RepositoryException : QException
     GBL_RepositoryException *clone() const { return new GBL_RepositoryException(*this); }
 
 };
+
+class GBL_RefItem
+{
+public:
+    explicit GBL_RefItem(QString sKey, QString sRef, GBL_RefItem *pParent = NULL);
+    ~GBL_RefItem();
+
+    void cleanup();
+
+    void addChild(GBL_RefItem *pRef);
+    GBL_RefItem* findChild(QString sKey);
+    GBL_RefItem* getParent() { return m_pParentRef; }
+    GBL_RefItem* getChildAt(int index);
+    QStringList getChildrenKeys();
+    int getChildCount() { return m_refChildren.size(); }
+    GBL_Ref_Children* getChildrenList() { return &m_refChildren; }
+    int index();
+    QString getKey() { return m_sKey; }
+    QString getRef() { return m_sRef; }
+    QString getName() { return m_sName; }
+    void setName(QString sName) { m_sName = sName; }
+    QIcon* getIcon() { return m_pIcon; }
+    void setIcon(QIcon *pIcon) { m_pIcon = pIcon; }
+
+private:
+    QString m_sKey;
+    QString m_sName;
+    QString m_sRef;
+    GBL_Ref_Children m_refChildren;
+    GBL_RefItem *m_pParentRef;
+    QIcon *m_pIcon;
+};
+
 
 /**
  * @brief The GBL_Repository class
@@ -78,6 +118,7 @@ public:
     static int diff_print_files_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
     static int diff_print_lines_callback(const git_diff_delta*, const git_diff_hunk*, const git_diff_line*, void *payload);
     static int staged_cb(const char *path, const char *matched_pathspec, void *payload);
+    static int stash_cb(size_t index, const char *message, const int *stash_id, void *payload);
 
     QString get_error_msg();
     bool init_repo(GBL_String path, bool bare=false);
@@ -89,7 +130,10 @@ public:
     bool index_unstage(QStringList *pList);
     bool commit_index(GBL_String sMessage);
     bool get_remotes(QStringList &remote_list);
-    bool get_references(QStringList &ref_list);
+    bool fill_references();
+    bool fill_stashes();
+    GBL_RefItem* get_references() { return m_pRef; }
+    QStringList getBranchNames();
     bool get_history(GBL_History_Array **pHist_Arr);
     bool get_tree_from_commit_oid(GBL_String oid_str, GBL_FileModel *pFileMod);
     void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);
@@ -104,12 +148,16 @@ public:
     bool get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &unstagedArr);
 
 signals:
+    void cleaningRepo();
 
 public slots:
 
-private:
+private slots:
     void cleanup();
+
+private:
     void cleanup_history();
+    void init_ref_items();
     void check_libgit_return(int ret);
     bool get_commit_to_parent_diff(GBL_String oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path=Q_NULLPTR);
 
@@ -117,7 +165,7 @@ private:
     int m_iErrorCode;
     GBL_History_Array *m_pHist_Arr;
     GBL_Config_Map *m_pConfig_Map;
-
+    GBL_RefItem *m_pRef;
 };
 
 #endif // GBL_REPOSITORY_H
