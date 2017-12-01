@@ -5,8 +5,6 @@
 #include "src/gbl/gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
-class UrlPixmap;
-class QNetworkReply;
 QT_END_NAMESPACE
 
 class GBL_HistoryModel : public QAbstractTableModel
@@ -14,7 +12,7 @@ class GBL_HistoryModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent = Q_NULLPTR);
+    GBL_HistoryModel(QObject *parent = Q_NULLPTR);
     ~GBL_HistoryModel();
 
     Q_INVOKABLE virtual QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
@@ -24,22 +22,22 @@ public:
     Q_INVOKABLE virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     //Q_INVOKABLE virtual bool hasChildren(const QModelIndex &parent = QModelIndex()) const;
 
-    void setModelData(GBL_History_Array *pHistArr);
+    //void setModelData(GBL_History_Array *pHistArr);
+    void historyUpdated();
+    GBL_History_Array* getHistoryArray() { return m_pHistArr; }
     GBL_History_Item* getHistoryItemAt(int index);
-    void getAvatarFromUrl(QString sUrl, QString sEmail);
-    QPixmap* getAvatar(QString sEmail);
+    void reset();
+    void addHistoryItem(GBL_History_Item *pHistItem);
 
 public slots:
-    void avatarDownloaded(QNetworkReply* pReply);
 
 private:
+    void cleanupHistory();
     void cleanupAvatars();
 
     GBL_History_Array *m_pHistArr;
+    QMap<QString,int> m_histMap;
     QVector<QString> m_headings;
-    QMap<QString, UrlPixmap*> m_avatarMap;
-    QMap<QString, QString> m_gravMap;
-    QList<QString> m_emailList;
     QMap<QString, int> m_colMap;
 };
 

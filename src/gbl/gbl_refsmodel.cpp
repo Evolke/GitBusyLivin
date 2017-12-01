@@ -5,7 +5,13 @@
 
 GBL_RefsModel::GBL_RefsModel(QObject *parent) : QAbstractItemModel(parent)
 {
+    //m_pRefRoot = new GBL_RefItem(QString(),QString());
     m_pRefRoot = NULL;
+}
+
+GBL_RefsModel::~GBL_RefsModel()
+{
+    //delete m_pRefRoot;
 }
 
 
@@ -34,6 +40,15 @@ void GBL_RefsModel::setRefRoot(GBL_RefItem *pRef)
     layoutChanged();
 }
 
+void GBL_RefsModel::reset()
+{
+    QAbstractItemModel::resetInternalData();
+
+    m_pRefRoot = NULL;
+    layoutChanged();
+    //m_pRefRoot->cleanup();
+    //initRefItems();
+}
 
 QModelIndex GBL_RefsModel::parent(const QModelIndex &child) const
 {
@@ -63,6 +78,8 @@ int GBL_RefsModel::rowCount(const QModelIndex &parent) const
 
 int GBL_RefsModel::columnCount(const QModelIndex &parent) const
 {
+    Q_UNUSED(parent);
+
     return 1;
 }
 

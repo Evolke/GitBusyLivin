@@ -1,6 +1,7 @@
 #include <QtWidgets>
 
 #include "mainwindow.h"
+#include "mdichild.h"
 #include "aboutdialog.h"
 #include "src/gbl/gbl_version.h"
 #include "src/gbl/gbl_historymodel.h"
@@ -9,37 +10,50 @@
 #include "src/ui/historyview.h"
 #include "src/ui/fileview.h"
 #include "referencesview.h"
-#include "diffview.h"
+#include "contentview.h"
 #include "clonedialog.h"
 #include "src/gbl/gbl_storage.h"
-#include "commitdetail.h"
+#include "commitdock.h"
 #include "prefsdialog.h"
 #include "urlpixmap.h"
 #include "stageddockview.h"
 #include "unstageddockview.h"
 #include "toolbarcombo.h"
 #include "badgetoolbutton.h"
+#include "commitdock.h"
 
+#include <QMdiArea>
+#include <QMdiSubWindow>
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
+#include <QNetworkReply>
 #include <QDir>
 #include <QFileInfo>
 #include <QSplitter>
 
 #define UPDATE_STATUS_INTERVAL 30000
+#define OPEN_REPO_UPDATE_STATUS_INTERVAL 500
+#define TOOLBAR_ICON_SIZE 24
 
 MainWindow* MainWindow::m_pSingleInst = NULL;
 
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+MainWindow::MainWindow()
+    : m_pMdiArea(new QMdiArea)
 {
+    setCentralWidget(m_pMdiArea);
+    m_pMdiArea->setViewMode(QMdiArea::TabbedView);
+    m_pMdiArea->setTabsClosable(true);
+    m_pMdiArea->setTabsMovable(true);
+    m_pMdiArea->setTabPosition(QTabWidget::North);
     m_qpRepo = NULL;
-    m_pHistModel = NULL;
-    m_pHistView = NULL;
     m_pNetAM = NULL;
     m_pNetCache = NULL;
     m_updateTimer = 0;
+    m_openRepoTimer = 0;
+    m_pCurrentChild = NULL;
+
+    m_nCommitTabID = COMMIT_DIFF_TAB_ID;
 
     setInstance(this);
 
@@ -55,6 +69,10 @@ MainWindow::~MainWindow()
 
     //if (m_pNetCache) { delete m_pNetCache;}
     if (m_pNetAM) { delete m_pNetAM; }
+    cleanupAvatars();
+    m_emailList.clear();
+    m_gravMap.clear();
+
     cleanupDocks();
 }
 
@@ -69,6 +87,16 @@ void MainWindow::cleanupDocks()
 
     m_docks.clear();
 
+}
+
+void MainWindow::cleanupAvatars()
+{
+    QMapIterator<QString, UrlPixmap*> i(m_avatarMap);
+    while (i.hasNext()) {
+        UrlPixmap *pUrlpm = (UrlPixmap*)i.next().value();
+        delete pUrlpm;
+    }
+    m_avatarMap.clear();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -98,6 +126,7 @@ void MainWindow::clone()
 
         if (m_qpRepo->clone_repo(src, dst))
         {
+            openRepoTab(dst);
             setupRepoUI(dst);
         }
         else
@@ -137,6 +166,10 @@ void MainWindow::new_network_repo()
         {
             QMessageBox::warning(this, tr("Creation Error"), m_qpRepo->get_error_msg());
         }
+        else
+        {
+            QMessageBox::information(this, tr("Success"),tr("Successfully created a new bare repository"));
+        }
     }
 }
 
@@ -145,18 +178,14 @@ void MainWindow::open()
     QString dirName = QFileDialog::getExistingDirectory(this);
     if (!dirName.isEmpty())
     {
-        if (m_qpRepo->open_repo(dirName))
+        if (m_updateTimer) killTimer(m_updateTimer);
+        if (m_openRepoTimer) killTimer(m_openRepoTimer);
+
+        if (openRepoTab(dirName))
         {
             MainWindow::prependToRecentRepos(dirName);
-            m_sRepoPath = dirName;
-            if (m_updateTimer) killTimer(m_updateTimer);
-            m_updateTimer = startTimer(UPDATE_STATUS_INTERVAL);
 
             setupRepoUI(dirName);
-        }
-        else
-        {
-            QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
         }
     }
 }
@@ -166,25 +195,50 @@ void MainWindow::openRecentRepo()
     if (const QAction *action = qobject_cast<const QAction *>(sender()))
     {
         QString dirName = action->data().toString();
-        if (m_qpRepo->open_repo(dirName))
+        if (m_updateTimer) killTimer(m_updateTimer);
+        if (m_openRepoTimer) killTimer(m_openRepoTimer);
+
+        if (openRepoTab(dirName))
         {
             MainWindow::prependToRecentRepos(dirName);
-            m_sRepoPath = dirName;
-            if (m_updateTimer) killTimer(m_updateTimer);
-            m_updateTimer = startTimer(UPDATE_STATUS_INTERVAL);
 
             setupRepoUI(dirName);
         }
-        else
-        {
-            QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
-        }
+    }
+}
 
+bool MainWindow::openRepoTab(QString &path)
+{
+    QMdiSubWindow *pSubWnd = findMdiChild(path);
+    if (pSubWnd)
+    {
+        m_pMdiArea->setActiveSubWindow(pSubWnd);
+        return false;
+    }
+
+    MdiChild *pChild = new MdiChild(m_pMdiArea);
+    if (pChild->init(path))
+    {
+        pSubWnd = m_pMdiArea->addSubWindow(pChild);
+        m_pMdiArea->setActiveSubWindow(pSubWnd);
+        pChild->show();
+
+        return true;
+    }
+    else
+    {
+        GBL_Repository *pRepo = pChild->getRepository();
+        QMessageBox::warning(this, tr("Open Error"), pRepo->get_error_msg());
+        delete pRepo;
+        return false;
     }
 }
 
 void MainWindow::setupRepoUI(QString repoDir)
 {
+    //m_sRepoPath = repoDir;
+    m_openRepoTimer = startTimer(OPEN_REPO_UPDATE_STATUS_INTERVAL);
+
     if (m_docks.isEmpty())
     {
         createDocks();
@@ -193,66 +247,169 @@ void MainWindow::setupRepoUI(QString repoDir)
         m_pToolBar->addSeparator();
         m_pToolBar->addWidget(m_pBranchCombo);
     }
+    else
+    {
+        resetDocks(true);
+    }
 
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 
-    QFileInfo fi(repoDir);
+
+    /*QFileInfo fi(repoDir);
     QString title(fi.fileName());
     QTextStream(&title) << " - " << GBL_APP_NAME;
-    setWindowTitle(title);
+    setWindowTitle(title);*/
 
-    GBL_History_Array *pHistArr = NULL;
-    m_qpRepo->get_history(&pHistArr);
+    //m_qpRepo->get_history(m_pHistModel);
+    //m_pHistModel->historyUpdated();
 
+    //m_pHistView->setSpan(0,0,500,1);
     m_actionMap["refresh"]->setDisabled(false);
 
     QStringList remotes;
-    m_qpRepo->get_remotes(remotes);
-    if (m_qpRepo->fill_references())
-    {
-        m_pBranchCombo->clear();
-        m_pBranchCombo->addItems(m_qpRepo->getBranchNames());
-        m_pBranchCombo->adjustSize();
+    GBL_Repository *pRepo = currentMdiChild()->getRepository();
+    m_actionMap["push"]->setDisabled(false);
+    m_actionMap["pull"]->setDisabled(false);
+    m_actionMap["fetch"]->setDisabled(false);
 
-       QDockWidget *pDock =  m_docks["refs"];
-       ReferencesView *pRefView = (ReferencesView*)pDock->widget();
-       pRefView->setRefRoot(m_qpRepo->get_references());
+    if (pRepo && !pRepo->is_bare())
+    {
+        pRepo->get_remotes(remotes);
+        if (!remotes.isEmpty())
+        {
+        }
+
+        //QDockWidget *pDock =  m_docks["refs"];
+        //ReferencesView *pRefView = (ReferencesView*)pDock->widget();
+        //GBL_RefsModel *pRefMod = (GBL_RefsModel*)pRefView->model();
+
+        if (pRepo->fill_references())
+        {
+            updateReferences();
+            updateBranchCombo();
+        }
     }
 
 
-    if (pHistArr != NULL && !pHistArr->isEmpty())
-    {
-        m_pHistModel->setModelData(pHistArr);
-    }
-
-    updateStatus();
+    //updateStatus();
 
     QApplication::restoreOverrideCursor();
 
 }
 
+
 void MainWindow::updateStatus()
 {
     GBL_File_Array stagedArr, unstagedArr;
-    if (m_qpRepo->get_repo_status(stagedArr, unstagedArr))
-    {
-        QDockWidget *pDock = m_docks["staged"];
-        StagedDockView *pView = (StagedDockView*)pDock->widget();
-        pDock = m_docks["unstaged"];
-        UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
+    QDockWidget *pDock = m_docks["staged"];
+    StagedDockView *pView = (StagedDockView*)pDock->widget();
+    pDock = m_docks["unstaged"];
+    UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
+    pView->reset();
+    pUSView->reset();
 
-        pView->reset();
-        pUSView->reset();
-        pView->setFileArray(&stagedArr);
-        pUSView->setFileArray(&unstagedArr);
+    GBL_Repository *pRepo = getCurrentRepository();
+    if (pRepo)
+    {
+        if (pRepo->get_repo_status(stagedArr, unstagedArr))
+        {
+
+            pView->setFileArray(&stagedArr);
+            pUSView->setFileArray(&unstagedArr);
+        }
+
+        int ahead = 0, behind = 0;
+        GBL_String sBranch;
+        sBranch = (const QString&)m_pBranchCombo->currentText();
+        if (!sBranch.isEmpty())
+        {
+            pRepo->get_ahead_behind_count(sBranch, ahead, behind);
+            if (behind > 0)
+            {
+                QString sBehind("99");
+                sBehind.setNum(behind);
+                m_pPullBtn->setBadge(sBehind);
+            }
+            else
+            {
+                m_pPullBtn->setBadge("");
+            }
+
+            if (ahead > 0)
+            {
+                QString sAhead("100");
+                sAhead.setNum(ahead);
+                m_pPushBtn->setBadge(sAhead);
+            }
+            else
+            {
+                m_pPushBtn->setBadge("");
+            }
+        }
+    }
+    else
+    {
+        m_pPullBtn->setBadge("");
+        m_pPushBtn->setBadge("");
+    }
+
+    m_pPullBtn->update();
+    m_pPushBtn->update();
+
+}
+
+void MainWindow::updateBranchCombo()
+{
+    MdiChild *pChild = currentMdiChild();
+    if (pChild)
+    {
+        GBL_Repository *pRepo = pChild->getRepository();
+        m_pBranchCombo->clear();
+        m_pBranchCombo->addItems(pRepo->getBranchNames());
+        m_pBranchCombo->adjustSize();
+
+        QString sHeadBranch;
+        pRepo->get_head_branch(sHeadBranch);
+        if (!sHeadBranch.isEmpty())
+        {
+            m_pBranchCombo->setCurrentText(sHeadBranch);
+        }
+    }
+    else
+    {
+        m_pBranchCombo->clear();
+    }
+
+}
+
+void MainWindow::updateReferences()
+{
+    MdiChild *pChild = currentMdiChild();
+    if (pChild)
+    {
+        QDockWidget *pDock =  m_docks["refs"];
+        ReferencesView *pRefView = (ReferencesView*)pDock->widget();
+        GBL_RefsModel *pRefMod = (GBL_RefsModel*)pRefView->model();
+
+        GBL_Repository *pRepo = pChild->getRepository();
+        pRefMod->setRefRoot(pRepo->get_references());
+        pRefView->setRefIcons();
     }
 }
 
 void MainWindow::timerEvent(QTimerEvent *event)
 {
-    if (event->timerId() == m_updateTimer)
+    if (event->timerId() == m_updateTimer || event->timerId() == m_openRepoTimer)
     {
-        updateStatus();
+        //updateStatus();
+
+        if (event->timerId() == m_openRepoTimer)
+        {
+            killTimer(m_openRepoTimer);
+            m_openRepoTimer = 0;
+            m_updateTimer = startTimer(UPDATE_STATUS_INTERVAL);
+
+        }
     }
 }
 
@@ -264,33 +421,7 @@ void MainWindow::historySelectionChanged(const QItemSelection &selected, const Q
     //single row selection
     if (mil.count() > 0)
     {
-        QModelIndex mi = mil.at(0);
-        int row = mi.row();
-        GBL_History_Item *pHistItem = m_pHistModel->getHistoryItemAt(row);
-        if (pHistItem)
-        {
-            QDockWidget *pDock = m_docks["history_details"];
-            QSplitter *pSplit = (QSplitter*)pDock->widget();
-            FileView *pView = (FileView*)pSplit->widget(1);
-            CommitDetailScrollArea *pDetail = (CommitDetailScrollArea*)pSplit->widget(0);
-            pDetail->setDetails(pHistItem, m_pHistModel->getAvatar(pHistItem->hist_author_email));
-            pView->reset();
-            GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
-            pMod->cleanFileArray();
-            pMod->setHistoryItem(pHistItem);
-            pDock = m_docks["file_diff"];
-            if (m_sSelectedCode == "history")
-            {
-                DiffView *pDV = (DiffView*)pDock->widget();
-                pDV->reset();
-            }
-            //m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
-            GBL_File_Array histFileArr;
-            if (m_qpRepo->get_commit_to_parent_diff_files(pHistItem->hist_oid, &histFileArr))
-            {
-                pMod->setFileArray(&histFileArr);
-            }
-        }
+        updateCommitFiles();
     }
 }
 
@@ -311,11 +442,10 @@ void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, con
 
         QModelIndex mi = mil.at(0);
         int row = mi.row();
-        QDockWidget *pDock = m_docks["history_details"];
-        QSplitter *pSplit = (QSplitter*)pDock->widget();
-        FileView *pView = (FileView*)pSplit->widget(1);
+        CommitDock *pDock = (CommitDock*)m_docks["history_details"];
+        FileView *pView = pDock->getFileView();
         GBL_FileModel *pFileMod = (GBL_FileModel*)pView->model();
-        GBL_File_Item *pFileItem = pFileMod->getFileItemAt(row);
+        GBL_File_Item *pFileItem = pFileMod->getFileItemFromModelIndex(mi);
         if (pFileItem)
         {
             QString path;
@@ -328,15 +458,30 @@ void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, con
             QTextStream(&path) << sub << pFileItem->file_name;
             QByteArray baPath = path.toUtf8();
             GBL_History_Item *pHistItem = pFileMod->getHistoryItem();
-            QDockWidget *pDock = m_docks["file_diff"];
-            DiffView *pDV = (DiffView*)pDock->widget();
-            pDV->reset();
+            QDockWidget *pDock = m_docks["file_content"];
+            ContentView *pCV = (ContentView*)pDock->widget();
+            pCV->reset();
 
-            if (m_qpRepo->get_commit_to_parent_diff_lines(pHistItem->hist_oid, this, baPath.data()))
+            GBL_Repository *pRepo = getCurrentRepository();
+            if (pRepo)
             {
-                pDV->setDiffFromLines(pFileItem);
+                if (m_nCommitTabID == COMMIT_DIFF_TAB_ID)
+                {
+                    if (pRepo->get_commit_to_parent_diff_lines(pHistItem->hist_oid, this, baPath.data()))
+                    {
+                        pCV->setDiffFromLines(pFileItem);
+                    }
+                }
+                else if (m_nCommitTabID == COMMiT_ALL_TAB_ID)
+                {
+                    QString content;
+                    if (pRepo->get_blob_content(GBL_String(pFileItem->file_oid), content))
+                    {
+                        pCV->setContentInfo(pFileItem);
+                        pCV->setContent(content);
+                    }
+                }
             }
-
         }
     }
 }
@@ -347,9 +492,9 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
     Q_UNUSED(selected);
 
 
-    QDockWidget *pDock = m_docks["file_diff"];
-    DiffView *pDV = (DiffView*)pDock->widget();
-    pDV->reset();
+    QDockWidget *pDock = m_docks["file_content"];
+    ContentView *pCV = (ContentView*)pDock->widget();
+    pCV->reset();
 
     FileView *pFView = m_fileviews["unstaged"];
     QModelIndexList mil = pFView->selectionModel()->selectedRows();
@@ -364,7 +509,7 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
     if  (mil.size())
     {
         m_sSelectedCode = "unstaged";
-        pFView = m_fileviews["history"];
+        pFView = ((CommitDock*)m_docks["history_details"])->getFileView();
         pFView->selectionModel()->clearSelection();
         pFView = m_fileviews["staged"];
         pFView->selectionModel()->clearSelection();
@@ -399,10 +544,14 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
 
             //qDebug() << path;
 
-        if (m_qpRepo->get_index_to_work_diff(this,&files))
+        GBL_Repository *pRepo = getCurrentRepository();
+        if (pRepo)
         {
-            if (mil.size() > 1) { pFileItem = NULL; }
-            pDV->setDiffFromLines(pFileItem);
+            if (pRepo->get_index_to_work_diff(this,&files))
+            {
+                if (mil.size() > 1) { pFileItem = NULL; }
+                pCV->setDiffFromLines(pFileItem);
+            }
         }
     }
 }
@@ -412,9 +561,9 @@ void MainWindow::stagedFileSelectionChanged(const QItemSelection &selected, cons
     Q_UNUSED(deselected);
     Q_UNUSED(selected);
 
-    QDockWidget *pDock = m_docks["file_diff"];
-    DiffView *pDV = (DiffView*)pDock->widget();
-    pDV->reset();
+    QDockWidget *pDock = m_docks["file_content"];
+    ContentView *pCV = (ContentView*)pDock->widget();
+    pCV->reset();
 
     FileView *pFView = m_fileviews["staged"];
     QModelIndexList mil = pFView->selectionModel()->selectedRows();
@@ -422,7 +571,7 @@ void MainWindow::stagedFileSelectionChanged(const QItemSelection &selected, cons
     if  (mil.size())
     {
         m_sSelectedCode = "staged";
-        pFView = m_fileviews["history"];
+        pFView = ((CommitDock*)m_docks["history_details"])->getFileView();
         pFView->selectionModel()->clearSelection();
         pFView = m_fileviews["unstaged"];
         pFView->selectionModel()->clearSelection();
@@ -456,12 +605,121 @@ void MainWindow::stagedFileSelectionChanged(const QItemSelection &selected, cons
             files.append(sPath);
         }
 
-
-        if (m_qpRepo->get_index_to_head_diff(this, &files))
+        GBL_Repository *pRepo = getCurrentRepository();
+        if (pRepo)
         {
-            if (mil.size() > 1) { pFileItem = NULL; }
-            pDV->setDiffFromLines(pFileItem);
+            if (pRepo->get_index_to_head_diff(this, &files))
+            {
+                if (mil.size() > 1) { pFileItem = NULL; }
+                pCV->setDiffFromLines(pFileItem);
+            }
         }
+    }
+}
+
+void MainWindow::commitTabChanged(int tabID)
+{
+    m_nCommitTabID = tabID;
+
+    updateCommitFiles();
+}
+
+void MainWindow::updateCommitFiles()
+{
+    MdiChild *pChild = currentMdiChild();
+    if (pChild)
+    {
+        HistoryView *pView = pChild->getHistoryView();
+        QModelIndexList mil = pView->selectionModel()->selectedIndexes();
+        if (mil.count() > 0)
+        {
+            QModelIndex mi = mil.at(0);
+            int row = mi.row();
+
+            GBL_HistoryModel *pHistModel = pChild->getHistoryModel();
+            GBL_History_Item *pHistItem = pHistModel->getHistoryItemAt(row);
+            if (pHistItem)
+            {
+                CommitDock *pCDock = (CommitDock*)m_docks["history_details"];
+                pCDock->reset();
+                CommitFileView *pView = pCDock->getFileView();
+                //CommitDetailScrollArea *pDetail = (CommitDetailScrollArea*)pSplit->widget(0);
+                pCDock->setDetails(pHistItem, getAvatar(pHistItem->hist_author_email));
+                //pMod->setHistoryItem(pHistItem);
+                QDockWidget *pDock = m_docks["file_content"];
+                if (m_sSelectedCode == "history")
+                {
+                    ContentView *pCV = (ContentView*)pDock->widget();
+                    pCV->reset();
+                }
+                //m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
+                GBL_File_Array histFileArr;
+                GBL_Repository *pRepo = currentMdiChild()->getRepository();
+                GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
+                pMod->setRepoPath(currentMdiChild()->currentPath());
+
+                switch (m_nCommitTabID)
+                {
+                    case COMMIT_DIFF_TAB_ID:
+                        if (pRepo->get_commit_to_parent_diff_files(pHistItem->hist_oid, &histFileArr))
+                        {
+                            pMod->setViewType(GBL_FILETREE_VIEW_TYPE_LIST);
+                            pCDock->setFileArray(&histFileArr);
+                            pView->setHeaderHidden(false);
+                        }
+                        break;
+
+                    case COMMiT_ALL_TAB_ID:
+                        if (pRepo->get_tree_from_commit_oid(pHistItem->hist_oid, &histFileArr))
+                        {
+                            pMod->setViewType(GBL_FILETREE_VIEW_TYPE_TREE);
+                            pCDock->setFileArray(&histFileArr);
+                            pView->setHeaderHidden(true);
+                        }
+                        break;
+                }
+
+            }
+        }
+    }
+}
+
+void MainWindow::activateChild(QMdiSubWindow *window)
+{
+    if (!m_docks.isEmpty())
+    {
+        MdiChild *oldChild = m_pCurrentChild;
+        m_pCurrentChild = currentMdiChild();
+
+        if (oldChild != m_pCurrentChild)
+        {
+            GBL_Repository *pRepo = getCurrentRepository();
+
+            m_pBranchCombo->clear();
+            resetDocks();
+            if (pRepo && !pRepo->is_bare())
+            {
+                updateReferences();
+                updateBranchCombo();
+                updateStatus();
+            }
+
+            updateCommitFiles();
+        }
+        else if (m_pCurrentChild == NULL)
+        {
+            m_pBranchCombo->clear();
+            resetDocks();
+        }
+    }
+
+}
+
+void MainWindow::applicationStateChanged(Qt::ApplicationState state)
+{
+    if (state == Qt::ApplicationActive && m_pCurrentChild)
+    {
+        m_pMdiArea->setActiveSubWindow((QMdiSubWindow*)m_pCurrentChild->parent());
     }
 }
 
@@ -488,13 +746,17 @@ void MainWindow::stageAll()
         files.append(sPath);
     }
 
-    if (m_qpRepo->add_to_index(&files))
+    GBL_Repository* pRepo = getCurrentRepository();
+    if (pRepo)
     {
-        updateStatus();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+        if (pRepo->add_to_index(&files))
+        {
+            updateStatus();
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Open Error"), pRepo->get_error_msg());
+        }
     }
 }
 
@@ -524,13 +786,17 @@ void MainWindow::stageSelected()
         files.append(sPath);
     }
 
-    if (m_qpRepo->add_to_index(&files))
+    GBL_Repository* pRepo = getCurrentRepository();
+    if (pRepo)
     {
-        updateStatus();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+        if (pRepo->add_to_index(&files))
+        {
+            updateStatus();
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Open Error"), pRepo->get_error_msg());
+        }
     }
 }
 
@@ -558,13 +824,17 @@ void MainWindow::unstageAll()
         files.append(sPath);
     }
 
-    if (m_qpRepo->index_unstage(&files))
+    GBL_Repository* pRepo = getCurrentRepository();
+    if (pRepo)
     {
-        updateStatus();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+        if (pRepo->index_unstage(&files))
+        {
+            updateStatus();
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Open Error"), pRepo->get_error_msg());
+        }
     }
 }
 
@@ -594,13 +864,17 @@ void MainWindow::unstageSelected()
         files.append(sPath);
     }
 
-    if (m_qpRepo->index_unstage(&files))
+    GBL_Repository* pRepo = getCurrentRepository();
+    if (pRepo)
     {
-        updateStatus();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("Open Error"), m_qpRepo->get_error_msg());
+        if (pRepo->index_unstage(&files))
+        {
+            updateStatus();
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Open Error"), pRepo->get_error_msg());
+        }
     }
 }
 
@@ -610,29 +884,34 @@ void MainWindow::commit()
     StagedDockView *pSView = (StagedDockView*)pDock->widget();
     QString msg = pSView->getCommitMessage();
 
-    if (m_qpRepo->commit_index(msg))
+    GBL_Repository* pRepo = getCurrentRepository();
+    if (pRepo)
     {
-        setupRepoUI(m_sRepoPath);
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("Creation Error"), m_qpRepo->get_error_msg());
+        if (pRepo->commit_index(msg))
+        {
+            currentMdiChild()->updateHistory();
+            updateStatus();
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Commit Error"), pRepo->get_error_msg());
+        }
     }
 }
 
 void MainWindow::addToDiffView(GBL_Line_Item *pLineItem)
 {
-    QDockWidget *pDock = m_docks["file_diff"];
-    DiffView *pDV = (DiffView*)pDock->widget();
+    QDockWidget *pDock = m_docks["file_content"];
+    ContentView *pCV = (ContentView*)pDock->widget();
 
-    pDV->addLine(pLineItem);
+    pCV->addLine(pLineItem);
 }
 
 void MainWindow::preferences()
 {
     QString currentTheme = m_sTheme;
 
-    GBL_Config_Map *pConfigMap;
+    GBL_Config_Map *pConfigMap;   
     if (!m_qpRepo->get_global_config_info(&pConfigMap))
     {
        QMessageBox::warning(this, tr("Config Error"), m_qpRepo->get_error_msg());
@@ -706,51 +985,71 @@ void MainWindow::refresh()
     updateStatus();
 }
 
+void MainWindow::pushAction()
+{
+    GBL_Repository* pRepo = getCurrentRepository();
+    if (pRepo)
+    {
+    }
+}
+
+void MainWindow::pullAction()
+{
+    GBL_String sBranch;
+    sBranch = m_pBranchCombo->currentText();
+
+    GBL_Repository* pRepo = getCurrentRepository();
+    if (pRepo)
+    {
+        pRepo->pull_remote("origin", sBranch);
+        currentMdiChild()->updateHistory();
+        updateReferences();
+        updateBranchCombo();
+        updateStatus();
+    }//setupRepoUI(m_sRepoPath);
+}
+
+void MainWindow::fetchAction()
+{
+    GBL_Repository *pRepo = getCurrentRepository();
+
+    if (pRepo)
+    {
+        if (pRepo->fetch_remote())
+        {
+            updateStatus();
+        }
+    }
+}
+
 void MainWindow::init()
 {
     m_qpRepo = new GBL_Repository();
     connect(m_qpRepo,&GBL_Repository::cleaningRepo,this,&MainWindow::cleaningRepo);
+    connect(m_pMdiArea,&QMdiArea::subWindowActivated,this,&MainWindow::activateChild);
     m_pToolBar = addToolBar(tr(GBL_APP_NAME));
     m_pToolBar->setObjectName("MainWindow/Toolbar");
-    m_pToolBar->setIconSize(QSize(16,16));
+    m_pToolBar->setIconSize(QSize(TOOLBAR_ICON_SIZE,TOOLBAR_ICON_SIZE));
     //m_pToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     createActions();
-    createHistoryTable();
+    //createHistoryTable();
     //createDocks();
     setWindowTitle(tr(GBL_APP_NAME));
     statusBar()->showMessage(tr("Ready"));
     readSettings();
 
-    setWindowIcon(QIcon(QPixmap(QLatin1String(":/images/git_busy_livin_logo_16.png"))));
+#ifdef Q_OS_MACOS
+    setWindowIcon(QIcon(":/images/git_busy_livin_logo_32.png"));
+#endif
+
+    m_pMdiArea->setBackground(Qt::NoBrush);
 }
 
 void MainWindow::cleaningRepo()
 {
     qDebug() << "cleaning Repo";
 
-    if (!m_docks.isEmpty())
-    {
-        m_pHistModel->setModelData(NULL);
-        m_pHistView->reset();
-        m_pHistView->scrollToTop();
-        QDockWidget *pDock = m_docks["history_details"];
-        QSplitter *pSplit = (QSplitter*)pDock->widget();
-        CommitDetailScrollArea *pDetailSA = (CommitDetailScrollArea*)pSplit->widget(0);
-        pDetailSA->reset();
-        FileView *pView = (FileView*)pSplit->widget(1);
-        pView->reset();
-        GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
-        pMod->cleanFileArray();
-
-        pDock = m_docks["file_diff"];
-        DiffView *pDV = (DiffView*)pDock->widget();
-        pDV->reset();
-
-        pDock = m_docks["refs"];
-        ReferencesView* pRefView = (ReferencesView*)pDock->widget();
-        pRefView->setRefRoot(NULL);
-        pRefView->reset();
-    }
+    resetDocks();
 }
 
 void MainWindow::createActions()
@@ -804,6 +1103,7 @@ void MainWindow::createActions()
 #ifdef QT_DEBUG
     QMenu *dbgMenu = menuBar()->addMenu(tr("&Debug"));
     dbgMenu->addAction(tr("&ssl version..."), this, &MainWindow::sslVersion);
+    dbgMenu->addAction(tr("&libgit2 version..."), this, &MainWindow::libgit2Version);
 #endif
 
     m_pViewMenu = menuBar()->addMenu(tr("&View"));
@@ -824,28 +1124,18 @@ void MainWindow::sslVersion()
     QMessageBox::information(this,tr("ssl version"), QSslSocket::sslLibraryBuildVersionString());
 }
 
-void MainWindow::createHistoryTable()
+void MainWindow::libgit2Version()
 {
-    m_pHistModel = new GBL_HistoryModel(NULL, this);
-    m_pHistView = new HistoryView(this);
-    m_pHistView->setModel(m_pHistModel);
-    m_pHistView->setItemDelegateForColumn(0,new HistoryDelegate(m_pHistView));
-    m_pHistView->verticalHeader()->hide();
-    //m_pHistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    m_pHistView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_pHistView->setSelectionMode(QAbstractItemView::SingleSelection);
-    m_pHistView->setShowGrid(false);
-    m_pHistView->setAlternatingRowColors(true);
-    connect(m_pHistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historySelectionChanged);
-    setCentralWidget(m_pHistView);
-    m_pHistView->setObjectName("MainWindow/HistoryTable");
+    QMessageBox::information(this,tr("libgit2 version"), m_qpRepo->get_libgit2_version());
 }
+
 
 void MainWindow::createDocks()
 {
     //setup history details dock
-    QDockWidget *pDock = new QDockWidget(tr("History - Details"), this);
-    QSplitter *pDetailSplit = new QSplitter(Qt::Vertical, pDock);
+    CommitDock *pCDock = new CommitDock(tr("History - Details"), this);
+    FileView *pView = pCDock->getFileView();
+    /*QSplitter *pDetailSplit = new QSplitter(Qt::Vertical, pDock);
     pDetailSplit->setFrameStyle(QFrame::StyledPanel);
     CommitDetailScrollArea *pScroll = new CommitDetailScrollArea(pDetailSplit);
     FileView *pView = new FileView(pDetailSplit);
@@ -853,19 +1143,19 @@ void MainWindow::createDocks()
     pDetailSplit->addWidget(pScroll);
     pDetailSplit->addWidget(pView);
     pDock->setWidget(pDetailSplit);
-    pView->setModel(new GBL_FileModel(pView));
+    pView->setModel(new GBL_FileModel(pView));*/
     connect(pView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historyFileSelectionChanged);
-    m_docks["history_details"] = pDock;
-    pDock->setObjectName("MainWindow/HistoryDetails");
-    addDockWidget(Qt::BottomDockWidgetArea, pDock);
-    m_pViewMenu->addAction(pDock->toggleViewAction());
+    m_docks["history_details"] = pCDock;
+    pCDock->setObjectName("MainWindow/HistoryDetails");
+    addDockWidget(Qt::BottomDockWidgetArea, pCDock);
+    m_pViewMenu->addAction(pCDock->toggleViewAction());
 
-    //setup file differences dock
-    pDock = new QDockWidget(tr("Differences"), this);
-    DiffView *pDV = new DiffView(pDock);
-    pDock->setWidget(pDV);
-    m_docks["file_diff"] = pDock;
-    pDock->setObjectName("MainWindow/Differences");
+    //setup file content dock
+    QDockWidget *pDock = new QDockWidget(tr("Content"), this);
+    ContentView *pCV = new ContentView(pDock);
+    pDock->setWidget(pCV);
+    m_docks["file_content"] = pDock;
+    pDock->setObjectName("MainWindow/Content");
     addDockWidget(Qt::BottomDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
 
@@ -910,7 +1200,84 @@ void MainWindow::createDocks()
     {
         restoreState(state);
     }
+}
 
+void MainWindow:: resetDocks(bool bRepaint)
+{
+    if (!m_docks.isEmpty())
+    {
+        //m_pHistView->reset();
+        //m_pHistView->scrollToTop();
+        CommitDock *pCDock = (CommitDock*)m_docks["history_details"];
+        pCDock->reset();
+        /*QSplitter *pSplit = (QSplitter*)pDock->widget();
+        CommitDetailScrollArea *pDetailSA = (CommitDetailScrollArea*)pSplit->widget(0);
+        pDetailSA->reset();
+        FileView *pHistoryFileView = (FileView*)pSplit->widget(1);
+        pHistoryFileView->reset();
+        GBL_FileModel *pMod = (GBL_FileModel*)pHistoryFileView->model();
+        pMod->cleanFileArray();*/
+
+        QDockWidget *pDock = m_docks["file_content"];
+        ContentView *pCV = (ContentView*)pDock->widget();
+        pCV->reset();
+
+        pDock = m_docks["staged"];
+        StagedDockView *pSView = (StagedDockView*)pDock->widget();
+        pDock = m_docks["unstaged"];
+        UnstagedDockView *pUSView = (UnstagedDockView*)pDock->widget();
+
+        pSView->reset();
+        pUSView->reset();
+
+        pDock = m_docks["refs"];
+        ReferencesView* pRefView = (ReferencesView*)pDock->widget();
+        pRefView->reset();
+
+        m_pPullBtn->setBadge(QString(""));
+        m_pPullBtn->update();
+        m_pPushBtn->setBadge(QString(""));
+        m_pPushBtn->update();
+
+        if (bRepaint)
+        {
+            //m_pHistView->repaint();
+            //pDetailSA->repaint();
+            //pHistoryFileView->repaint();
+            pSView->repaint();
+            pUSView->repaint();
+            pRefView->repaint();
+        }
+    }
+
+}
+
+MdiChild *MainWindow::currentMdiChild()
+{
+    QMdiSubWindow *currentSubWindow = m_pMdiArea->currentSubWindow();
+    if (currentSubWindow)
+        return qobject_cast<MdiChild *>(currentSubWindow->widget());
+    return 0;
+}
+
+QMdiSubWindow *MainWindow::findMdiChild(const QString &fileName) const
+{
+    QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
+
+    foreach (QMdiSubWindow *window, m_pMdiArea->subWindowList()) {
+        MdiChild *mdiChild = qobject_cast<MdiChild *>(window->widget());
+        if (mdiChild->currentPath() == canonicalFilePath)
+            return window;
+    }
+    return NULL;
+}
+
+GBL_Repository* MainWindow::getCurrentRepository()
+{
+    MdiChild *pChild = currentMdiChild();
+    if (pChild) { return pChild->getRepository(); }
+
+    return NULL;
 }
 
 void MainWindow::readSettings()
@@ -934,7 +1301,7 @@ void MainWindow::readSettings()
     }
 
     m_pNetAM = new QNetworkAccessManager();
-
+    m_pNetAM->setNetworkAccessible(QNetworkAccessManager::Accessible);
     //create cache dir
     QString sCachePath = GBL_Storage::getCachePath();
     QDir cachePath(sCachePath);
@@ -975,23 +1342,21 @@ void MainWindow::readSettings()
     QColor txtClr = pal.color(QPalette::Text);
     QString sBorderClr = txtClr.name(QColor::HexRgb);
 
-    m_pToolBar->setIconSize(QSize(16,16));
+    m_pToolBar->setIconSize(QSize(TOOLBAR_ICON_SIZE,TOOLBAR_ICON_SIZE));
 
-    svgpix.loadSVGResource(":/images/open_toolbar_icon.svg", sBorderClr, QSize(16,16));
+    svgpix.loadSVGResource(":/images/open_toolbar_icon.svg", sBorderClr, QSize(TOOLBAR_ICON_SIZE,TOOLBAR_ICON_SIZE));
     QAction *pOpenAct = m_actionMap["open"];
-    pOpenAct->setIcon(QIcon(*svgpix.getSmallPixmap(16)));
+    pOpenAct->setIcon(QIcon(*svgpix.getSmallPixmap(TOOLBAR_ICON_SIZE)));
     m_pToolBar->addAction(pOpenAct);
 
 
-    svgpix.loadSVGResource(":/images/clone_toolbar_icon.svg", sBorderClr, QSize(16,16));
+    svgpix.loadSVGResource(":/images/clone_toolbar_icon.svg", sBorderClr, QSize(TOOLBAR_ICON_SIZE,TOOLBAR_ICON_SIZE));
     QAction *pCloneAct = m_actionMap["clone"];
-    pCloneAct->setIcon(QIcon(*svgpix.getSmallPixmap(16)));
+    pCloneAct->setIcon(QIcon(*svgpix.getSmallPixmap(TOOLBAR_ICON_SIZE)));
     m_pToolBar->addAction(pCloneAct);
 
-    svgpix.loadSVGResource(":/images/push_toolbar_icon.svg", sBorderClr, QSize(16,16));
-
-    QAction *pushAct = new QAction(QIcon(*svgpix.getSmallPixmap(16)), tr("&Push"), this);
-    m_pRepoMenu->addAction(pushAct);
+    svgpix.loadSVGResource(":/images/push_toolbar_icon.svg", sBorderClr, QSize(TOOLBAR_ICON_SIZE,TOOLBAR_ICON_SIZE));
+    QAction *pushAct = m_pRepoMenu->addAction(QIcon(*svgpix.getSmallPixmap(TOOLBAR_ICON_SIZE)), tr("&Push"), this, &MainWindow::pushAction);
     //m_pToolBar->addAction(pushAct);
     pushAct->setDisabled(true);
     m_actionMap["push"] = pushAct;
@@ -1004,10 +1369,9 @@ void MainWindow::readSettings()
     m_pToolBar->addWidget(m_pPushBtn);
 
 
-    svgpix.loadSVGResource(":/images/pull_toolbar_icon.svg", sBorderClr, QSize(16,16));
+    svgpix.loadSVGResource(":/images/pull_toolbar_icon.svg", sBorderClr, QSize(TOOLBAR_ICON_SIZE,TOOLBAR_ICON_SIZE));
 
-    QAction *pullAct = new QAction(QIcon(*svgpix.getSmallPixmap(16)), tr("&Pull"), this);
-    m_pRepoMenu->addAction(pullAct);
+    QAction *pullAct = m_pRepoMenu->addAction(QIcon(*svgpix.getSmallPixmap(TOOLBAR_ICON_SIZE)), tr("&Pull"), this, &MainWindow::pullAction);
     //m_pToolBar->addAction(pullAct);
     pullAct->setDisabled(true);
     m_actionMap["pull"] = pullAct;
@@ -1018,6 +1382,13 @@ void MainWindow::readSettings()
     m_pPullBtn->setToolButtonStyle(nTBStyle);
     m_pToolBar->addWidget(m_pPullBtn);
 
+    svgpix.loadSVGResource(":/images/fetch_toolbar_icon.svg", sBorderClr, QSize(TOOLBAR_ICON_SIZE,TOOLBAR_ICON_SIZE));
+    QAction *fetchAct = m_pRepoMenu->addAction(QIcon(*svgpix.getSmallPixmap(TOOLBAR_ICON_SIZE)), tr("&Fetch"), this, &MainWindow::fetchAction);
+    m_pRepoMenu->addAction(fetchAct);
+    m_pToolBar->addAction(fetchAct);
+    fetchAct->setDisabled(true);
+    m_actionMap["fetch"] = fetchAct;
+
 }
 
 void MainWindow::writeSettings()
@@ -1026,6 +1397,116 @@ void MainWindow::writeSettings()
     settings.setValue("MainWindow/Geometry", saveGeometry());
     settings.setValue("MainWindow/WindowState", saveState());
 
+}
+
+void MainWindow::addAvatar(QString &sEmail)
+{
+    if (!m_avatarMap.contains(sEmail))
+    {
+        UrlPixmap *pUrlpm = new UrlPixmap(m_pNetAM, this);
+        m_avatarMap[sEmail] = pUrlpm;
+        m_emailList.append(sEmail);
+    }
+
+}
+
+void MainWindow::startAvatarDownload()
+{
+    if (!m_emailList.isEmpty())
+    {
+       QString sEmail = m_emailList.first();
+       m_emailList.removeFirst();
+       QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
+       m_gravMap[sUrl] = sEmail;
+       getAvatarFromUrl(sUrl, sEmail);
+       //pUrlPM->loadFromUrl(sUrl);
+       //connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
+    }
+
+}
+
+void MainWindow::getAvatarFromUrl(QString sUrl, QString sEmail)
+{
+    MainWindow *pMain = MainWindow::getInstance();
+    QNetworkAccessManager *pNetAM = pMain->getNetworkAccessManager();
+
+    connect(
+      pNetAM, SIGNAL (finished(QNetworkReply*)),
+      this, SLOT (avatarDownloaded(QNetworkReply*))
+      );
+
+    QNetworkRequest request(sUrl);
+    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
+    pNetAM->get(request);
+}
+
+void MainWindow::avatarDownloaded(QNetworkReply* pReply)
+{
+    if (m_avatarMap.isEmpty() || m_gravMap.isEmpty())
+    {
+        pReply->deleteLater();
+        return;
+    }
+
+    QString sUrl = pReply->url().toString();
+
+    QByteArray baImg = pReply->readAll();
+    pReply->deleteLater();
+
+    if (baImg.size() > 0)
+    {
+        QString sEmail = m_gravMap[sUrl];
+        if (!sEmail.length()) return;
+
+        UrlPixmap *pUrlpm = m_avatarMap[sEmail];
+        if (!pUrlpm) return;
+
+        //qDebug() << "avatarDownloaded;" << sUrl;
+        //qDebug() << "avatarDownloaded size:" << baImg.size();
+        MdiChild *pChild = currentMdiChild();
+        if (pChild)
+        {
+            GBL_HistoryModel *pModel = pChild->getHistoryModel();
+            pModel->layoutChanged();
+            pUrlpm->setPixmapData(baImg);
+            pReply->close();
+
+            if (!m_emailList.isEmpty())
+            {
+               QString sEmail = m_emailList.first();
+               m_emailList.removeFirst();
+               //UrlPixmap *pUrlPM = m_pAvMapIt->value();
+               //qDebug() << "next_email:" << sEmail;
+               QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
+               m_gravMap[sUrl] = sEmail;
+               getAvatarFromUrl(sUrl, sEmail);
+               //pUrlPM->loadFromUrl(sUrl);
+               //connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
+            }
+        }
+    }
+}
+
+QPixmap* MainWindow::getAvatar(QString sEmail, bool bSmall)
+{
+    QPixmap *pPixMap = NULL;
+
+    QString slcEmail = sEmail.toLower();
+    UrlPixmap *pAvatar = (UrlPixmap*)m_avatarMap[slcEmail];
+    if (pAvatar)
+    {
+        if (bSmall)
+        {
+            pPixMap = pAvatar->getSmallPixmap(20);
+        }
+        else
+        {
+            pPixMap = pAvatar->getPixmap();
+        }
+
+    }
+
+    return pPixMap;
 }
 
 static inline QString RecentReposKey() { return QStringLiteral("RecentRepoList"); }
@@ -1091,7 +1572,7 @@ void MainWindow::updateRecentRepoActions()
     int i = 0;
     for ( ; i < count; ++i) {
         const QString fileName = QFileInfo(RecentRepos.at(i)).fileName();
-        m_pRecentRepoActs[i]->setText(tr("&%1 %2").arg(i + 1).arg(fileName));
+        m_pRecentRepoActs[i]->setText(tr("&%1 %2").arg(i + 1).arg(RecentRepos.at(i)/*fileName*/));
         m_pRecentRepoActs[i]->setData(RecentRepos.at(i));
         m_pRecentRepoActs[i]->setVisible(true);
     }

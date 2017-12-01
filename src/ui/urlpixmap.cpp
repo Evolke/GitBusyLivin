@@ -61,7 +61,7 @@ QPixmap* UrlPixmap::getSmallPixmap(int size)
 {
     if (!m_pPixmap->isNull() && m_pSmallPixmap->isNull())
     {
-        QPixmap smPM = m_pPixmap->scaledToWidth(size);
+        QPixmap smPM = m_pPixmap->scaledToWidth(size, Qt::SmoothTransformation);
          m_pSmallPixmap->swap(smPM);
     }
 
@@ -97,8 +97,8 @@ void UrlPixmap::loadSVGResource(QString sRes, QString sColor, QSize size)
     QPainter pixPainter(&pix);
     //pixPainter.setRenderHint(QPainter::Antialiasing, false);
     svg.render(&pixPainter);
-    qDebug() << "svg size:" << pix.size();
-    qDebug() << "is null:" << pix.isNull();
+    //qDebug() << "svg size:" << pix.size();
+    //qDebug() << "is null:" << pix.isNull();
     m_pPixmap->swap(pix);
     delete m_pSmallPixmap;
     m_pSmallPixmap = new QPixmap();

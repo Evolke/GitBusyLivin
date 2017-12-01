@@ -10,6 +10,7 @@ public:
     explicit GBL_String(const QChar *unicode, int size = -1);
     GBL_String(QChar c);
     GBL_String(int size, QChar c);
+    GBL_String(const char *str);
     GBL_String(QString &str);
     inline GBL_String(QLatin1String latin1);
     GBL_String &operator=(const QString &);

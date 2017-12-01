@@ -21,6 +21,7 @@
 #define GBL_FILE_STATUS_UNTRACKED 'U'
 #define GBL_FILE_STATUS_UNREADABLE '*'
 #define GBL_FILE_STATUS_UNKNOWN '?'
+#define GBL_FILE_STATUS_SYSTEM 'S'
 
 
 
@@ -40,9 +41,11 @@ typedef struct GBL_File_Item {
     char status;
     QString file_name;
     QString sub_dir;
+    QString file_oid;
 } GBL_File_Item;
 
 typedef QVector<GBL_File_Item*> GBL_File_Array;
+
 
 typedef struct GBL_Line_Item {
     char line_change_type;
@@ -59,10 +62,19 @@ QT_BEGIN_NAMESPACE
 class GBL_FileModel;
 class MainWindow;
 class GBL_RefItem;
+class GBL_RefsModel;
+class GBL_HistoryModel;
+class GBL_Repository;
 QT_END_NAMESPACE
 
 typedef QMap<QString, GBL_RefItem*> GBL_Ref_Map;
 typedef QList<GBL_RefItem*> GBL_Ref_Children;
+
+
+typedef struct GBL_Tree_Walk_Payload {
+    GBL_File_Array *file_arr;
+    GBL_Repository *repo;
+} GBL_Tree_Walk_Payload;
 
 class GBL_RepositoryException : QException
 {
@@ -121,8 +133,10 @@ public:
     static int stash_cb(size_t index, const char *message, const int *stash_id, void *payload);
 
     QString get_error_msg();
+    QString get_libgit2_version();
     bool init_repo(GBL_String path, bool bare=false);
     bool open_repo(GBL_String path);
+    bool is_bare();
     bool clone_repo(GBL_String srcUrl, GBL_String dstPath);
     bool is_remote_repo(GBL_String path);
     bool add_to_index(QStringList *pList);
@@ -130,22 +144,33 @@ public:
     bool index_unstage(QStringList *pList);
     bool commit_index(GBL_String sMessage);
     bool get_remotes(QStringList &remote_list);
+    bool get_head_branch(QString &branch);
+    void get_upstream_ref(GBL_String sBranchName, git_reference **ref);
+    bool get_upstream_branch_name(GBL_String sBranchName, GBL_String &sUpstreamBranchName);
+    bool get_ahead_behind_count(GBL_String sBranchName, int &ahead, int &behind);
+    bool fetch_remote(GBL_String sRemote = "origin");
+    bool pull_remote(GBL_String sRemote, GBL_String sBranch);
+    bool push_remote(GBL_String sRemote, GBL_String sBranch);
+
     bool fill_references();
     bool fill_stashes();
-    GBL_RefItem* get_references() { return m_pRef; }
+    GBL_RefItem* get_references() { return m_pRefRoot; }
     QStringList getBranchNames();
-    bool get_history(GBL_History_Array **pHist_Arr);
-    bool get_tree_from_commit_oid(GBL_String oid_str, GBL_FileModel *pFileMod);
-    void tree_walk(const git_oid *pTroid, GBL_FileModel *pFileMod);
+    bool get_history(GBL_HistoryModel *io_pHistModel);
+    bool get_tree_from_commit_oid(GBL_String oid_str, GBL_File_Array *pHistFileArr);
+    void tree_walk(const git_oid *pTroid, GBL_File_Array *pHistFileArr);
     bool get_commit_to_parent_diff_files(GBL_String oid_str, GBL_File_Array *pHistFileArr);
     bool get_commit_to_parent_diff_lines(GBL_String oid_str, MainWindow *pMain, char *path);
     bool get_index_to_work_diff(MainWindow *pMain, QStringList *pList);
     bool get_index_to_head_diff(MainWindow *pMain, QStringList *pList);
-
+    bool get_blob_content(GBL_String oid_str, QString& content);
     bool get_global_config_info(GBL_Config_Map **out);
     bool set_global_config_info(GBL_Config_Map *cfgMap);
 
     bool get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &unstagedArr);
+
+    git_repository* get_repository() { return m_pRepo; }
+    void set_repository(git_repository *pRepo) { m_pRepo = pRepo; }
 
 signals:
     void cleaningRepo();
@@ -156,16 +181,16 @@ private slots:
     void cleanup();
 
 private:
-    void cleanup_history();
+    //void cleanup_history();
     void init_ref_items();
     void check_libgit_return(int ret);
     bool get_commit_to_parent_diff(GBL_String oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path=Q_NULLPTR);
 
     git_repository *m_pRepo;
     int m_iErrorCode;
-    GBL_History_Array *m_pHist_Arr;
+    //GBL_History_Array *m_pHist_Arr;
     GBL_Config_Map *m_pConfig_Map;
-    GBL_RefItem *m_pRef;
+    GBL_RefItem *m_pRefRoot;
 };
 
 #endif // GBL_REPOSITORY_H

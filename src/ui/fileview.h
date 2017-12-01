@@ -10,6 +10,8 @@ public:
     explicit FileView(QWidget *parent = 0);
     ~FileView();
 
+    void reset();
+
 signals:
 
 public slots:

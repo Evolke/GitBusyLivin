@@ -10,6 +10,7 @@ class GBL_RefsModel : public QAbstractItemModel
 
 public:
     GBL_RefsModel(QObject *parent = Q_NULLPTR);
+    ~GBL_RefsModel();
 
     Q_INVOKABLE virtual QModelIndex index(int row, int column,
                               const QModelIndex &parent = QModelIndex()) const;
@@ -21,6 +22,7 @@ public:
                                 int role = Qt::DisplayRole) const;
 
     void setRefRoot(GBL_RefItem *pRef);
+    void reset();
     GBL_RefItem* getRefRoot() { return m_pRefRoot; }
 
 private:

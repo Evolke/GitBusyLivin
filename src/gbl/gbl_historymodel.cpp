@@ -14,9 +14,10 @@
 #include "gbl_storage.h"
 
 
-GBL_HistoryModel::GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent) : QAbstractTableModel(parent)
+GBL_HistoryModel::GBL_HistoryModel(QObject *parent) : QAbstractTableModel(parent)
 {
-    m_pHistArr = pHistArr;
+    m_pHistArr = new GBL_History_Array;
+
     m_headings.append(tr("Graph"));
     m_headings.append(tr("Summary"));
     m_headings.append(tr("Author"));
@@ -29,42 +30,53 @@ GBL_HistoryModel::GBL_HistoryModel(GBL_History_Array *pHistArr, QObject *parent)
 
 GBL_HistoryModel::~GBL_HistoryModel()
 {
-    cleanupAvatars();
+    cleanupHistory();
+
+
+    delete m_pHistArr;
 }
 
-void GBL_HistoryModel::cleanupAvatars()
+void GBL_HistoryModel::cleanupHistory()
 {
-    QMapIterator<QString, UrlPixmap*> i(m_avatarMap);
-    while (i.hasNext()) {
-        UrlPixmap *pUrlpm = (UrlPixmap*)i.next().value();
-        delete pUrlpm;
-    }
-    m_avatarMap.clear();
-}
-
-void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
-{
-    m_pHistArr = pHistArr;
-    cleanupAvatars();
-    m_emailList.clear();
-    m_gravMap.clear();
-
-    if (pHistArr && !pHistArr->isEmpty())
+    if (m_pHistArr)
     {
-        MainWindow *pMain = (MainWindow*)parent();
-        QNetworkAccessManager *pNetAM = pMain->getNetworkAccessManager();
-        //QNetworkDiskCache *pNetCache = pMain->getNetworkCache();
+        for (int i = 0; i < m_pHistArr->size(); i++)
+        {
+            GBL_History_Item *pHI = m_pHistArr->at(i);
+            delete pHI;
+        }
+
+        m_pHistArr->clear();
+    }
+
+    m_histMap.clear();
+}
+
+
+void GBL_HistoryModel::reset()
+{
+    QAbstractItemModel::resetInternalData();
+
+    cleanupHistory();
+}
+
+void GBL_HistoryModel::addHistoryItem(GBL_History_Item *pHistItem)
+{
+    m_pHistArr->append(pHistItem);
+    m_histMap.insert(pHistItem->hist_oid, m_pHistArr->size()-1);
+}
+
+void GBL_HistoryModel::historyUpdated()
+{
+    if (m_pHistArr && !m_pHistArr->isEmpty())
+    {
+        MainWindow *pMain = MainWindow::getInstance();
 
         for (int i = 0; i < m_pHistArr->size(); i++)
         {
             GBL_History_Item *pHistItem = m_pHistArr->at(i);
             QString sEmail = pHistItem->hist_author_email.toLower();
-            if (!m_avatarMap.contains(sEmail))
-            {
-                UrlPixmap *pUrlpm = new UrlPixmap(pNetAM, this);
-                m_avatarMap[sEmail] = pUrlpm;
-                m_emailList.append(sEmail);
-            }
+            pMain->addAvatar(sEmail);
             /*else
             {
                 qDebug() << "avatarMap.contains = true";
@@ -73,86 +85,11 @@ void GBL_HistoryModel::setModelData(GBL_History_Array *pHistArr)
 
         //qDebug() << "avatarMap.size:" << m_avatarMap.size();
 
-        if (!m_emailList.isEmpty())
-        {
-           QString sEmail = m_emailList.first();
-           m_emailList.removeFirst();
-           QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
-           m_gravMap[sUrl] = sEmail;
-           getAvatarFromUrl(sUrl, sEmail);
-           //pUrlPM->loadFromUrl(sUrl);
-           //connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
-        }
-
+        pMain->startAvatarDownload();
         layoutChanged();
     }
 }
 
-QPixmap* GBL_HistoryModel::getAvatar(QString sEmail)
-{
-    QString slcEmail = sEmail.toLower();
-    UrlPixmap *pAvatar = (UrlPixmap*)m_avatarMap[slcEmail];
-    if (pAvatar) return pAvatar->getPixmap();
-
-    return NULL;
-}
-
-void GBL_HistoryModel::getAvatarFromUrl(QString sUrl, QString sEmail)
-{
-    MainWindow *pMain = (MainWindow*)parent();
-    QNetworkAccessManager *pNetAM = pMain->getNetworkAccessManager();
-
-    connect(
-      pNetAM, SIGNAL (finished(QNetworkReply*)),
-      this, SLOT (avatarDownloaded(QNetworkReply*))
-      );
-
-    QNetworkRequest request(sUrl);
-    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
-    pNetAM->get(request);
-}
-
-void GBL_HistoryModel::avatarDownloaded(QNetworkReply* pReply)
-{
-    if (m_avatarMap.isEmpty() || m_gravMap.isEmpty())
-    {
-        pReply->deleteLater();
-        return;
-    }
-
-    QString sUrl = pReply->url().toString();
-
-    QByteArray baImg = pReply->readAll();
-    pReply->deleteLater();
-
-    if (baImg.size() > 0)
-    {
-        QString sEmail = m_gravMap[sUrl];
-        if (!sEmail.length()) return;
-
-        UrlPixmap *pUrlpm = m_avatarMap[sEmail];
-        if (!pUrlpm) return;
-
-        //qDebug() << "avatarDownloaded;" << sUrl;
-        //qDebug() << "avatarDownloaded size:" << baImg.size();
-        layoutChanged();
-        pUrlpm->setPixmapData(baImg);
-        pReply->close();
-
-        if (!m_emailList.isEmpty())
-        {
-           QString sEmail = m_emailList.first();
-           m_emailList.removeFirst();
-           //UrlPixmap *pUrlPM = m_pAvMapIt->value();
-           //qDebug() << "next_email:" << sEmail;
-           QString sUrl = GBL_Storage::getGravatarUrl(sEmail);
-           m_gravMap[sUrl] = sEmail;
-           getAvatarFromUrl(sUrl, sEmail);
-           //pUrlPM->loadFromUrl(sUrl);
-           //connect(pUrlPM, SIGNAL (downloaded()), this, SLOT (avatarDownloaded()));
-        }
-    }
-}
 
 QModelIndex GBL_HistoryModel::index(int row, int column, const QModelIndex &parent) const
 {
@@ -176,7 +113,7 @@ int GBL_HistoryModel::rowCount(const QModelIndex &parent) const
 int GBL_HistoryModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    if (m_pHistArr) return m_headings.size();
+    if (m_pHistArr && m_pHistArr->length()) return m_headings.size();
 
     return 0;
 }
@@ -211,12 +148,12 @@ QVariant GBL_HistoryModel::data(const QModelIndex &index, int role) const
         if (index.column() == m_colMap["author"])
         {
             GBL_History_Item *pHistItem = m_pHistArr->at(index.row());
-            QString sEmail = pHistItem->hist_author_email.toLower();
-            if (m_avatarMap.contains(sEmail))
-            {
-                UrlPixmap *pUP = m_avatarMap[sEmail];
-                return QVariant::fromValue(*(pUP->getSmallPixmap(20)));
-            }
+            QString sEmail = pHistItem->hist_author_email;
+            MainWindow *pMain = MainWindow::getInstance();
+            QPixmap *pPixMap = pMain->getAvatar(sEmail,true);
+
+            if (pPixMap) return QVariant::fromValue(*(pPixMap));
+
         }
     }
 

@@ -5,10 +5,10 @@
 #include "src/gbl/gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
-    class QListWidget;
+    class QTreeWidget;
     class QStackedWidget;
     class QLineEdit;
-    class QListWidgetItem;
+    class QTreeWidgetItem;
     class QComboBox;
 QT_END_NAMESPACE
 
@@ -60,13 +60,13 @@ public:
 signals:
 
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void changePage(QTreeWidgetItem *current, QTreeWidgetItem *previous);
     void changeTheme(const QString &text);
 
 private:
-    void createListItems();
+    void createTreeItems();
 
-    QListWidget *m_pTabs;
+    QTreeWidget *m_pTabs;
     QStackedWidget *m_pPages;
 };
 

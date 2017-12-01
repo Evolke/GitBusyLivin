@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="12px" viewBox="0 0 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 47.1 (45422) - http://www.bohemiancoding.com/sketch -->
+    <title>commit_diff_icon</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="commit_diff_icon">
+            <circle id="Oval" stroke="#000000" cx="6" cy="6" r="5"></circle>
+            <path d="M6,11 C9.32255046,10.43868 10.9892171,8.77201335 11,6 C11.0107829,3.22798665 9.34411621,1.56131999 6,1 L6,11 Z" id="Oval-Copy" fill="#000000"></path>
+        </g>
+    </g>
+</svg>

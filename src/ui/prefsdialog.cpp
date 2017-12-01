@@ -8,7 +8,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QListWidget>
+#include <QTreeWidget>
 #include <QStackedWidget>
 #include <QDebug>
 #include <QComboBox>
@@ -37,15 +37,17 @@ PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
     connect(pOkCancel, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     QGridLayout *mainLayout = new QGridLayout(this);
-    m_pTabs = new QListWidget(this);
-    m_pTabs->setViewMode(QListView::IconMode);
-    m_pTabs->setIconSize(QSize(40, 40));
-    m_pTabs->setMovement(QListView::Static);
-    m_pTabs->setMaximumWidth(90);
+    m_pTabs = new QTreeWidget(this);
+    m_pTabs->setIconSize(QSize(16, 16));
+    m_pTabs->setHeaderHidden(true);
+    m_pTabs->setIndentation(0);
+
+    //m_pTabs->setMovement(QListView::Static);
+    m_pTabs->setMaximumWidth(120);
     //m_pTabs->setSpacing(5);
-    m_pTabs->setWordWrap(true);
-    m_pTabs->setWrapping(true);
-    m_pTabs->setGridSize(QSize(80,64));
+    //m_pTabs->setWordWrap(true);
+    //m_pTabs->setWrapping(true);
+    //m_pTabs->setGridSize(QSize(80,64));
 
     m_pPages = new QStackedWidget(this);
     m_pPages->addWidget(new GeneralPrefsPage(this));
@@ -54,18 +56,18 @@ PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
     mainLayout->addWidget(m_pPages,0,1);
     mainLayout->addWidget(pOkCancel,1,1,1,1, Qt::AlignBottom);
 
-    createListItems();
-    m_pTabs->setCurrentRow(0);
+    createTreeItems();
+    //m_pTabs->setCurrentRow(0);
 
     setWindowTitle(tr("Preferences"));
 }
 
-void PrefsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
+void PrefsDialog::changePage(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
     if (!current)
         current = previous;
 
-    m_pPages->setCurrentIndex(m_pTabs->row(current));
+    m_pPages->setCurrentIndex(m_pTabs->indexOfTopLevelItem(current));
 }
 
 void PrefsDialog::changeTheme(const QString &text)
@@ -77,29 +79,30 @@ void PrefsDialog::changeTheme(const QString &text)
 /**
  * @brief PrefsDialog::createListItems
  */
-void PrefsDialog::createListItems()
+void PrefsDialog::createTreeItems()
 {
-    QListWidgetItem *configButton = new QListWidgetItem(m_pTabs);
+    QTreeWidgetItem *configButton = new QTreeWidgetItem(m_pTabs);
     UrlPixmap svgPm(NULL);
     QColor txtClr = parentWidget()->palette().color(QPalette::Text);
     QString sBorderClr = txtClr.name(QColor::HexRgb);
-    qDebug() << sBorderClr;
+    //qDebug() << sBorderClr;
 
-    svgPm.loadSVGResource(":/images/general_pref_icon.svg", sBorderClr, QSize(32,32));
-    configButton->setIcon(QIcon(*svgPm.getPixmap()));
-    configButton->setText(tr("General"));
-    configButton->setTextAlignment(Qt::AlignHCenter);
-    configButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    svgPm.loadSVGResource(":/images/general_pref_icon.svg", sBorderClr, QSize(16,16));
+    configButton->setIcon(0,QIcon(*svgPm.getPixmap()));
+    configButton->setText(0,tr("General"));
+    m_pTabs->setCurrentItem(configButton);
 
-    configButton = new QListWidgetItem(m_pTabs);
-    svgPm.loadSVGResource(":/images/ui_pref_icon.svg", sBorderClr, QSize(32,32));
-    configButton->setIcon(QIcon(*svgPm.getPixmap()));
-    configButton->setText(tr("User Interface"));
-    configButton->setTextAlignment(Qt::AlignHCenter);
-    configButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    //configButton->setTextAlignment(Qt::AlignHCenter);
+    //configButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-    connect(m_pTabs, &QListWidget::currentItemChanged, this, &PrefsDialog::changePage);
+    configButton = new QTreeWidgetItem(m_pTabs);
+    svgPm.loadSVGResource(":/images/ui_pref_icon.svg", sBorderClr, QSize(16,16));
+    configButton->setIcon(0,QIcon(*svgPm.getPixmap()));
+    configButton->setText(0,tr("User Interface"));
+    //configButton->setTextAlignment(Qt::AlignHCenter);
+    //configButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
+    connect(m_pTabs, &QTreeWidget::currentItemChanged, this, &PrefsDialog::changePage);
 }
 
 void PrefsDialog::setConfigMap(GBL_Config_Map *pMap)

@@ -10,14 +10,22 @@
 #include <QScrollArea>
 #include <QToolButton>
 #include <QItemSelection>
+#include <QTextEdit>
 
 #include "src/gbl/gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
 class FileView;
-class QTextEdit;
 class QPushButton;
+class QLabel;
 QT_END_NAMESPACE
+
+class CommitMessageEdit : public QTextEdit
+{
+    Q_OBJECT
+public:
+    explicit CommitMessageEdit(QWidget *parent = Q_NULLPTR);
+};
 
 class StagedButton : public QToolButton
 {
@@ -42,6 +50,8 @@ public:
     explicit StagedButtonBar(QWidget *parent = 0);
 
     StagedButton* getButton(int nBtnID);
+
+    void reset();
 
 signals:
 
@@ -68,7 +78,8 @@ public slots:
     virtual void resizeEvent(QResizeEvent *event);
 
 private:
-    QTextEdit *m_pCommitEdit;
+    QLabel *m_pCommitMsgLabel;
+    CommitMessageEdit *m_pCommitEdit;
     StagedButtonBar *m_pBtnBar;
 };
 

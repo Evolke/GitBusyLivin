@@ -2,7 +2,18 @@
 #define ABOUTDIALOG_H
 
 #include <QDialog>
-#include <QPixmap>
+#include <QTextEdit>
+
+QT_BEGIN_NAMESPACE
+class QPixmap;
+QT_END_NAMESPACE
+
+class AboutInfo : public QTextEdit
+{
+    Q_OBJECT
+public:
+    explicit AboutInfo(QWidget *parent = 0);
+};
 
 class AboutDialog : public QDialog
 {
@@ -21,7 +32,8 @@ private slots:
     void timerEvent(QTimerEvent *event);
 
 private:
-    QPixmap *m_pix;
+    QPixmap *m_gbl_logo/*, *m_libgit_logo, *m_qt_logo*/;
+    AboutInfo *m_pInfo;
     int m_hue;
     int m_timer;
 };

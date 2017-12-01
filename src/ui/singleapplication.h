@@ -14,6 +14,7 @@ public:
 
     bool lock();
 
+
 private:
     QSharedMemory *_singular; // shared memory !! SINGLE ACCESS
 };

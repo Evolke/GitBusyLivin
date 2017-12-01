@@ -34,8 +34,8 @@ QTableView {
     color: #DDDDDD;
     background-color: #333333;
     alternate-background-color: #404040;
-    selection-color: #444444;
-    selection-background-color: #999999;
+    selection-color: #eee;
+    selection-background-color: #222;
     outline: 0;
     border: 1px solid #444;
 }
@@ -77,22 +77,39 @@ QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:
     background-color: #222222;
 }
 
+QTabWidget::tab-bar {
+    alignment: left;
+}
+QTabBar::tab:selected {
+    background: #222;
+}
+
+QTabBar::close-button {
+    image: url(:/images/light_dock_close_icon.png);
+    subcontrol-position: right;
+}
+
 QTextEdit, QTreeView {
     color:#ddd;
     background-color:#333333;
 }
 
 QTreeView {
-    outline: 0;
+    outline: none;
     border: 1px solid #444;
 }
+
+QTreeView::focus {
+    outline: none;
+}
+
 
 QTreeView::item {
     /*padding: 2px;*/
 }
 
 
-QTreeView::item:selected, QTreeView::item:selected:hover {
+QTreeView::item:selected, QTreeView::item:selected:hover, QTreeView::branch:selected {
     color: #eee;
     background-color: #222;
 }
@@ -102,6 +119,15 @@ QTreeView::item:hover {
     background-color: #333333;
 }
 
+QTreeView::branch:open:has-children  {
+        border-image: none;
+        image: url(:/images/light_down_arrow.png);
+}
+
+QTreeView::branch:closed:has-children {
+        border-image: none;
+        image: url(:/images/light_right_arrow.png);
+}
 
 QListView {
     border: 1px solid #555;
@@ -121,10 +147,11 @@ QListView::item:selected {
     background-color: #222;
 }
 
-QComboBox {
+QComboBox, QComboBox:!editable {
     border: 1px solid #555;
     border-radius: 4px;
     padding: 3px 20px 3px 5px;
+    background-color: #444;
 }
 
 QComboBox::drop-down {
@@ -153,7 +180,7 @@ QComboBox QAbstractItemView {
 }
 
 ToolbarCombo {
-    border-radius: none;
+    border-radius: 5px;
 }
 
 ToolbarCombo::drop-down {
@@ -170,17 +197,16 @@ QSplitter {
 }
 
 QSplitter::handle:vertical {
-    background-color: #333333;
-    border-top: 1px solid #444444;
-    border-bottom: 1px solid #222222;
-    height: 4px;
+    background-color: #333;
+    height: 1px;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
 }
 
 QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button,
-QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QWidget {
+QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QWidget, QMdiArea {
     color:#999999;
-    background: none;
-    background-color:#333333;
+    background:#333333;
 }
 
 QScrollArea {
@@ -239,9 +265,19 @@ QToolBar {
     color: #aaa;
 }
 
+QToolButton {
+    outline: none;
+    border: none;
+}
+
 QToolButton:hover {
     border: 1px solid #555;
     background-color: #444;
+}
+
+QToolButton:checked {
+    background-color: #111;
+    color: #ddd;
 }
 
 QStatusBar {
@@ -341,17 +377,32 @@ QTabBar::tab {
     padding: 5px;
 }
 
-DiffView {
+ContentView {
 }
 
-DiffInfoWidget {
+ContentInfoWidget {
     color: #DDDDDD;
     background-color: #222222;
     border: none;
 }
 
-DiffInfoTypeLabel {
+ContentInfoTypeLabel {
     color: #aaa;
     background-color: #222;
     border-right: 1px solid #555;
+}
+
+CommitMessageEdit {
+    background-color: #303030;
+    border: 1px solid #444;
+    border-radius: 3px;
+}
+
+CommitFilesScrollArea {
+    border: none;
+}
+
+CommitTabsToolbar {
+    border: none;
+    outline: none;
 }

@@ -28,8 +28,8 @@ QMenu:selected {
 
 QTableView {
     color: #333333;
-    background-color: #267BD9;
-    alternate-background-color: #267B8D;
+    background: #eee;
+    alternate-background-color: #ddd;
     selection-color: #BBBBBB;
     selection-background-color: #666666;
     outline: none;
@@ -78,6 +78,25 @@ QHeaderView::section:focus, QHeaderView::section:selected, QHeaderView::section:
     background-color: #DDDDDD;
 }
 
+QTabWidget::tab-bar {
+    alignment: left;
+}
+
+
+QTabBar::tab {
+    background: #fff;
+    border: none;
+}
+
+QTabBar::tab:selected {
+    background: #aaa;
+}
+
+QTabBar::close-button {
+    image: url(:/images/dark_dock_close_icon.png);
+    subcontrol-position: right;
+}
+
 QTextEdit, QTreeView {
     color:#333;
     background-color:#fff;
@@ -99,9 +118,9 @@ QTreeView::item:focus {
     outline: none;
 }
 
-QTreeView::item:selected, QTreeView::item:selected:hover {
-    color: #ddd ;
-    background-color: #666666;
+QTreeView::item:selected, QTreeView::item:selected:hover, QTreeView::branch:selected {
+    color: #111 ;
+    background-color: #bbb;
     outline: none;
 }
 
@@ -109,6 +128,17 @@ QTreeView::item:hover {
     color: #333;
     background-color: #ddd;
 }
+
+QTreeView::branch:open:has-children  {
+        border-image: none;
+        image: url(:/images/dark_down_arrow.png);
+}
+
+QTreeView::branch:closed:has-children {
+        border-image: none;
+        image: url(:/images/dark_right_arrow.png);
+}
+
 
 QSplitter::handle:vertical {
     background-color: #ddd;
@@ -119,7 +149,7 @@ QSplitter::handle:vertical {
 
 QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button,
 QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QFrame {
-    color:#333333;
+    color:#222;
     background: none;
     background-color:#fff;
 }
@@ -173,9 +203,18 @@ QToolBar {
     border-bottom: 1px solid #BBBBBB;
 }
 
+QToolButton {
+    outline: none;
+    border: none;
+}
+
 QToolButton:hover {
     border: 1px solid #aaa;
-    background-color: #ddd;
+    background-color: #ccc;
+}
+
+QToolButton:Checked {
+    background-color: #aaa;
 }
 
 QStatusBar {
@@ -324,18 +363,30 @@ QTabBar::tab {
     padding: 5px;
 }
 
-DiffView {
+ContentfView {
 }
 
-DiffInfoWidget {
+ContentInfoWidget {
     color: #333;
     background-color: #ddd;
     border: none;
     border-bottom: 1px solid #bbb;
 }
 
-DiffInfoTypeLabel {
+ContentInfoTypeLabel {
     color: #444;
     background-color: #ccc;
     border-right: 1px solid #aaa;
+}
+
+CommitMessageEdit {
+    background-color: #eee;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+}
+
+CommitTabsToolbar {
+    background-color: #ddd;
+    border: none;
+    outline: none;
 }

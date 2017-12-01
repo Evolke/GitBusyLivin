@@ -45,6 +45,7 @@ CloneDialog::CloneDialog(QWidget *parent) : QDialog(parent)
                                          | QDialogButtonBox::Cancel);
 
     m_pOkBtn = m_pBtnBox->button(QDialogButtonBox::Ok);
+    m_pOkBtn->setText(tr("Clone"));
     m_pOkBtn->setDisabled(true);
     connect(m_pBtnBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(m_pBtnBox, &QDialogButtonBox::rejected, this, &QDialog::reject);

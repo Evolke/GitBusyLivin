@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="18px" height="18px" viewBox="0 0 18 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 46.2 (44496) - http://www.bohemiancoding.com/sketch -->
+    <title>git-logo</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="git-logo" transform="translate(1.000000, 1.000000)" stroke="#000000">
+            <path d="M15.4733333,7.52666667 L8.47333333,0.526666667 C8.21330836,0.26818427 7.7933583,0.26818427 7.53333333,0.526666667 L0.526666667,7.52666667 C0.26818427,7.78669164 0.26818427,8.2066417 0.526666667,8.46666667 L7.52666667,15.4666667 C7.78669164,15.7251491 8.2066417,15.7251491 8.46666667,15.4666667 L15.4666667,8.46666667 C15.7251491,8.2066417 15.7251491,7.78669164 15.4666667,7.52666667 L15.4733333,7.52666667 Z" id="_Path_"></path>
+            <path d="M5.73333333,2.4 L7.29333333,3.96" id="_Path_2"></path>
+            <path d="M8,5.66666667 L8,10.3333333" id="_Path_3"></path>
+            <circle id="_Path_4" cx="8" cy="4.66666667" r="1"></circle>
+            <circle id="_Path_5" cx="11.3333333" cy="8" r="1"></circle>
+            <circle id="_Path_6" cx="8" cy="11.3333333" r="1"></circle>
+            <path d="M8.7,5.38 L10.62,7.3" id="_Path_7"></path>
+        </g>
+    </g>
+</svg>

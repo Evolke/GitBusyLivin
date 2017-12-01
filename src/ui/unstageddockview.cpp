@@ -47,6 +47,7 @@ GBL_File_Array* UnstagedDockView::getFileArray()
 void UnstagedDockView::reset()
 {
     m_pFileView->reset();
+    m_pBtnBar->reset();
 }
 
 void UnstagedDockView::workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
@@ -116,6 +117,12 @@ UnstagedButton* UnstagedButtonBar::getButton(int nBtnID)
     }
 
     return pRet;
+}
+
+void UnstagedButtonBar::reset()
+{
+    m_pAddAllBtn->setDisabled(true);
+    m_pAddSelBtn->setDisabled(true);
 }
 
 UnstagedButton::UnstagedButton(const QString &text, QWidget *parent, int nMinWidthWithText) : QToolButton(parent)

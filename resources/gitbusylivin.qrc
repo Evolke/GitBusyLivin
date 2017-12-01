@@ -36,5 +36,14 @@
         <file>images/branch_icon.svg</file>
         <file>images/stashes_icon.svg</file>
         <file>images/git_busy_livin_logo_16.png</file>
+        <file>images/fetch_toolbar_icon.svg</file>
+        <file>images/git_logo_16.svg</file>
+        <file>images/git_logo_16.png</file>
+        <file>images/git_busy_livin_logo_32.png</file>
+        <file>images/libgit2_logo.png</file>
+        <file>images/qt_logo_32.png</file>
+        <file>content/about.html</file>
+        <file>images/commit_diff_icon.svg</file>
+        <file>images/commit_all_icon.svg</file>
     </qresource>
 </RCC>

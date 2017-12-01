@@ -5,6 +5,7 @@
 #include "mainwindow.h"
 
 #include <QTextEdit>
+#include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QDebug>
@@ -18,6 +19,7 @@
 StagedDockView::StagedDockView(QWidget *parent) : QSplitter(Qt::Vertical,parent)
 {
     setContentsMargins(0,0,0,0);
+    setHandleWidth(2);
     m_pFileView = new FileView(this);
     m_pFileView->setModel(new GBL_FileModel(m_pFileView));
     addWidget(m_pFileView);
@@ -84,16 +86,24 @@ QString StagedDockView::getCommitMessage()
  */
 StagedCommitView::StagedCommitView(QWidget *parent) : QScrollArea(parent)
 {
-    setBackgroundRole(QPalette::Base);
+    //setBackgroundRole(QPalette::Base);
     setFrameStyle(QFrame::StyledPanel);
 
     //setViewportMargins(0,0,0,0);
     //setWidgetResizable(true);
+   int pointSize = 12;
+#ifdef Q_OS_WIN
+   pointSize = 8;
+#endif
+
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    m_pCommitEdit = new QTextEdit(tr(DEFAULT_COMMIT_MESSAGE), this);
+    m_pCommitMsgLabel = new QLabel(tr("Commit Message:"));
+    m_pCommitMsgLabel->setFont(QFont("Arial",pointSize,-1,true));
+    m_pCommitEdit = new CommitMessageEdit(this);
     //m_pCommitEdit->setGeometry(0,0,COMMIT_MIN_WIDTH,30);
     m_pCommitEdit->setFrameStyle(QFrame::NoFrame);
     m_pBtnBar = new StagedButtonBar(this);
+    mainLayout->addWidget(m_pCommitMsgLabel);
     mainLayout->addWidget(m_pCommitEdit);
     mainLayout->addWidget(m_pBtnBar);
     mainLayout->setMargin(0);
@@ -113,7 +123,12 @@ QString StagedCommitView::getCommitMessage()
 
 void StagedCommitView::reset()
 {
-    m_pCommitEdit->setText(tr(DEFAULT_COMMIT_MESSAGE));
+    if (!m_pCommitEdit->hasFocus())
+    {
+        m_pCommitEdit->setText("");
+    }
+
+    m_pBtnBar->reset();
 }
 
 void StagedCommitView::resizeEvent(QResizeEvent *event)
@@ -224,6 +239,13 @@ StagedButton* StagedButtonBar::getButton(int nBtnID)
     return pRet;
 }
 
+void StagedButtonBar::reset()
+{
+    m_pCommitBtn->setDisabled(true);
+    m_pPushBtn->setDisabled(true);
+    m_pUnstageAllBtn->setDisabled(true);
+    m_pUnstageSelBtn->setDisabled(true);
+}
 
 StagedButton::StagedButton(const QString &text, QWidget *parent, int nMinWidthWithText) : QToolButton(parent)
 {
@@ -251,3 +273,8 @@ void StagedButton::resizeEvent(QResizeEvent *event)
     }
 }
 
+
+CommitMessageEdit::CommitMessageEdit(QWidget *parent) : QTextEdit(parent)
+{
+
+}

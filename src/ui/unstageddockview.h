@@ -33,6 +33,7 @@ public:
     explicit UnstagedButtonBar(QWidget *parent = 0);
 
     UnstagedButton* getButton(int nBtnID);
+    void reset();
 
 signals:
 

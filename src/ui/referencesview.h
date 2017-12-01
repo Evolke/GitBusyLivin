@@ -13,7 +13,10 @@ public:
     explicit ReferencesView(QWidget *parent = nullptr);
     ~ReferencesView();
 
-    void setRefRoot(GBL_RefItem *pRef);
+    void setRefIcons();
+    void reset();
+    QStringList getBranchNames();
+
 signals:
 
 public slots:

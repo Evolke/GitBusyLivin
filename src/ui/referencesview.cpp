@@ -14,6 +14,11 @@ ReferencesView::ReferencesView(QWidget *parent) : QTreeView(parent)
     m_pTagIcon = NULL;
     m_pStashIcon = NULL;
     resizeColumnToContents(0);
+    resizeColumnToContents(1);
+    resizeColumnToContents(2);
+
+    setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 }
 
 ReferencesView::~ReferencesView()
@@ -24,10 +29,10 @@ ReferencesView::~ReferencesView()
     delete m_pStashIcon;
 }
 
-void ReferencesView::setRefRoot(GBL_RefItem *pRef)
+void ReferencesView::setRefIcons()
 {
     GBL_RefsModel *pMod = (GBL_RefsModel*)model();
-    pMod->setRefRoot(pRef);
+    GBL_RefItem *pRef = pMod->getRefRoot();
 
     if (pRef && m_pBranchIcon && m_pRemoteIcon && m_pTagIcon && m_pStashIcon)
     {
@@ -43,9 +48,33 @@ void ReferencesView::setRefRoot(GBL_RefItem *pRef)
     }
 }
 
+void ReferencesView::reset()
+{
+    QTreeView::reset();
+
+    GBL_RefsModel *pMod = (GBL_RefsModel*)model();
+    pMod->reset();
+    setRefIcons();
+}
+
+QStringList ReferencesView::getBranchNames()
+{
+    GBL_RefsModel *pMod = (GBL_RefsModel*)model();
+    GBL_RefItem *pRefRoot = pMod->getRefRoot();
+
+    QStringList branches;
+    GBL_RefItem *pRef = pRefRoot->findChild(QString("heads"));
+    if (pRef)
+    {
+        branches = pRef->getChildrenKeys();
+    }
+
+    return branches;
+}
+
 void ReferencesView::paintEvent(QPaintEvent *event)
 {
-    if (!m_pBranchIcon && !m_pRemoteIcon && !m_pTagIcon)
+    if (!m_pBranchIcon && !m_pRemoteIcon && !m_pTagIcon && !m_pStashIcon)
     {
         UrlPixmap svgpix(NULL);
         QPalette pal = palette();
@@ -63,20 +92,7 @@ void ReferencesView::paintEvent(QPaintEvent *event)
 
         if (m_pBranchIcon && m_pRemoteIcon && m_pTagIcon && m_pStashIcon)
         {
-            GBL_RefItem *pRef = ((GBL_RefsModel*)model())->getRefRoot();
-            if (pRef)
-            {
-                GBL_RefItem *pBranchRef, *pRemoteRef, *pTagRef, *pStashRef;
-                pBranchRef = pRef->findChild("heads");
-                pRemoteRef = pRef->findChild("remotes");
-                pTagRef = pRef->findChild("tags");
-                pStashRef = pRef->findChild("stashes");
-
-                if (pBranchRef) { pBranchRef->setIcon(m_pBranchIcon); }
-                if (pRemoteRef) { pRemoteRef->setIcon(m_pRemoteIcon); }
-                if (pTagRef) { pTagRef->setIcon(m_pTagIcon); }
-                if (pStashRef) { pStashRef->setIcon(m_pStashIcon); }
-            }
+            setRefIcons();
         }
 
     }

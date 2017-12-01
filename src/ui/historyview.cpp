@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QScrollBar>
 #include <QPainter>
+#include <QMouseEvent>
 
 HistoryView::HistoryView(QWidget *parent) : QTableView(parent)
 {
@@ -16,6 +17,14 @@ HistoryView::~HistoryView()
 
 }
 
+void HistoryView::reset()
+{
+    QTableView::reset();
+    GBL_HistoryModel *pModel = (GBL_HistoryModel*)model();
+    pModel->reset();
+
+}
+
 void HistoryView::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event);
@@ -23,7 +32,7 @@ void HistoryView::resizeEvent(QResizeEvent *event)
     int nWidth = width();
 
     QScrollBar *pSB = verticalScrollBar();
-    if (pSB && pSB->isVisible()) nWidth -= pSB->width();
+    //if (pSB && pSB->isVisible()) nWidth -= pSB->width();
 
     setColumnWidth(0, nWidth*.1);
     setColumnWidth(1, nWidth*.5);
@@ -34,64 +43,131 @@ void HistoryView::resizeEvent(QResizeEvent *event)
     pModel->layoutChanged();
 }
 
-/*void HistoryView::itemSelectionChanged()
+void HistoryView::mousePressEvent(QMouseEvent *event)
 {
-    qDebug() << "itemSectionChanged";
+    QPoint pos = event->pos();
+    int col = columnAt(pos.x());
+    int row = rowAt(pos.y());
+    //qDebug() << "row:" << row;
+
+    if (col > 0)
+    {
+        QTableView::mousePressEvent(event);
+    }
+    else if (col == 0)
+    {
+        setAutoScroll(false);
+        selectRow(row);
+        setAutoScroll(true);
+    }
+}
+
+/*void HistoryView::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    QTableView::selectionChanged(selected, deselected);
+
+    //qDebug() << "selectionChanged";
+
+    if (!selected.isEmpty())
+    {
+        QItemSelectionRange first = selected.first();
+
+        //showRow(row);
+    }
 }*/
 
 
-HistoryDelegate::HistoryDelegate(QObject *parent) : QStyledItemDelegate(parent)
+
+HistorySelectionModel::HistorySelectionModel(QAbstractItemModel *model, QObject *parent) :  QItemSelectionModel(model, parent)
 {
 
 }
 
+
+HistoryDelegate::HistoryDelegate(QObject *parent) : QStyledItemDelegate(parent)
+{
+    m_graphColors << QColor(50,50,200/*, 225*/) << QColor(50,200,50/*,200*/) << QColor(200,50,50/*,200*/);
+}
+
 void HistoryDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    QStyledItemDelegate::paint(painter, option, index);
-
+    //QStyledItemDelegate::paint(painter, option, index);
+    painter->setRenderHint(QPainter::Antialiasing, true);
     if (index.column() == 0)
     {
+        HistoryView *pView = (HistoryView*)parent();
+        //int nRow = index.row();
+        QStyle *pStyle = pView->style();
         QSize szCir(7,7);
-        int nLineIndent = 10, nLineSpacing = 10;
-        QColor active_color(50,50,200, 200);
-        QColor second_color(50,200,50,200);
-
-        /*if (option.state & QStyle::State_Selected)
-            painter->fillRect(option.rect, option.palette.highlight());
-
-        if (option.state & QStyle::State_Selected)
-    //! [8] //! [9]
-            painter->setBrush(option.palette.highlightedText());
-        else
-    //! [2]
-            painter->setBrush(option.palette.text());
-        */
+        int nLineIndent = 14, nLineSpacing = 10;
         QRect rct = option.rect;
-        //painter->drawEllipse(rct);
-        QPen pen(active_color);
-        pen.setWidth(2);
-        painter->setPen(pen);
+        QPalette pal = option.palette;
 
-        painter->drawLine(rct.left() + nLineIndent,rct.top(),rct.left() + nLineIndent,rct.bottom());
-        if (index.row() % 2 == 0)
+        //painter->fillRect(rct,pal.base());
+        QItemSelectionModel *pSelMod = pView->selectionModel();
+
+        int nRowCnt = pView->model()->rowCount();
+        QRect rowRct = rct;
+
+        QPolygon line;
+        for (int i = 0; i < nRowCnt; i++)
+        {
+            int nRowHt = pView->rowHeight(i);
+            //qDebug() << "rowHt:" << nRowHt;
+            rowRct.setHeight(nRowHt);
+            pal.setCurrentColorGroup(QPalette::Normal);
+            QBrush rowBr = i % 2 ? pal.alternateBase() : pal.window();
+
+            if (pSelMod->isRowSelected(i, QModelIndex()))
+            {
+                //painter->fillRect(rowRct, pal.highlight());
+                rowBr = pal.highlight();
+            }
+            painter->fillRect(rowRct, rowBr);
+
+            //qDebug() << "rowRct" << rowRct;
+
+            painter->setBrush(m_graphColors[0]);
+            painter->setPen(m_graphColors[0]);
+            QRect cirRct(rowRct.left()+nLineIndent - szCir.width()/2,rowRct.top()+rowRct.height()/2-szCir.height()/2, szCir.width(),szCir.height());
+            line << QPoint(rowRct.left()+nLineIndent,rowRct.top()+rowRct.height()/2);
+            painter->drawEllipse(cirRct);
+
+            rowRct.setTop(rowRct.top()+nRowHt);
+        }
+        painter->drawPolyline(line);
+        //painter->drawEllipse(rct);
+
+            /*QPen pen(m_graphColors[0]);
+            pen.setWidth(3);
+            painter->setPen(pen);
+            painter->drawLine(rct.left() + nLineIndent, rct.top()+rct.height()/2,rct.left()+nLineIndent,rct.bottom());
+
+            QRect cirRct(rct.left()+nLineIndent-szCir.width()/2,rct.top()+rct.height()/2-szCir.height()/2,szCir.width(),szCir.height());
+            painter->setBrush(QBrush(m_graphColors[0]));
+            painter->drawEllipse(cirRct);
+            */
+
+        //painter->drawLine(rct.left() + nLineIndent,rct.top(),rct.left() + nLineIndent,rct.bottom());
+        /*if (index.row() % 2 == 0)
         {
             QRect cirRct(rct.left()+nLineIndent-szCir.width()/2,rct.top()+rct.height()/2-szCir.height()/2,szCir.width(),szCir.height());
             painter->setBrush(QBrush(QColor(active_color)));
-            painter->setPen(Qt::NoPen);
+            //painter->setPen(Qt::NoPen);
             painter->drawEllipse(cirRct);
         }
 
         QPen pen2(second_color);
         pen.setWidth(2);
         painter->setPen(pen2);
-        painter->drawLine(rct.left() + nLineIndent+nLineSpacing,rct.top(),rct.left() + nLineIndent+nLineSpacing,rct.bottom());
+        //painter->drawLine(rct.left() + nLineIndent+nLineSpacing,rct.top(),rct.left() + nLineIndent+nLineSpacing,rct.bottom());
 
         if (index.row() % 2 != 0)
         {
             QRect cirRct2(rct.left()+nLineIndent+nLineSpacing-szCir.width()/2,rct.top()+rct.height()/2-szCir.height()/2,szCir.width(),szCir.height());
             painter->setBrush(QBrush(QColor(second_color)));
-            painter->setPen(Qt::NoPen);
+            //painter->setPen(Qt::NoPen);
             painter->drawEllipse(cirRct2);
-        }
+        }*/
     }
 }

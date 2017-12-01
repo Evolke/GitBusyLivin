@@ -4,14 +4,23 @@
 
 FileView::FileView(QWidget *parent) : QTreeView(parent)
 {
-    setIndentation(0);
-    setAllColumnsShowFocus(true);
+    //setIndentation(0);
+    setAllColumnsShowFocus(false);
+    setContentsMargins(0,0,0,0);
+    setTabKeyNavigation(false);
 }
 
 FileView::~FileView()
 {
     GBL_FileModel *pFileModel = (GBL_FileModel*)model();
     delete pFileModel;
+}
+
+void FileView::reset()
+{
+    QTreeView::reset();
+    GBL_FileModel *pFileModel = (GBL_FileModel*)model();
+    pFileModel->cleanUp();
 }
 
 void FileView::resizeEvent(QResizeEvent *event)

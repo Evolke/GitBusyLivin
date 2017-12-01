@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = GitBusyLivin
 TEMPLATE = app
 
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 
 SOURCES += src/main.cpp\
         src/ui/mainwindow.cpp \
@@ -22,8 +23,6 @@ SOURCES += src/main.cpp\
     src/ui/clonedialog.cpp \
     src/ui/urlpixmap.cpp \
     src/gbl/gbl_storage.cpp \
-    src/ui/commitdetail.cpp \
-    src/ui/diffview.cpp \
     src/ui/prefsdialog.cpp \
     src/ui/stageddockview.cpp \
     src/ui/unstageddockview.cpp \
@@ -33,7 +32,11 @@ SOURCES += src/main.cpp\
     src/gbl/gbl_string.cpp \
     src/ui/badgetoolbutton.cpp \
     src/ui/referencesview.cpp \
-    src/gbl/gbl_refsmodel.cpp
+    src/gbl/gbl_refsmodel.cpp \
+    src/ui/mdichild.cpp \
+    src/gbl/gbl_threads.cpp \
+    src/ui/commitdock.cpp \
+    src/ui/contentview.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -45,8 +48,6 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/clonedialog.h \
     src/ui/urlpixmap.h \
     src/gbl/gbl_storage.h \
-    src/ui/commitdetail.h \
-    src/ui/diffview.h \
     src/ui/prefsdialog.h \
     src/ui/stageddockview.h \
     src/ui/unstageddockview.h \
@@ -56,7 +57,11 @@ HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_string.h \
     src/ui/badgetoolbutton.h \
     src/ui/referencesview.h \
-    src/gbl/gbl_refsmodel.h
+    src/gbl/gbl_refsmodel.h \
+    src/ui/mdichild.h \
+    src/gbl/gbl_threads.h \
+    src/ui/commitdock.h \
+    src/ui/contentview.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
@@ -100,13 +105,14 @@ ICON = resources/images/gitbusylivin.icns
 
 DISTFILES += \
     resources/styles/zihuatanejo.qss \
-    resources/styles/shawshank.qss
+    resources/styles/shawshank.qss \
+    resources/content/about.html
 
 
 #CUSTOM CODE HERE
 VERSION_MAJOR = 0
 VERSION_MINOR = 0
-VERSION_BUILD = 17
+VERSION_BUILD = 18
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
        "VERSION_MINOR=$$VERSION_MINOR"\

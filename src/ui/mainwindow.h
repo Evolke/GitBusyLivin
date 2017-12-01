@@ -18,11 +18,16 @@ class QDockWidget;
 class QItemSelection;
 class QNetworkAccessManager;
 class QNetworkDiskCache;
+class QNetworkReply;
+class UrlPixmap;
 class QAction;
 struct GBL_Line_Item;
 class FileView;
 class ToolbarCombo;
 class BadgeToolButton;
+class QMdiArea;
+class MdiChild;
+class QMdiSubWindow;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -30,7 +35,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0);
+    MainWindow();
     ~MainWindow();
 
     QNetworkAccessManager* getNetworkAccessManager() { return m_pNetAM; }
@@ -46,12 +51,25 @@ public:
     static MainWindow* getInstance() { return m_pSingleInst; }
     static void setInstance(MainWindow* pInst) { m_pSingleInst = pInst; }
 
+    void addAvatar(QString &sEmail);
+    void startAvatarDownload();
+    void getAvatarFromUrl(QString sUrl, QString sEmail);
+    QPixmap* getAvatar(QString sEmail, bool bSmall=false);
+
+    MdiChild* currentMdiChild();
+    GBL_Repository* getCurrentRepository();
+
 public slots:
     void stageAll();
     void stageSelected();
     void unstageAll();
     void unstageSelected();
     void commit();
+    void avatarDownloaded(QNetworkReply* pReply);
+    void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void commitTabChanged(int tabID);
+    void applicationStateChanged(Qt::ApplicationState state);
+
 
 private slots:
     void about();
@@ -62,17 +80,23 @@ private slots:
     void preferences();
     void toggleToolBar();
     void toggleStatusBar();
+    void pushAction();
+    void pullAction();
+    void fetchAction();
     void sslVersion();
-    void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void libgit2Version();
     void historyFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void stagedFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void activateChild(QMdiSubWindow *window);
+    QMdiSubWindow* findMdiChild(const QString &fileName) const;
     void closeEvent(QCloseEvent *event);
     void updateRecentRepoActions();
     void openRecentRepo();
     void cleaningRepo();
     void timerEvent(QTimerEvent *event);
     void refresh();
+    void updateCommitFiles();
 
 
 private:
@@ -80,8 +104,10 @@ private:
 
     void init();
     void cleanupDocks();
+    void cleanupAvatars();
     void createActions();
     void createDocks();
+    void resetDocks(bool bRepaint = false);
     void createHistoryTable();
     void readSettings();
     void writeSettings();
@@ -90,11 +116,11 @@ private:
     void prependToRecentRepos(const QString &dirName);
     void setRecentReposVisible(bool visible);
     void updateStatus();
+    bool openRepoTab(QString &path);
+    void updateBranchCombo();
+    void updateReferences();
 
     GBL_Repository *m_qpRepo;
-    QString m_sRepoPath;
-    HistoryView *m_pHistView;
-    QPointer<GBL_HistoryModel> m_pHistModel;
     QMap<QString, QDockWidget*> m_docks;
     QMap<QString, FileView*> m_fileviews;
     QMenu *m_pViewMenu, *m_pRepoMenu;
@@ -111,9 +137,17 @@ private:
     BadgeToolButton *m_pPullBtn, *m_pPushBtn;
 
     static MainWindow *m_pSingleInst;
-    int m_updateTimer;
+    int m_updateTimer, m_openRepoTimer;
     QString m_sSelectedCode;
 
+    QMdiArea *m_pMdiArea;
+
+    QMap<QString, UrlPixmap*> m_avatarMap;
+    QMap<QString, QString> m_gravMap;
+    QList<QString> m_emailList;
+
+    int m_nCommitTabID;
+    MdiChild *m_pCurrentChild;
 };
 
 #endif // MAINWINDOW_H

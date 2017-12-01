@@ -14,3 +14,4 @@ GitBusyLivin.iconset/icon_512x512@2x.png
 *.exp
 *.DS_Store
 libs
+libgit2

@@ -2,7 +2,9 @@
 #define HISTORYVIEW_H
 
 #include <QTableView>
+#include <QItemSelectionModel>
 #include <QStyledItemDelegate>
+#include <QColor>
 
 class HistoryView : public QTableView
 {
@@ -12,11 +14,25 @@ public:
     explicit HistoryView(QWidget *parent = Q_NULLPTR);
     ~HistoryView();
 
+    void reset();
+
+
 private slots:
     virtual void resizeEvent(QResizeEvent *event);
-    //void itemSelectionChanged();
-};
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseDoubleClickEvent(QMouseEvent *event)  {}
+    virtual void mouseMoveEvent(QMouseEvent *event) {}
+    //virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+ };
 
+class HistorySelectionModel : public QItemSelectionModel
+{
+    Q_OBJECT
+
+public:
+    explicit HistorySelectionModel(QAbstractItemModel *model, QObject *parent);
+
+};
 
 class HistoryDelegate : public QStyledItemDelegate
 {
@@ -28,6 +44,8 @@ public:
     void paint(QPainter *painter, const QStyleOptionViewItem &option,
                const QModelIndex &index) const override;
 
+private:
+    QVector<QColor> m_graphColors;
 };
 
 #endif // HISTORYVIEW_H

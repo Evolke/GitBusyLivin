@@ -20,6 +20,11 @@ GBL_String::GBL_String(int size, QChar c) : QString(size, c)
 
 }
 
+GBL_String::GBL_String(const char *str) : QString(str)
+{
+
+}
+
 GBL_String::GBL_String(QLatin1String latin1) : QString(latin1)
 {
 

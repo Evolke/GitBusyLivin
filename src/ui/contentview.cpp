@@ -1,68 +1,88 @@
-#include "diffview.h"
+#include "contentview.h"
 #include "mainwindow.h"
+#include "mdichild.h"
 
 #include <QDebug>
 #include <QTextEdit>
 #include <QLabel>
 #include <QGridLayout>
+#include <QFileIconProvider>
 
-DiffView::DiffView(QWidget *parent) : QScrollArea(parent)
+ContentView::ContentView(QWidget *parent) : QScrollArea(parent)
 {
 
     QGridLayout *mainLayout = new QGridLayout(this);
     mainLayout->setMargin(0);
     mainLayout->setSpacing(0);
-    m_pDiff = new DiffEdit(this);
-    m_pInfo = new DiffInfoWidget(this);
+    m_pContent = new ContentEdit(this);
+
+    int fntSize = 12;
+
+#ifdef Q_OS_WIN
+    fntSize = 10;
+#endif
+    QFont fnt("Monospace",fntSize);
+    fnt.setFixedPitch(true);
+    m_pContent->setFont(fnt);
+    m_pInfo = new ContentInfoWidget(this);
     mainLayout->addWidget(m_pInfo,0,0);
-    mainLayout->addWidget(m_pDiff,1,0);
+    mainLayout->addWidget(m_pContent,1,0);
     mainLayout->setSpacing(0);
     setFrameStyle(QFrame::StyledPanel);
     mainLayout->setMargin(0);
-    m_pDiff->setReadOnly(true);
-    m_pDiff->setWordWrapMode(QTextOption::NoWrap);
+    m_pContent->setReadOnly(true);
+    m_pContent->setWordWrapMode(QTextOption::NoWrap);
     setViewportMargins(0,0,0,0);
     setContentsMargins(0,0,0,0);
 }
 
-DiffView::~DiffView()
+ContentView::~ContentView()
 {
-    cleanupDiffArray();
+    cleanupContentArray();
 }
 
-void DiffView::reset()
+void ContentView::reset()
 {
-    m_pDiff->clear();
+    m_pContent->clear();
     m_pInfo->reset();
-    cleanupDiffArray();
+    cleanupContentArray();
     //setHtml("<table cellpadding=\'5\' cellspacing=\'0\'><tr><td></td><td></td><td></td><td></td></tr></table>");
     //qDebug() << "reset" << toHtml();
 }
 
-void DiffView::cleanupDiffArray()
+void ContentView::cleanupContentArray()
 {
-    if (!m_diff_arr.isEmpty())
+    if (!m_Content_arr.isEmpty())
     {
-        for (int i = 0; i < m_diff_arr.size(); i++)
+        for (int i = 0; i < m_Content_arr.size(); i++)
         {
-            GBL_Line_Item *pLI = (GBL_Line_Item*)m_diff_arr.at(i);
+            GBL_Line_Item *pLI = (GBL_Line_Item*)m_Content_arr.at(i);
             delete pLI;
         }
-        m_diff_arr.clear();
+        m_Content_arr.clear();
     }
 }
 
-void DiffView::addLine(GBL_Line_Item *pLI)
+void ContentView::setMargins(int marg)
+{
+    /*QMargins m(marg,marg,marg,marg);
+    m_pContent->setContentsMargins(m);*/
+    QString sStyle;
+    QTextStream(&sStyle) << "ContentEdit {margin:" <<marg<<"px;}";
+    m_pContent->setStyleSheet(sStyle);
+}
+
+void ContentView::addLine(GBL_Line_Item *pLI)
 {
     GBL_Line_Item *pLineItem = new GBL_Line_Item;
     pLineItem->content = pLI->content;
     pLineItem->line_change_type = pLI->line_change_type;
     pLineItem->new_line_num = pLI->new_line_num;
     pLineItem->old_line_num = pLI->old_line_num;
-    m_diff_arr.append(pLineItem);
+    m_Content_arr.append(pLineItem);
 }
 
-void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
+void ContentView::setDiffFromLines(GBL_File_Item *pFileItem)
 {
     m_pInfo->setFileItem(pFileItem);
     QString num;
@@ -88,9 +108,9 @@ void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
     QTextStream(&sBackClrAttr) << "bgcolor=\'" << lineNumBgClr << "\'";
 
     QString sHtml("<html><body style=\'margin:0;padding:0;\'><table cellpadding=\'5\' cellspacing=\'0\' >");
-    for (int i = 0; i < m_diff_arr.size(); i++)
+    for (int i = 0; i < m_Content_arr.size(); i++)
     {
-        GBL_Line_Item *pLI = (GBL_Line_Item*)m_diff_arr.at(i);
+        GBL_Line_Item *pLI = (GBL_Line_Item*)m_Content_arr.at(i);
         htmlContent = pLI->content.toHtmlEscaped();
         sHtml += "<tr>";
         sHtml += "<td ";
@@ -114,9 +134,9 @@ void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
             sHtml += "</td>";
             sHtml += "<td style=\'";
             sHtml += style;
-            sHtml += "\'>";
+            sHtml += "\'><pre>";
             sHtml += htmlContent;
-            sHtml += "</td>";
+            sHtml += "</pre></td>";
         }
         else {
             bool bHeader = pLI->line_change_type == GIT_DIFF_LINE_FILE_HDR || pLI->line_change_type == GIT_DIFF_LINE_HUNK_HDR;
@@ -135,15 +155,27 @@ void DiffView::setDiffFromLines(GBL_File_Item *pFileItem)
         sHtml += "</tr>";
     }
     sHtml += "</table></body></html>";
-    m_pDiff->setHtml(sHtml);
+    m_pContent->setHtml(sHtml);
+    setMargins(0);
 }
 
+void ContentView::setContent(QString content)
+{
+    m_pContent->setPlainText(content);
+    setMargins(10);
+}
 
-DiffInfoWidget::DiffInfoWidget(QWidget *parent) : QFrame(parent)
+void ContentView::setContentInfo(GBL_File_Item *pFileItem)
+{
+    m_pInfo->setFileItem(pFileItem);
+
+}
+
+ContentInfoWidget::ContentInfoWidget(QWidget *parent) : QFrame(parent)
 {
     setFrameStyle(QFrame::StyledPanel);
     QGridLayout *mainLayout = new QGridLayout(this);
-    m_pTypeLabel = new DiffInfoTypeLabel(this);
+    m_pTypeLabel = new ContentInfoTypeLabel(this);
     m_pFileImgLabel = new QLabel(this);
     m_pFilePathLabel = new QLabel(this);
 
@@ -167,24 +199,27 @@ DiffInfoWidget::DiffInfoWidget(QWidget *parent) : QFrame(parent)
     m_pPixmap = new QPixmap();
 }
 
-void DiffInfoWidget::reset()
+void ContentInfoWidget::reset()
 {
     m_pTypeLabel->clear();
     m_pFileImgLabel->clear();
     m_pFilePathLabel->clear();
 }
 
-void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
+void ContentInfoWidget::setFileItem(GBL_File_Item *pFileItem)
 {
     QString path;
     QString sub;
+    MainWindow *pMain = MainWindow::getInstance();
 
-    if (pFileItem)
+    MdiChild *pCurrent = pMain->currentMdiChild();
+
+    if (pFileItem && pCurrent)
     {
-        if (pFileItem->sub_dir != '.')
+        if (pFileItem->sub_dir != ".")
         {
             sub = pFileItem->sub_dir;
-            sub += '/';
+            //sub += '/';
         }
         QTextStream(&path) << sub << pFileItem->file_name;
 
@@ -199,6 +234,17 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
             case GBL_FILE_STATUS_MODIFIED:
                  m_pPixmap->load(QLatin1String(":/images/modify_doc_icon.png"));
                 break;
+            case GBL_FILE_STATUS_SYSTEM:
+                {
+                    QString sPath = pCurrent->currentPath();
+                    sPath += "/" + pFileItem->sub_dir + pFileItem->file_name;
+                    QFileIconProvider icnp;
+                    QFileInfo fi(sPath);
+                    QIcon icn = fi.isFile() ? icnp.icon(fi) : icnp.icon(QFileIconProvider::File);
+                    *m_pPixmap = icn.pixmap(16,16);
+                }
+                break;
+
             default:
                  m_pPixmap->load(QLatin1String(":/images/unknown_doc_icon.png"));
                 break;
@@ -210,7 +256,6 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
         path = "...";
     }
 
-    MainWindow *pMain = MainWindow::getInstance();
     QString sType = pMain->getSelectedCode();
 
     m_pTypeLabel->setText("<i>"+sType+"</i>");
@@ -219,12 +264,12 @@ void DiffInfoWidget::setFileItem(GBL_File_Item *pFileItem)
     //qDebug() << m_pFilePathLabel->geometry();
 }
 
-DiffInfoTypeLabel::DiffInfoTypeLabel(QWidget *parent) : QLabel(parent)
+ContentInfoTypeLabel::ContentInfoTypeLabel(QWidget *parent) : QLabel(parent)
 {
 }
 
 
-DiffEdit::DiffEdit(QWidget *parent) : QTextEdit(parent)
+ContentEdit::ContentEdit(QWidget *parent) : QTextEdit(parent)
 {
 #ifdef Q_OS_MAC
     setViewportMargins(0,0,0,8);
