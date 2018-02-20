@@ -22,6 +22,7 @@ public:
     void setPixmapData(QByteArray ba);
     QPixmap* getPixmap();
     QPixmap* getSmallPixmap(int size);
+    QPixmap* getSmallCirclePixmap(int size);
     void loadSVGResource(QString sRes, QString sColor, QSize size);
 
 signals:
@@ -35,6 +36,7 @@ private slots:
 private:
     QPixmap *m_pPixmap;
     QPixmap *m_pSmallPixmap;
+    QPixmap *m_pSmallCirclePixmap;
     QNetworkAccessManager *m_pNetAM;
 };
 

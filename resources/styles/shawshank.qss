@@ -3,9 +3,16 @@ QMainWindow, QApplication {
    color: #DDDDDD;
 }
 
-QMenuBar {
+QMenuBar,QToolbar,QStatusBar {
     background: #222222;
     color: #DDDDDD;
+}
+
+QSizeGrip {
+    image: url(:/images/sizer_light.png);
+    width: 16px;
+    height: 16px;
+    border: none;
 }
 
 QMenuBar::item:selected {
@@ -19,6 +26,7 @@ QMenu {
     background-color: #333333;
     color: #DDDDDD;
     padding: 0;
+    border: 1px solid #444;
 }
 
 QMenu:selected, QMenu::item:selected {
@@ -28,6 +36,17 @@ QMenu:selected, QMenu::item:selected {
 
 QMenu::item:disabled {
     color: #999;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #444;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+QStatusBar::item {
+    border: none;
 }
 
 QTableView {
@@ -204,9 +223,13 @@ QSplitter::handle:vertical {
 }
 
 QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button,
-QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QWidget, QMdiArea {
+QTabBar, QDialog, QLabel, QScrollArea, QWidget, QMdiArea {
     color:#999999;
     background:#333333;
+}
+
+QDockWidget, QDockWidget::title {
+    border: 1px solid #444;
 }
 
 QScrollArea {
@@ -222,6 +245,10 @@ QDockWidget {
     titlebar-close-icon: url(:/images/light_dock_close_icon.png);
     titlebar-normal-icon: url(:/images/light_dock_max_icon.png);
     border: 1px solid #444;
+}
+
+QDockWidget::title {
+    text-align: left center;
 }
 
 QLineEdit {
@@ -375,6 +402,19 @@ QTabBar::tab {
     background-color: #333;
     border: 1px solid #555;
     padding: 5px;
+}
+
+QProgressBar {
+    border: 1px solid #555;
+    /*border-radius: 5px;*/
+    background: #444;
+    outline: none;
+}
+
+QProgressBar::chunk {
+    background-color: #080;
+    width: 10px;
+    margin: 0;
 }
 
 ContentView {

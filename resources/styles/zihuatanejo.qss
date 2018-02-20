@@ -2,7 +2,7 @@ QMainWindow {
    background-color: #ddd;
 }
 
-QMenuBar {
+QMenuBar,QToolBar {
     background: #eee;
     color: #333333;
 }
@@ -19,11 +19,20 @@ QMenu {
     background-color: #eee;
     color: #333333;
     padding: 0;
+    border: 1px solid #ddd;
+
 }
 
 QMenu:selected {
     background: #666666;
     color: #BBBBBB;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #ccc;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 QTableView {
@@ -147,12 +156,12 @@ QSplitter::handle:vertical {
     height: 4px;
 }
 
-QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button,
-QTabBar, QToolBar, QStatusBar, QDialog, QLabel, QScrollArea, QFrame {
+QDockWidget,QTabBar, QStatusBar, QDialog, QLabel, QScrollArea, QFrame {
     color:#222;
     background: none;
     background-color:#fff;
 }
+
 
 QLabel {
     background: none;
@@ -161,6 +170,12 @@ QLabel {
 QDockWidget {
     titlebar-close-icon: url(:/images/dark_dock_close_icon.png);
     titlebar-normal-icon: url(:/images/dark_dock_max_icon.png);
+}
+
+QDockWidget::title,QDockWidget::close-button, QDockWidget::float-button {
+    color: #222;
+    background: none;
+    background-color:#ddd;
 }
 
 QLineEdit {
@@ -221,6 +236,13 @@ QStatusBar {
     border-top: 1px solid #BBB;
 }
 
+QSizeGrip {
+    image: url(:/images/sizer_dark.png);
+    width: 16px;
+    height: 16px;
+    border: none;
+}
+
 QComboBox {
     border: 1px solid #bbb;
     border-radius: 4px;
@@ -257,7 +279,8 @@ QComboBox QAbstractItemView {
 }
 
 ToolbarCombo {
-    border-radius: none;
+    border-radius: 5px;
+    background: #ddd;
 }
 
 ToolbarCombo::drop-down {

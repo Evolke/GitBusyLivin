@@ -32,11 +32,12 @@ void HistoryView::resizeEvent(QResizeEvent *event)
     int nWidth = width();
 
     QScrollBar *pSB = verticalScrollBar();
-    //if (pSB && pSB->isVisible()) nWidth -= pSB->width();
-
+#ifdef Q_OS_WIN
+    if (pSB && pSB->isVisible()) nWidth -= pSB->width();
+#endif
     setColumnWidth(0, nWidth*.1);
     setColumnWidth(1, nWidth*.5);
-    setColumnWidth(2, nWidth*.24);
+    setColumnWidth(2, nWidth*.25);
     setColumnWidth(3, nWidth*.15);
 
     GBL_HistoryModel *pModel = (GBL_HistoryModel*)model();

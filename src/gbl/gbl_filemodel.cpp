@@ -53,7 +53,12 @@ void GBL_FileModel::setFileArray(GBL_File_Array *pArr)
     for (int i = 0; i < pArr->size(); i++)
     {
         GBL_File_Item *pItem = pArr->at(i);
-        m_pFileArr->append(pItem);
+        GBL_File_Item *pNewItem = new GBL_File_Item();
+        pNewItem->file_name = pItem->file_name;
+        pNewItem->file_oid = pItem->file_oid;
+        pNewItem->status = pItem->status;
+        pNewItem->sub_dir = pItem->sub_dir;
+        m_pFileArr->append(pNewItem);
         if (pItem->sub_dir == ".")
         {
             m_pFileTreeRoot->addChild(new GBL_FileTreeItem("",i,m_pFileTreeRoot));

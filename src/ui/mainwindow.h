@@ -5,6 +5,7 @@
 #include <QPointer>
 #include <QMap>
 
+#include "src/gbl/gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -28,6 +29,8 @@ class BadgeToolButton;
 class QMdiArea;
 class MdiChild;
 class QMdiSubWindow;
+class GBL_Thread;
+class StatusProgressBar;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -69,7 +72,11 @@ public slots:
     void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void commitTabChanged(int tabID);
     void applicationStateChanged(Qt::ApplicationState state);
-
+    void statusUpdated(GBL_String *psError, GBL_File_Array *pStagedArr, GBL_File_Array *pUnstagedArr);
+    void refsUpdated(GBL_String *psError, GBL_RefItem *pRefItem);
+    void fetchFinished(GBL_String *psError);
+    void pullFinished(GBL_String *psError);
+    void cloneFinished(GBL_String* psError, GBL_String* psDst);
 
 private slots:
     void about();
@@ -85,6 +92,7 @@ private slots:
     void fetchAction();
     void sslVersion();
     void libgit2Version();
+    void progressTest();
     void historyFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void stagedFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
@@ -97,7 +105,7 @@ private slots:
     void timerEvent(QTimerEvent *event);
     void refresh();
     void updateCommitFiles();
-
+    void scanAction();
 
 private:
     enum { MaxRecentRepos = 10 };
@@ -116,6 +124,7 @@ private:
     void prependToRecentRepos(const QString &dirName);
     void setRecentReposVisible(bool visible);
     void updateStatus();
+    void updatePushPull();
     bool openRepoTab(QString &path);
     void updateBranchCombo();
     void updateReferences();
@@ -123,8 +132,10 @@ private:
     GBL_Repository *m_qpRepo;
     QMap<QString, QDockWidget*> m_docks;
     QMap<QString, FileView*> m_fileviews;
+    QMap<QString, GBL_Thread*> m_threads;
     QMenu *m_pViewMenu, *m_pRepoMenu;
     QToolBar *m_pToolBar;
+    StatusProgressBar *m_pStatProg;
     ToolbarCombo *m_pBranchCombo;
     QNetworkAccessManager *m_pNetAM;
     QNetworkDiskCache *m_pNetCache;
@@ -137,7 +148,7 @@ private:
     BadgeToolButton *m_pPullBtn, *m_pPushBtn;
 
     static MainWindow *m_pSingleInst;
-    int m_updateTimer, m_openRepoTimer;
+    int m_nMainTimer;
     QString m_sSelectedCode;
 
     QMdiArea *m_pMdiArea;

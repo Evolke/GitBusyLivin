@@ -129,14 +129,14 @@ bool GBL_Repository::get_global_config_info(GBL_Config_Map **out)
         git_buf_free(&buf);
         check_libgit_return(git_config_get_string_buf(&buf, cfg, "user.email"));
         m_pConfig_Map->insert(QString("global.user.email"),QString(buf.ptr));
-
-       *out = m_pConfig_Map;
     }
     catch(GBL_RepositoryException &e)
     {
         Q_UNUSED(e);
 
     }
+
+    *out = m_pConfig_Map;
 
     git_buf_free(&buf);
     if (cfg != NULL) git_config_free(cfg);
@@ -151,8 +151,7 @@ bool GBL_Repository::set_global_config_info(GBL_Config_Map *cfgMap)
     //const char *name, *email;
     try
     {
-        check_libgit_return(git_config_find_global(&buf));
-        check_libgit_return(git_config_open_ondisk(&cfg, buf.ptr));
+        check_libgit_return(git_config_open_default(&cfg));
 
         QMapIterator<QString, QString> i(*cfgMap);
         GBL_String sKey, sVal;
@@ -270,7 +269,7 @@ bool GBL_Repository::open_repo(GBL_String path)
     cleanup();
     /*const QByteArray l8b = path.toUtf8();
     const char* spath = l8b.constData();*/
-    m_iErrorCode = git_repository_open(&m_pRepo, path.toConstChar());
+    m_iErrorCode = git_repository_open_ext(&m_pRepo, path.toConstChar(),GIT_REPOSITORY_OPEN_NO_SEARCH,NULL);
     return m_iErrorCode >= 0;
 }
 
@@ -353,8 +352,10 @@ bool GBL_Repository::pull_remote(GBL_String sRemote, GBL_String sBranch)
     git_merge_preference_t merge_preference;
     git_object *pRemoteObj = NULL;
     git_tree *pRemoteTreeObj = NULL;
+    git_merge_options merge_options = GIT_MERGE_OPTIONS_INIT;
     git_checkout_options checkout_options = GIT_CHECKOUT_OPTIONS_INIT;
     checkout_options.checkout_strategy = GIT_CHECKOUT_SAFE;
+    git_index *index = NULL;
 
     if (fetch_remote(sRemote))
     {
@@ -377,6 +378,16 @@ bool GBL_Repository::pull_remote(GBL_String sRemote, GBL_String sBranch)
                 check_libgit_return(git_reference_set_target(&pNewRef, pHeadRef, git_commit_id((const git_commit*)pRemoteObj), NULL));
                 //check_libgit_return(git_checkout_head(m_pRepo, &checkout_options));
             }
+
+            check_libgit_return(git_merge(m_pRepo, (const git_annotated_commit **)&pAnnCommit, 1, &merge_options, &checkout_options));
+            /*check_libgit_return(git_repository_index(&index, m_pRepo));
+
+            if (!git_index_has_conflicts(index))
+            {
+                GBL_String msg("Merged branch ");
+                msg += sBranch;
+                commit_index(msg);
+            }*/
         }
         catch (GBL_RepositoryException &e)
         {
@@ -596,11 +607,11 @@ QStringList GBL_Repository::getBranchNames()
  * @param pHist_Arr
  * @return
  */
-bool GBL_Repository::get_history(GBL_HistoryModel *io_pHistModel)
+bool GBL_Repository::get_history(GBL_History_Array *io_pHistArr)
 {
     git_revwalk *walker;
     m_iErrorCode = git_revwalk_new(&walker, m_pRepo);
-    int nMaxRevs = 500;
+    int nMaxRevs = 300;
     int nCount = 0;
     if (m_iErrorCode >= 0)
     {
@@ -642,7 +653,7 @@ bool GBL_Repository::get_history(GBL_HistoryModel *io_pHistModel)
                 }
 
 
-                io_pHistModel->addHistoryItem(pHistItem);
+                io_pHistArr->append(pHistItem);
 
                 //qDebug() << pHistItem->hist_summary << pHistItem->hist_author << pHistItem->hist_datetime;
 
@@ -818,8 +829,29 @@ bool GBL_Repository::get_tree_from_commit_oid(GBL_String oid_str, GBL_File_Array
 {
 
    git_oid oid;
-   const char* str = oid_str.toConstChar();
-   m_iErrorCode = git_oid_fromstr(&oid, str);
+   const char* str;
+   if (oid_str.isEmpty())
+   {
+       git_reference *head_ref = NULL;
+       git_object *head_obj = NULL;
+       try
+       {
+           check_libgit_return(git_reference_dwim(&head_ref,m_pRepo, "HEAD"));
+           check_libgit_return(git_reference_peel(&head_obj, head_ref, GIT_OBJ_COMMIT));
+           oid = *git_object_id(head_obj);
+       }
+       catch(GBL_RepositoryException &e)
+       {
+
+       }
+       if (head_ref) git_reference_free(head_ref);
+       if (head_obj) git_object_free(head_obj);
+   }
+   else
+   {
+       str = oid_str.toConstChar();
+       m_iErrorCode = git_oid_fromstr(&oid, str);
+   }
    if (m_iErrorCode >= 0)
    {
         git_tree *pTree = NULL;
@@ -1209,7 +1241,7 @@ int GBL_Repository::diff_print_lines_callback(const git_diff_delta *pDelta, cons
     return 0;
 }
 
-bool GBL_Repository::get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &unstagedArr)
+bool GBL_Repository::get_repo_status(GBL_File_Array *pStagedArr, GBL_File_Array *pUnstagedArr)
 {
     git_status_list *status;
     git_status_options opts = GIT_STATUS_OPTIONS_INIT;
@@ -1252,7 +1284,7 @@ bool GBL_Repository::get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &
                 if (s->status & GIT_STATUS_IGNORED)
                     pFItem->status = GBL_FILE_STATUS_IGNORED;
 
-                stagedArr.append(pFItem);
+                pStagedArr->append(pFItem);
             }
 
             if (s->index_to_workdir)
@@ -1277,7 +1309,7 @@ bool GBL_Repository::get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &
                     pFItem->status = GBL_FILE_STATUS_TYPECHANGE;
                 if (s->status & GIT_STATUS_IGNORED)
                     pFItem->status = GBL_FILE_STATUS_IGNORED;
-                unstagedArr.append(pFItem);
+                pUnstagedArr->append(pFItem);
 
             }
         }
@@ -1366,4 +1398,21 @@ int GBL_RefItem::index()
     }
 
     return -1;
+}
+
+GBL_RefItem& GBL_RefItem::operator=(GBL_RefItem &ref)
+{
+    cleanup();
+    m_sKey = ref.getKey();
+    m_sName = ref.getName();
+    m_sRef = ref.getRef();
+
+    for (int i=0; i < ref.getChildCount(); i++)
+    {
+        GBL_RefItem *pRefItem = new GBL_RefItem("","",this);
+        *pRefItem = *ref.getChildAt(i);
+        m_refChildren.append(pRefItem);
+    }
+
+    return *this;
 }

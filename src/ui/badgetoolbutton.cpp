@@ -46,7 +46,7 @@ void BadgeToolButton::paintEvent(QPaintEvent *event)
         p.setRenderHint(QPainter::TextAntialiasing,true);
         QPalette pal = palette();
         QColor txtClr(255,255,255);//pal.color(QPalette::Text);
-        QColor bkClr(200,0,0,200);//pal.color(QPalette::Background);
+        QColor bkClr(200,0,0);//pal.color(QPalette::Background);
         //p.fillRect(rct, pal.background());
         p.setBrush(QBrush(bkClr));
         p.drawEllipse(rct);

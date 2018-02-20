@@ -106,6 +106,8 @@ public:
     QIcon* getIcon() { return m_pIcon; }
     void setIcon(QIcon *pIcon) { m_pIcon = pIcon; }
 
+    GBL_RefItem &operator=(GBL_RefItem &);
+
 private:
     QString m_sKey;
     QString m_sName;
@@ -156,7 +158,7 @@ public:
     bool fill_stashes();
     GBL_RefItem* get_references() { return m_pRefRoot; }
     QStringList getBranchNames();
-    bool get_history(GBL_HistoryModel *io_pHistModel);
+    bool get_history(GBL_History_Array *io_pHistArr);
     bool get_tree_from_commit_oid(GBL_String oid_str, GBL_File_Array *pHistFileArr);
     void tree_walk(const git_oid *pTroid, GBL_File_Array *pHistFileArr);
     bool get_commit_to_parent_diff_files(GBL_String oid_str, GBL_File_Array *pHistFileArr);
@@ -167,7 +169,7 @@ public:
     bool get_global_config_info(GBL_Config_Map **out);
     bool set_global_config_info(GBL_Config_Map *cfgMap);
 
-    bool get_repo_status(GBL_File_Array &stagedArr, GBL_File_Array &unstagedArr);
+    bool get_repo_status(GBL_File_Array *pStagedArr, GBL_File_Array *pUnstagedArr);
 
     git_repository* get_repository() { return m_pRepo; }
     void set_repository(git_repository *pRepo) { m_pRepo = pRepo; }

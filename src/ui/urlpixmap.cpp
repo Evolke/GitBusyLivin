@@ -15,13 +15,15 @@ UrlPixmap::UrlPixmap(QNetworkAccessManager *pNetAM, QObject *parent) : QObject(p
 {
     m_pPixmap = new QPixmap();
     m_pSmallPixmap = new QPixmap();
+    m_pSmallCirclePixmap = new QPixmap();
     m_pNetAM = pNetAM;
 }
 
 UrlPixmap::~UrlPixmap()
 {
-    delete m_pPixmap;
+    if (m_pPixmap) delete m_pPixmap;
     if (m_pSmallPixmap) delete m_pSmallPixmap;
+    if (m_pSmallCirclePixmap) delete m_pSmallCirclePixmap;
 }
 
 void UrlPixmap::loadFromUrl(QString imageUrl)
@@ -65,8 +67,27 @@ QPixmap* UrlPixmap::getSmallPixmap(int size)
          m_pSmallPixmap->swap(smPM);
     }
 
-
     return m_pSmallPixmap;
+}
+
+QPixmap* UrlPixmap::getSmallCirclePixmap(int size)
+{
+    if (!m_pPixmap->isNull() && m_pSmallCirclePixmap->isNull())
+    {
+        QPixmap smallCircle(size,size);
+        smallCircle.fill(Qt::transparent);
+        QPixmap *pSmall = getSmallPixmap(size);
+        QPainter pixPainter(&smallCircle);
+        pixPainter.setRenderHint(QPainter::Antialiasing, true);
+        QBrush bkgnd(*pSmall);
+        pixPainter.setBrush(bkgnd);
+        pixPainter.setPen(Qt::NoPen);
+        QRect rct(0,0,size,size);
+        pixPainter.drawEllipse(rct);
+        m_pSmallCirclePixmap->swap(smallCircle);
+    }
+
+    return m_pSmallCirclePixmap;
 }
 
 void UrlPixmap::loadSVGResource(QString sRes, QString sColor, QSize size)
@@ -95,7 +116,7 @@ void UrlPixmap::loadSVGResource(QString sRes, QString sColor, QSize size)
 
     pix.fill(Qt::transparent);
     QPainter pixPainter(&pix);
-    //pixPainter.setRenderHint(QPainter::Antialiasing, false);
+    pixPainter.setRenderHint(QPainter::Antialiasing, false);
     svg.render(&pixPainter);
     //qDebug() << "svg size:" << pix.size();
     //qDebug() << "is null:" << pix.isNull();

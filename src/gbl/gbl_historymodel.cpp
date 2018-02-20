@@ -62,7 +62,16 @@ void GBL_HistoryModel::reset()
 
 void GBL_HistoryModel::addHistoryItem(GBL_History_Item *pHistItem)
 {
-    m_pHistArr->append(pHistItem);
+    GBL_History_Item *pNewHistItem = new GBL_History_Item;
+    pNewHistItem->hist_author = pHistItem->hist_author;
+    pNewHistItem->hist_author_email = pHistItem->hist_author_email;
+    pNewHistItem->hist_datetime = pHistItem->hist_datetime;
+    pNewHistItem->hist_message = pHistItem->hist_message;
+    pNewHistItem->hist_oid = pHistItem->hist_oid;
+    pNewHistItem->hist_parents = pHistItem->hist_parents;
+    pNewHistItem->hist_summary = pHistItem->hist_summary;
+
+    m_pHistArr->append(pNewHistItem);
     m_histMap.insert(pHistItem->hist_oid, m_pHistArr->size()-1);
 }
 
@@ -75,6 +84,7 @@ void GBL_HistoryModel::historyUpdated()
         for (int i = 0; i < m_pHistArr->size(); i++)
         {
             GBL_History_Item *pHistItem = m_pHistArr->at(i);
+            m_histMap.insert(pHistItem->hist_oid, i);
             QString sEmail = pHistItem->hist_author_email.toLower();
             pMain->addAvatar(sEmail);
             /*else

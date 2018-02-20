@@ -156,22 +156,22 @@ StagedButtonBar::StagedButtonBar(QWidget *parent) : QFrame(parent)
 {
     setContentsMargins(0,0,0,0);
     setMaximumHeight(30);
-    m_pCommitBtn = new StagedButton(tr("Commit"), this, 60);
+    m_pCommitBtn = new StagedButton(tr("Commit"), this, 55);
     m_pCommitBtn->setDisabled(true);
-    m_pCommitBtn->setMaximumSize(100,20);
+    m_pCommitBtn->setMaximumSize(68,20);
     //mainLayout->addWidget(m_pCommitBtn,1,0,1,1,Qt::AlignBottom);
-    m_pPushBtn = new StagedButton(tr("Push"), this, 50);
+    m_pPushBtn = new StagedButton(tr("Commit/Push"), this, 85);
     m_pPushBtn->setDisabled(true);
-    m_pPushBtn->setMaximumSize(80,20);
+    m_pPushBtn->setMaximumSize(95,20);
     //mainLayout->addWidget(m_pPushBtn,1,1,1,1,Qt::AlignBottom);
     m_pUnstageAllBtn = new StagedButton(tr("Unstage All"), this, 80);
     m_pUnstageAllBtn->setDisabled(true);
-    m_pUnstageAllBtn->setMaximumSize(100,20);
+    m_pUnstageAllBtn->setMaximumSize(90,20);
 
     //mainLayout->addWidget(m_pUnstageAllBtn,1,2,1,1,Qt::AlignBottom);
     m_pUnstageSelBtn = new StagedButton(tr("Unstage Selected"), this, 115);
     m_pUnstageSelBtn->setDisabled(true);
-    m_pUnstageSelBtn->setMaximumSize(120,20);
+    m_pUnstageSelBtn->setMaximumSize(125,20);
 
     UrlPixmap svgpix(NULL);
     MainWindow *pMain = MainWindow::getInstance();

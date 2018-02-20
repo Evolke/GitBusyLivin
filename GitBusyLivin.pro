@@ -36,7 +36,10 @@ SOURCES += src/main.cpp\
     src/ui/mdichild.cpp \
     src/gbl/gbl_threads.cpp \
     src/ui/commitdock.cpp \
-    src/ui/contentview.cpp
+    src/ui/contentview.cpp \
+    src/ui/statusprogressbar.cpp \
+    src/ui/scandialog.cpp \
+    src/ui/scanmdichild.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -61,7 +64,10 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/mdichild.h \
     src/gbl/gbl_threads.h \
     src/ui/commitdock.h \
-    src/ui/contentview.h
+    src/ui/contentview.h \
+    src/ui/statusprogressbar.h \
+    src/ui/scandialog.h \
+    src/ui/scanmdichild.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
@@ -112,7 +118,7 @@ DISTFILES += \
 #CUSTOM CODE HERE
 VERSION_MAJOR = 0
 VERSION_MINOR = 0
-VERSION_BUILD = 18
+VERSION_BUILD = 19
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
        "VERSION_MINOR=$$VERSION_MINOR"\
