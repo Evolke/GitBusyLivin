@@ -106,6 +106,10 @@ macx {
     }
 }
 
+unix {
+    LIBS += -lgit2
+}
+
 RC_ICONS = resources/images/gitbusylivin.ico
 ICON = resources/images/gitbusylivin.icns
 
