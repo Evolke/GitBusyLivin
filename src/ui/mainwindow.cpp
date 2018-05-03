@@ -607,14 +607,17 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
         }
 
             //qDebug() << path;
-
-        GBL_Repository *pRepo = getCurrentRepository();
-        if (pRepo)
+        QDockWidget *pDock = m_docks["file_content"];
+        if(pDock->isVisible())
         {
-            if (pRepo->get_index_to_work_diff(this,&files))
+            GBL_Repository *pRepo = getCurrentRepository();
+            if (pRepo)
             {
-                if (mil.size() > 1) { pFileItem = NULL; }
-                pCV->setDiffFromLines(pFileItem);
+                if (pRepo->get_index_to_work_diff(this,&files))
+                {
+                    if (mil.size() > 1) { pFileItem = NULL; }
+                    pCV->setDiffFromLines(pFileItem);
+                }
             }
         }
     }
@@ -669,13 +672,17 @@ void MainWindow::stagedFileSelectionChanged(const QItemSelection &selected, cons
             files.append(sPath);
         }
 
-        GBL_Repository *pRepo = getCurrentRepository();
-        if (pRepo)
+        QDockWidget *pDock = m_docks["file_content"];
+        if(pDock->isVisible())
         {
-            if (pRepo->get_index_to_head_diff(this, &files))
+            GBL_Repository *pRepo = getCurrentRepository();
+            if (pRepo)
             {
-                if (mil.size() > 1) { pFileItem = NULL; }
-                pCV->setDiffFromLines(pFileItem);
+                if (pRepo->get_index_to_head_diff(this, &files))
+                {
+                    if (mil.size() > 1) { pFileItem = NULL; }
+                    pCV->setDiffFromLines(pFileItem);
+                }
             }
         }
     }
