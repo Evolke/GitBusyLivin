@@ -1,6 +1,6 @@
 #include "gbl_refsmodel.h"
 
-#include <qicon>
+#include <QIcon>
 
 
 GBL_RefsModel::GBL_RefsModel(QObject *parent) : QAbstractItemModel(parent)
