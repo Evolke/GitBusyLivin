@@ -16,6 +16,7 @@
 #include "src/gbl/gbl_storage.h"
 #include "src/gbl/gbl_threads.h"
 #include "commitdock.h"
+#include "bookmarksdock.h"
 #include "prefsdialog.h"
 #include "urlpixmap.h"
 #include "stageddockview.h"
@@ -25,6 +26,7 @@
 #include "commitdock.h"
 #include "statusprogressbar.h"
 #include "scanmdichild.h"
+#include "branchdialog.h"
 
 #include <QMdiArea>
 #include <QMdiSubWindow>
@@ -36,6 +38,7 @@
 #include <QSplitter>
 
 #define MAIN_TIMER_INTERVAL 60000
+#define COMMIT_DETAILS_TIMER_INTERVAL 100
 #define TOOLBAR_ICON_SIZE 24
 
 MainWindow* MainWindow::m_pSingleInst = NULL;
@@ -53,7 +56,11 @@ MainWindow::MainWindow()
     m_pNetAM = NULL;
     m_pNetCache = NULL;
     m_nMainTimer = 0;
+    m_nCommitDetailsTimer = 0;
+    m_nAutoFetchInterval = 15;
+    m_nAutoFetchInterval = 0;
     m_pCurrentChild = NULL;
+    m_pStorage = new GBL_Storage();
 
     m_nCommitTabID = COMMIT_DIFF_TAB_ID;
 
@@ -64,6 +71,8 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
+    if (m_nMainTimer) killTimer(m_nMainTimer);
+
     if (m_qpRepo)
     {
         delete m_qpRepo;
@@ -71,6 +80,8 @@ MainWindow::~MainWindow()
 
     //if (m_pNetCache) { delete m_pNetCache;}
     if (m_pNetAM) { delete m_pNetAM; }
+    delete m_pStorage;
+
     cleanupAvatars();
     m_emailList.clear();
     m_gravMap.clear();
@@ -178,13 +189,19 @@ void MainWindow::open()
     QString dirName = QFileDialog::getExistingDirectory(this);
     if (!dirName.isEmpty())
     {
-        if (openRepoTab(dirName))
-        {
-            MainWindow::prependToRecentRepos(dirName);
-
-            setupRepoUI(dirName);
-        }
+        openRepo(dirName);
     }
+}
+
+void MainWindow::openRepo(QString &sPath)
+{
+    if (openRepoTab(sPath))
+    {
+        MainWindow::prependToRecentRepos(sPath);
+
+        setupRepoUI(sPath);
+    }
+
 }
 
 void MainWindow::openRecentRepo()
@@ -232,10 +249,11 @@ bool MainWindow::openRepoTab(QString &path)
 void MainWindow::setupRepoUI(QString repoDir)
 {
     //m_sRepoPath = repoDir;
-    if (m_docks.isEmpty())
+    if (m_docks.size() <= 1)
     {
         createDocks();
         m_pBranchCombo = new ToolbarCombo(m_pToolBar);
+        connect(m_pBranchCombo, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), this, &MainWindow::branchComboChanged);
         //m_pBranchCombo->addItem(tr("Master"));
         m_pToolBar->addSeparator();
         m_pToolBar->addWidget(m_pBranchCombo);
@@ -425,6 +443,8 @@ void MainWindow::updatePushPull()
 
 void MainWindow::updateBranchCombo()
 {
+    m_sCurrentBranch = "";
+
     MdiChild *pChild = currentMdiChild();
     if (pChild)
     {
@@ -435,16 +455,30 @@ void MainWindow::updateBranchCombo()
         m_pBranchCombo->addItems(pRefView->getBranchNames());
         m_pBranchCombo->adjustSize();
 
-        QString sHeadBranch;
-        pRepo->get_head_branch(sHeadBranch);
-        if (!sHeadBranch.isEmpty())
+        pRepo->get_head_branch(m_sCurrentBranch);
+        if (!m_sCurrentBranch.isEmpty())
         {
-            m_pBranchCombo->setCurrentText(sHeadBranch);
+            m_pBranchCombo->setCurrentText(m_sCurrentBranch);
         }
     }
     else
     {
         m_pBranchCombo->clear();
+    }
+}
+
+void MainWindow::branchComboChanged(const QString &text)
+{
+    if (m_sCurrentBranch == text || m_sCurrentBranch.isEmpty()) return;
+
+    MdiChild *pChild = currentMdiChild();
+    if (pChild)
+    {
+        m_pStatProg->show();
+        GBL_String sBranch;
+        sBranch = text;
+        pChild->checkout(sBranch);
+
     }
 }
 
@@ -474,19 +508,52 @@ void MainWindow::updateReferences()
 
 void MainWindow::timerEvent(QTimerEvent *event)
 {
-
+    if (event->timerId() == m_nCommitDetailsTimer)
+    {
+        MdiChild *pChild = currentMdiChild();
+        if (pChild)
+        {
+            QModelIndexList miList = pChild->getHistoryView()->selectionModel()->selectedIndexes();
+            if (miList.count() > 0)
+            {
+                updateCommitFiles();
+            }
+        }
+        killTimer(m_nCommitDetailsTimer);
+        m_nCommitDetailsTimer = 0;
+    }
+    else if (event->timerId() == m_nMainTimer)
+    {
+        MdiChild *pChild = currentMdiChild();
+        if (pChild)
+        {
+            if (m_nAutoFetchCount == m_nAutoFetchInterval)
+            {
+                fetchAction();
+                m_nAutoFetchCount = 0;
+            }
+            else
+            {
+                m_nAutoFetchCount++;
+            }
+        }
+    }
 }
 
 void MainWindow::historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
     Q_UNUSED(deselected);
-    QModelIndexList mil = selected.indexes();
+
+    if (m_nCommitDetailsTimer) killTimer(m_nCommitDetailsTimer);
+    m_nCommitDetailsTimer = startTimer(COMMIT_DETAILS_TIMER_INTERVAL);
+
+    /*QModelIndexList mil = selected.indexes();
 
     //single row selection
     if (mil.count() > 0)
     {
         updateCommitFiles();
-    }
+    }*/
 }
 
 void MainWindow::historyFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
@@ -610,14 +677,12 @@ void MainWindow::workingFileSelectionChanged(const QItemSelection &selected, con
         QDockWidget *pDock = m_docks["file_content"];
         if(pDock->isVisible())
         {
+
             GBL_Repository *pRepo = getCurrentRepository();
-            if (pRepo)
+            if (pRepo && pRepo->get_index_to_work_diff(this,&files))
             {
-                if (pRepo->get_index_to_work_diff(this,&files))
-                {
-                    if (mil.size() > 1) { pFileItem = NULL; }
-                    pCV->setDiffFromLines(pFileItem);
-                }
+                if (mil.size() > 1) { pFileItem = NULL; }
+                pCV->setDiffFromLines(pFileItem);
             }
         }
     }
@@ -672,19 +737,25 @@ void MainWindow::stagedFileSelectionChanged(const QItemSelection &selected, cons
             files.append(sPath);
         }
 
-        QDockWidget *pDock = m_docks["file_content"];
-        if(pDock->isVisible())
+        GBL_Repository *pRepo = getCurrentRepository();
+        if (pRepo)
         {
-            GBL_Repository *pRepo = getCurrentRepository();
-            if (pRepo)
+            if (pRepo->get_index_to_head_diff(this, &files))
             {
-                if (pRepo->get_index_to_head_diff(this, &files))
-                {
-                    if (mil.size() > 1) { pFileItem = NULL; }
-                    pCV->setDiffFromLines(pFileItem);
-                }
+                if (mil.size() > 1) { pFileItem = NULL; }
+                pCV->setDiffFromLines(pFileItem);
             }
         }
+    }
+}
+
+void MainWindow::openBookmarkDoubleClick(const QModelIndex &index)
+{
+    BookmarkItem *pItem = static_cast<BookmarkItem*>(index.internalPointer());
+    if (pItem)
+    {
+        QString sPath = pItem->getPath();
+        openRepo(sPath);
     }
 }
 
@@ -695,8 +766,10 @@ void MainWindow::commitTabChanged(int tabID)
     updateCommitFiles();
 }
 
-void MainWindow::updateCommitFiles()
+GBL_History_Item* MainWindow::getSelectedHistoryItem()
 {
+    GBL_History_Item *pRet = NULL;
+
     MdiChild *pChild = currentMdiChild();
     if (pChild)
     {
@@ -711,64 +784,84 @@ void MainWindow::updateCommitFiles()
             GBL_History_Item *pHistItem = pHistModel->getHistoryItemAt(row);
             if (pHistItem)
             {
-                CommitDock *pCDock = (CommitDock*)m_docks["history_details"];
-                pCDock->reset();
-                CommitFileView *pView = pCDock->getFileView();
-                //CommitDetailScrollArea *pDetail = (CommitDetailScrollArea*)pSplit->widget(0);
-                pCDock->setDetails(pHistItem, getAvatar(pHistItem->hist_author_email));
-                //pMod->setHistoryItem(pHistItem);
-                QDockWidget *pDock = m_docks["file_content"];
-                if (m_sSelectedCode == "history")
-                {
-                    ContentView *pCV = (ContentView*)pDock->widget();
-                    pCV->reset();
-                }
-                //m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
-                GBL_File_Array histFileArr;
-                GBL_Repository *pRepo = currentMdiChild()->getRepository();
-                GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
-                pMod->setRepoPath(currentMdiChild()->currentPath());
-
-                switch (m_nCommitTabID)
-                {
-                    case COMMIT_DIFF_TAB_ID:
-                        if (pRepo->get_commit_to_parent_diff_files(pHistItem->hist_oid, &histFileArr))
-                        {
-                            pMod->setViewType(GBL_FILETREE_VIEW_TYPE_LIST);
-                            pCDock->setFileArray(&histFileArr);
-                            pView->setHeaderHidden(false);
-                        }
-                        break;
-
-                    case COMMiT_ALL_TAB_ID:
-                        if (pRepo->get_tree_from_commit_oid(pHistItem->hist_oid, &histFileArr))
-                        {
-                            pMod->setViewType(GBL_FILETREE_VIEW_TYPE_TREE);
-                            pCDock->setFileArray(&histFileArr);
-                            pView->setHeaderHidden(true);
-                        }
-                        break;
-                }
-
+                pRet = pHistItem;
             }
         }
+    }
+
+    return pRet;
+}
+
+void MainWindow::updateCommitFiles()
+{
+    GBL_History_Item *pHistItem = getSelectedHistoryItem();
+
+    if (pHistItem)
+    {
+        CommitDock *pCDock = (CommitDock*)m_docks["history_details"];
+        pCDock->reset();
+        CommitFileView *pView = pCDock->getFileView();
+        //CommitDetailScrollArea *pDetail = (CommitDetailScrollArea*)pSplit->widget(0);
+        pCDock->setDetails(pHistItem, getAvatar(pHistItem->hist_author_email));
+        //pMod->setHistoryItem(pHistItem);
+        QDockWidget *pDock = m_docks["file_content"];
+        if (m_sSelectedCode == "history")
+        {
+            ContentView *pCV = (ContentView*)pDock->widget();
+            pCV->reset();
+        }
+        //m_qpRepo->get_tree_from_commit_oid(pHistItem->hist_oid, pMod);
+        GBL_File_Array histFileArr;
+        GBL_Repository *pRepo = currentMdiChild()->getRepository();
+        GBL_FileModel *pMod = (GBL_FileModel*)pView->model();
+        pMod->setRepoPath(currentMdiChild()->currentPath());
+
+        switch (m_nCommitTabID)
+        {
+            case COMMIT_DIFF_TAB_ID:
+                if (pRepo->get_commit_to_parent_diff_files(pHistItem->hist_oid, &histFileArr))
+                {
+                    pMod->setViewType(GBL_FILETREE_VIEW_TYPE_LIST);
+                    pCDock->setFileArray(&histFileArr);
+                    pView->setHeaderHidden(false);
+                }
+                break;
+
+            case COMMiT_ALL_TAB_ID:
+                if (pRepo->get_tree_from_commit_oid(pHistItem->hist_oid, &histFileArr))
+                {
+                    pMod->setViewType(GBL_FILETREE_VIEW_TYPE_TREE);
+                    pCDock->setFileArray(&histFileArr);
+                    pView->setHeaderHidden(true);
+                }
+                break;
+        }
+
     }
 }
 
 void MainWindow::activateChild(QMdiSubWindow *window)
 {
-    if (!m_docks.isEmpty())
+    GBL_Repository *pRepo = NULL;
+    pRepo = getCurrentRepository();
+    BookmarksDock *pDock = (BookmarksDock*)m_docks["bookmarks"];
+    pDock->enableAdd(pRepo != NULL);
+    m_actionMap["bookmark"]->setEnabled(pRepo != NULL);
+    bool bRepoNotBare = pRepo && !pRepo->is_bare();
+    m_actionMap["branch"]->setEnabled(bRepoNotBare);
+
+    if (m_docks.size() > 1)
     {
         MdiChild *oldChild = m_pCurrentChild;
         m_pCurrentChild = currentMdiChild();
 
         if (oldChild != m_pCurrentChild)
         {
-            GBL_Repository *pRepo = getCurrentRepository();
+
+            resetDocks();
 
             m_pBranchCombo->clear();
-            resetDocks();
-            if (pRepo && !pRepo->is_bare())
+            if (bRepoNotBare)
             {
                 updateReferences();
                 updateBranchCombo();
@@ -783,8 +876,8 @@ void MainWindow::activateChild(QMdiSubWindow *window)
             m_pBranchCombo->clear();
             resetDocks();
         }
-    }
 
+    }
 }
 
 void MainWindow::applicationStateChanged(Qt::ApplicationState state)
@@ -963,12 +1056,19 @@ void MainWindow::commit()
         {
             currentMdiChild()->updateHistory();
             updateStatus();
+            updatePushPull();
         }
         else
         {
             QMessageBox::warning(this, tr("Commit Error"), pRepo->get_error_msg());
         }
     }
+}
+
+void MainWindow::commit_push()
+{
+    commit();
+    pushAction();
 }
 
 void MainWindow::addToDiffView(GBL_Line_Item *pLineItem)
@@ -1057,11 +1157,27 @@ void MainWindow::refresh()
     updateStatus();
 }
 
+void MainWindow::addBookmark()
+{
+    BookmarksDock *pDock = (BookmarksDock*)m_docks["bookmarks"];
+
+    MdiChild *pChild = currentMdiChild();
+    if (pChild)
+    {
+        pDock->addBookmark(pChild->repoName(),pChild->currentPath());
+    }
+}
+
 void MainWindow::pushAction()
 {
-    GBL_Repository* pRepo = getCurrentRepository();
-    if (pRepo)
+    MdiChild *pChild = currentMdiChild();
+    if (pChild)
     {
+        GBL_String sBranch;
+        sBranch = m_pBranchCombo->currentText();
+        if (sBranch.isEmpty()) sBranch = GBL_String("master");
+        pChild->push(sBranch);
+        m_pStatProg->show();
     }
 }
 
@@ -1110,6 +1226,37 @@ void MainWindow::fetchAction()
 
 }
 
+void MainWindow::onCreateBranch()
+{
+    MdiChild *pChild = currentMdiChild();
+    if (pChild)
+    {
+        GBL_Repository *pRepo = pChild->getRepository();
+        if (pRepo)
+        {
+            BranchDialog brDlg(this);
+            if (brDlg.exec() == QDialog::Accepted)
+            {
+                GBL_String sBranchName;
+                sBranchName = brDlg.getBranchName();
+                GBL_String sOid;
+                GBL_History_Item *pHistItem = getSelectedHistoryItem();
+                if (pHistItem)
+                {
+                    sOid = pHistItem->hist_oid;
+                }
+
+                if (pRepo->create_branch(sBranchName, sOid))
+                {                    
+                    //updateReferences();
+                    pChild->checkout(sBranchName);
+                }
+            }
+        }
+    }
+
+}
+
 void MainWindow::fetchFinished(GBL_String *psError)
 {
     if (psError->isEmpty())
@@ -1130,6 +1277,58 @@ void MainWindow::pullFinished(GBL_String *psError)
             m_pStatProg->show();
         }
     }
+    else
+    {
+        GBL_String sErr = *psError;
+        QMessageBox::warning(this, tr("Pull Error"), sErr);
+    }
+
+}
+
+void MainWindow::pushFinished(GBL_String *psError)
+{
+    m_pStatProg->hide();
+
+    if (psError->isEmpty())
+    {
+        MdiChild *pChild = currentMdiChild();
+        if (pChild)
+        {
+//            pChild->updateHistory();
+//            updateReferences();
+//            updateBranchCombo();
+            updatePushPull();
+        }
+    }
+    else
+    {
+        GBL_String sErr = *psError;
+        QMessageBox::warning(this, tr("Push Error"), sErr);
+    }
+
+}
+
+void MainWindow::checkoutFinished(GBL_String *psError)
+{
+    m_pStatProg->hide();
+
+    if (psError->isEmpty())
+    {
+        MdiChild *pChild = currentMdiChild();
+        if (pChild)
+        {
+            pChild->updateHistory();
+            updateReferences();
+            updateBranchCombo();
+            updatePushPull();
+        }
+    }
+    else
+    {
+        GBL_String sErr = *psError;
+        QMessageBox::warning(this, tr("Checkout Error"), sErr);
+    }
+
 }
 
 void MainWindow::cloneFinished(GBL_String *psError, GBL_String *psDst)
@@ -1160,6 +1359,7 @@ void MainWindow::init()
     createActions();
     //createHistoryTable();
     //createDocks();
+
     setWindowTitle(tr(GBL_APP_NAME));
     QStatusBar *pStat = statusBar();
     pStat->showMessage(tr("Ready"));
@@ -1318,7 +1518,7 @@ void MainWindow::scanAction()
         sRoot = sdlg.getRootPath();
         GBL_String sSearch;
         sSearch = sdlg.getSearch();
-        pChild->init(sRoot, sSearch);
+        pChild->init(sRoot, sSearch, sdlg.getSearchType());
     }
 }
 
@@ -1338,7 +1538,7 @@ void MainWindow::createDocks()
     pView->setModel(new GBL_FileModel(pView));*/
     connect(pView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::historyFileSelectionChanged);
     m_docks["history_details"] = pCDock;
-    pCDock->setObjectName("MainWindow/HistoryDetails");
+    pCDock->setObjectName("MainWindow/HistoryDetails/Dock");
     addDockWidget(Qt::BottomDockWidgetArea, pCDock);
     m_pViewMenu->addAction(pCDock->toggleViewAction());
 
@@ -1347,14 +1547,14 @@ void MainWindow::createDocks()
     ContentView *pCV = new ContentView(pDock);
     pDock->setWidget(pCV);
     m_docks["file_content"] = pDock;
-    pDock->setObjectName("MainWindow/Content");
+    pDock->setObjectName("MainWindow/Content/Dock");
     addDockWidget(Qt::BottomDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
 
     //setup staged dock
     pDock = new QDockWidget(tr("Staged"));
     m_docks["staged"] = pDock;
-    pDock->setObjectName("MainWindow/Staged");
+    pDock->setObjectName("MainWindow/Staged/Dock");
     addDockWidget(Qt::RightDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
     StagedDockView *pSDView = new StagedDockView(pDock);
@@ -1368,7 +1568,7 @@ void MainWindow::createDocks()
     //setup unstaged dock
     pDock = new QDockWidget(tr("Unstaged"));
     m_docks["unstaged"] = pDock;
-    pDock->setObjectName("MainWindow/Unstaged");
+    pDock->setObjectName("MainWindow/Unstaged/Dock");
     addDockWidget(Qt::RightDockWidgetArea, pDock);
     m_pViewMenu->addAction(pDock->toggleViewAction());
     UnstagedDockView *pUSView = new UnstagedDockView(pDock);
@@ -1382,7 +1582,7 @@ void MainWindow::createDocks()
     //setup refs dock
     pDock = new QDockWidget(tr("References"));
     m_docks["refs"] = pDock;
-    pDock->setObjectName("MainWindow/Refs");
+    pDock->setObjectName("MainWindow/References/Dock");
     addDockWidget(Qt::LeftDockWidgetArea, pDock);
     ReferencesView *pRefView = new ReferencesView(pDock);
     pDock->setWidget(pRefView);
@@ -1398,7 +1598,9 @@ void MainWindow::createDocks()
 
 void MainWindow:: resetDocks(bool bRepaint)
 {
-    if (!m_docks.isEmpty())
+    m_sCurrentBranch = "";
+
+    if (m_docks.size() > 1)
     {
         //m_pHistView->reset();
         //m_pHistView->scrollToTop();
@@ -1510,7 +1712,7 @@ void MainWindow::readSettings()
     m_pNetAM = new QNetworkAccessManager();
 
     //create cache dir
-    QString sCachePath = GBL_Storage::getCachePath();
+    QString sCachePath = m_pStorage->getCachePath();
     QDir cachePath(sCachePath);
     if (!cachePath.exists())
     {
@@ -1597,6 +1799,29 @@ void MainWindow::readSettings()
     fetchAct->setDisabled(true);
     m_actionMap["fetch"] = fetchAct;
 
+    QAction *branchAct = m_pRepoMenu->addAction(tr("&Create Branch..."),this,&MainWindow::onCreateBranch);
+    branchAct->setDisabled(true);
+    m_actionMap["branch"] = branchAct;
+
+    QAction *bmAct = m_pRepoMenu->addAction(tr("&Add Bookmark"),this,&MainWindow::addBookmark);
+    bmAct->setDisabled(true);
+    m_actionMap["bookmark"] = bmAct;
+
+    BookmarksDock *pBMDock = new BookmarksDock(tr("Bookmarks"),this);
+    m_docks["bookmarks"] = pBMDock;
+    m_pViewMenu->addAction(pBMDock->toggleViewAction());
+    pBMDock->setObjectName("MainWindow/Bookmarks/Dock ");
+
+    addDockWidget(Qt::LeftDockWidgetArea, pBMDock);
+
+    BookmarksDock *pDock = (BookmarksDock*)m_docks["bookmarks"];
+    BookmarksModel *pModel = pDock->getTreeModel();
+
+    QByteArray jsonData = m_pStorage->readBookmarks();
+    if (!jsonData.isEmpty())
+    {
+        pModel->readBookmarkData(&jsonData);
+    }
 }
 
 void MainWindow::writeSettings()
@@ -1605,6 +1830,12 @@ void MainWindow::writeSettings()
     settings.setValue("MainWindow/Geometry", saveGeometry());
     settings.setValue("MainWindow/WindowState", saveState());
 
+    BookmarksDock *pDock = (BookmarksDock*)m_docks["bookmarks"];
+    QJsonDocument *pDoc = pDock->getJDoc();
+
+
+    QByteArray jsonData = pDoc->toJson();
+    m_pStorage->saveBookmarks(jsonData);
 }
 
 void MainWindow::addAvatar(QString &sEmail)

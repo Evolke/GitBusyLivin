@@ -1,15 +1,25 @@
 #include "historyview.h"
 #include "src/gbl/gbl_historymodel.h"
+#include "mainwindow.h"
 
 #include <QDebug>
 #include <QScrollBar>
 #include <QPainter>
 #include <QMouseEvent>
+#include <QMenu>
+#include <QPalette>
 
 HistoryView::HistoryView(QWidget *parent) : QTableView(parent)
 {
     setContentsMargins(0,0,0,0);
     //setMinimumWidth(300);
+    setAutoFillBackground(false);
+
+    m_pContextMenu = new QMenu(this);
+
+    MainWindow *pMain = MainWindow::getInstance();
+    m_pContextMenu->addAction(tr("Create Branch..."),pMain, &MainWindow::onCreateBranch);
+
 }
 
 HistoryView::~HistoryView()
@@ -38,7 +48,7 @@ void HistoryView::resizeEvent(QResizeEvent *event)
     setColumnWidth(0, nWidth*.1);
     setColumnWidth(1, nWidth*.5);
     setColumnWidth(2, nWidth*.25);
-    setColumnWidth(3, nWidth*.15);
+    setColumnWidth(3, nWidth*.148);
 
     GBL_HistoryModel *pModel = (GBL_HistoryModel*)model();
     pModel->layoutChanged();
@@ -51,6 +61,8 @@ void HistoryView::mousePressEvent(QMouseEvent *event)
     int row = rowAt(pos.y());
     //qDebug() << "row:" << row;
 
+    //if (event->button() == Qt::RightButton) return;
+
     if (col > 0)
     {
         QTableView::mousePressEvent(event);
@@ -61,6 +73,13 @@ void HistoryView::mousePressEvent(QMouseEvent *event)
         selectRow(row);
         setAutoScroll(true);
     }
+}
+
+void HistoryView::contextMenuEvent(QContextMenuEvent *event)
+{
+    QTableView::contextMenuEvent(event);
+
+    m_pContextMenu->exec(event->globalPos());
 }
 
 /*void HistoryView::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
@@ -116,7 +135,7 @@ void HistoryDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
             int nRowHt = pView->rowHeight(i);
             //qDebug() << "rowHt:" << nRowHt;
             rowRct.setHeight(nRowHt);
-            pal.setCurrentColorGroup(QPalette::Normal);
+            /*pal.setCurrentColorGroup(QPalette::Normal);
             QBrush rowBr = i % 2 ? pal.alternateBase() : pal.window();
 
             if (pSelMod->isRowSelected(i, QModelIndex()))
@@ -124,7 +143,24 @@ void HistoryDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
                 //painter->fillRect(rowRct, pal.highlight());
                 rowBr = pal.highlight();
             }
-            painter->fillRect(rowRct, rowBr);
+            painter->fillRect(rowRct, rowBr);*/
+            QStyleOptionViewItem newOpt = option;
+            newOpt.index = pView->model()->index(i,1);
+            if (i % 2)
+                newOpt.features |= QStyleOptionViewItem::Alternate;
+            else
+                newOpt.features &= ~QStyleOptionViewItem::Alternate;
+            //newOpt.state = QStyle::State_Enabled;
+            if (pSelMod->isRowSelected(i, QModelIndex()))
+                newOpt.state |= QStyle::State_Selected;
+            else
+                newOpt.state &= ~QStyle::State_Selected;
+
+            QPalette::ColorGroup cg = QPalette::Normal;
+            newOpt.rect = rowRct;
+            newOpt.palette.setCurrentColorGroup(cg);
+            pView->style()->drawPrimitive(QStyle::PE_PanelItemViewRow,&newOpt, painter, pView);
+            pView->style()->drawPrimitive(QStyle::PE_PanelItemViewItem,&newOpt, painter, pView);
 
             //qDebug() << "rowRct" << rowRct;
 

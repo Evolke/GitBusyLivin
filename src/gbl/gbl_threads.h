@@ -8,6 +8,10 @@
 #include <QMutex>
 #include <QWaitCondition>
 
+#define SCAN_THREAD_SEARCH_TYPE_INSENSITIVE 1
+#define SCAN_THREAD_SEARCH_TYPE_SENSITIVE   2
+#define SCAN_THREAD_SEARCH_TYPE_REGEX       3
+
 QT_BEGIN_NAMESPACE
 QT_END_NAMESPACE
 
@@ -82,6 +86,41 @@ public:
 
 signals:
     void pullFinished(GBL_String*);
+
+protected:
+    void run() override;
+
+private:
+    GBL_String m_sBranch;
+};
+
+class GBL_PushThread : public GBL_Thread
+{
+    Q_OBJECT
+public:
+    GBL_PushThread(QObject *parent = Q_NULLPTR);
+void push(GBL_String sRepoPath, GBL_String sBranch);
+
+signals:
+    void pushFinished(GBL_String*);
+
+protected:
+    void run() override;
+
+private:
+    GBL_String m_sBranch;
+};
+
+
+class GBL_CheckoutThread : public GBL_Thread
+{
+    Q_OBJECT
+public:
+    GBL_CheckoutThread(QObject *parent = Q_NULLPTR);
+    void checkout(GBL_String sRepoPath, GBL_String sBranch);
+
+signals:
+    void checkoutFinished(GBL_String*);
 
 protected:
     void run() override;
@@ -165,7 +204,7 @@ public:
     GBL_ScanThread(QObject *parent = Q_NULLPTR);
     ~GBL_ScanThread();
 
-    void scan(GBL_String sRootPath, GBL_String sSearch);
+    void scan(GBL_String sRootPath, GBL_String sSearch, int nSearchType);
 
 signals:
     void scanUpdated(int prog_value, int prog_max, GBL_String *psOutput);
@@ -177,6 +216,7 @@ protected:
     GBL_String m_sRootPath;
     GBL_String m_sSearch;
     GBL_String m_sOutput;
+    int m_nSearchType;
 };
 
 #endif // GBL_THREADS_H

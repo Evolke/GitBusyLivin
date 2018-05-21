@@ -147,12 +147,15 @@ public:
     bool commit_index(GBL_String sMessage);
     bool get_remotes(QStringList &remote_list);
     bool get_head_branch(QString &branch);
-    void get_upstream_ref(GBL_String sBranchName, git_reference **ref);
+    bool get_upstream_ref(GBL_String sBranchName, git_reference **ref);
+    bool create_branch(GBL_String sBranchName, GBL_String sCommitOid="");
     bool get_upstream_branch_name(GBL_String sBranchName, GBL_String &sUpstreamBranchName);
+    bool set_upstream_branch(GBL_String sBranch, GBL_String sUpstreamBranch);
     bool get_ahead_behind_count(GBL_String sBranchName, int &ahead, int &behind);
     bool fetch_remote(GBL_String sRemote = "origin");
     bool pull_remote(GBL_String sRemote, GBL_String sBranch);
-    bool push_remote(GBL_String sRemote, GBL_String sBranch);
+    bool push_to_remote(GBL_String sRemote, GBL_String sBranch);
+    bool checkout_branch(GBL_String sBranchName);
 
     bool fill_references();
     bool fill_stashes();
@@ -193,6 +196,7 @@ private:
     //GBL_History_Array *m_pHist_Arr;
     GBL_Config_Map *m_pConfig_Map;
     GBL_RefItem *m_pRefRoot;
+    int m_nCommitCount;
 };
 
 #endif // GBL_REPOSITORY_H

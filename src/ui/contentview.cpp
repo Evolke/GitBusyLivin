@@ -1,12 +1,16 @@
 #include "contentview.h"
 #include "mainwindow.h"
 #include "mdichild.h"
+#include "optionsmenubutton.h"
 
 #include <QDebug>
 #include <QTextEdit>
 #include <QLabel>
 #include <QGridLayout>
 #include <QFileIconProvider>
+#include <QToolButton>
+#include <QToolBar>
+#include <QMenu>
 
 ContentView::ContentView(QWidget *parent) : QScrollArea(parent)
 {
@@ -28,7 +32,7 @@ ContentView::ContentView(QWidget *parent) : QScrollArea(parent)
     mainLayout->addWidget(m_pInfo,0,0);
     mainLayout->addWidget(m_pContent,1,0);
     mainLayout->setSpacing(0);
-    setFrameStyle(QFrame::StyledPanel);
+    //setFrameStyle(QFrame::StyledPanel);
     mainLayout->setMargin(0);
     m_pContent->setReadOnly(true);
     m_pContent->setWordWrapMode(QTextOption::NoWrap);
@@ -107,7 +111,7 @@ void ContentView::setDiffFromLines(GBL_File_Item *pFileItem)
     QString sBackClrAttr;
     QTextStream(&sBackClrAttr) << "bgcolor=\'" << lineNumBgClr << "\'";
 
-    QString sHtml("<html><body style=\'margin:0;padding:0;\'><table cellpadding=\'5\' cellspacing=\'0\' >");
+    QString sHtml("<html><body style=\'margin:0;padding:0;\'><table cellpadding=\'2\' cellspacing=\'0\' >");
     for (int i = 0; i < m_Content_arr.size(); i++)
     {
         GBL_Line_Item *pLI = (GBL_Line_Item*)m_Content_arr.at(i);
@@ -162,7 +166,7 @@ void ContentView::setDiffFromLines(GBL_File_Item *pFileItem)
 void ContentView::setContent(QString content)
 {
     m_pContent->setPlainText(content);
-    setMargins(10);
+    //setMargins(10);
 }
 
 void ContentView::setContentInfo(GBL_File_Item *pFileItem)
@@ -171,6 +175,21 @@ void ContentView::setContentInfo(GBL_File_Item *pFileItem)
 
 }
 
+void ContentView::zoomIn()
+{
+    m_pContent->zoomIn();
+
+}
+
+void ContentView::zoomOut()
+{
+    m_pContent->zoomOut();
+}
+
+/**
+ * @brief ContentInfoWidget::ContentInfoWidget
+ * @param parent
+ */
 ContentInfoWidget::ContentInfoWidget(QWidget *parent) : QFrame(parent)
 {
     setFrameStyle(QFrame::StyledPanel);
@@ -179,9 +198,15 @@ ContentInfoWidget::ContentInfoWidget(QWidget *parent) : QFrame(parent)
     m_pFileImgLabel = new QLabel(this);
     m_pFilePathLabel = new QLabel(this);
 
+    m_pOptionsBtn = new OptionsMenuButton(this);
+    QMenu *pMenu = m_pOptionsBtn->getMenu();
+    pMenu->addAction(tr("Zoom In"),(ContentView*)parent,&ContentView::zoomIn);
+    pMenu->addAction(tr("Zoom Out"),(ContentView*)parent,&ContentView::zoomOut);
+
     mainLayout->addWidget(m_pTypeLabel, 0,0);
     mainLayout->addWidget(m_pFileImgLabel, 0,1);
     mainLayout->addWidget(m_pFilePathLabel, 0,2);
+    mainLayout->addWidget(m_pOptionsBtn, 0,3);
     mainLayout->setSpacing(0);
     mainLayout->setContentsMargins(0,0,0,0);
     setMaximumHeight(25);
@@ -197,6 +222,11 @@ ContentInfoWidget::ContentInfoWidget(QWidget *parent) : QFrame(parent)
     m_pFilePathLabel->setAlignment(Qt::AlignLeft|Qt::AlignVCenter);
 
     m_pPixmap = new QPixmap();
+}
+
+ContentInfoWidget::~ContentInfoWidget()
+{
+    delete m_pPixmap;
 }
 
 void ContentInfoWidget::reset()
@@ -219,7 +249,7 @@ void ContentInfoWidget::setFileItem(GBL_File_Item *pFileItem)
         if (pFileItem->sub_dir != ".")
         {
             sub = pFileItem->sub_dir;
-            //sub += '/';
+            sub += '/';
         }
         QTextStream(&path) << sub << pFileItem->file_name;
 

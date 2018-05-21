@@ -22,7 +22,7 @@
  */
 PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
 {
-    int nWidth = 500;
+    int nWidth = 600;
     int nHeight = 300;
     if (parent != NULL)
         setGeometry(parent->x() + parent->width()/2 - nWidth/2,
@@ -43,7 +43,7 @@ PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
     m_pTabs->setIndentation(0);
 
     //m_pTabs->setMovement(QListView::Static);
-    m_pTabs->setMaximumWidth(120);
+    m_pTabs->setMaximumWidth(150);
     //m_pTabs->setSpacing(5);
     //m_pTabs->setWordWrap(true);
     //m_pTabs->setWrapping(true);
@@ -55,7 +55,7 @@ PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
     mainLayout->addWidget(m_pTabs,0,0);
     mainLayout->addWidget(m_pPages,0,1);
     mainLayout->addWidget(pOkCancel,1,1,1,1, Qt::AlignBottom);
-
+    mainLayout->setMargin(5);
     createTreeItems();
     //m_pTabs->setCurrentRow(0);
 
@@ -179,9 +179,9 @@ UIPrefsPage::UIPrefsPage(QWidget *parent) : QWidget(parent)
     QLabel *pThemeLabel = new QLabel(tr("Theme:"));
     pThemeLabel->setMaximumWidth(60);
     m_pThemeCombo = new QComboBox(this);
-    QStringList themes = GBL_Storage::getThemes();
-    m_pThemeCombo->addItems(themes);
     MainWindow *pMain = (MainWindow*)parent->parentWidget();
+    QStringList themes = pMain->getStorage()->getThemes();
+    m_pThemeCombo->addItems(themes);
     QString sTheme = pMain->getTheme();
     int index = themes.indexOf(QRegExp(sTheme));
     if (index > -1)

@@ -2,9 +2,11 @@
 
 #include "src/gbl/gbl_refsmodel.h"
 #include "urlpixmap.h"
+#include "mainwindow.h"
 
 #include <QDebug>
 #include <QIcon>
+#include <QToolBar>
 
 ReferencesView::ReferencesView(QWidget *parent) : QTreeView(parent)
 {
@@ -77,7 +79,8 @@ void ReferencesView::paintEvent(QPaintEvent *event)
     if (!m_pBranchIcon && !m_pRemoteIcon && !m_pTagIcon && !m_pStashIcon)
     {
         UrlPixmap svgpix(NULL);
-        QPalette pal = palette();
+        MainWindow *pMain = MainWindow::getInstance();
+        QPalette pal = pMain->getToolBar()->palette();
         QColor txtClr = pal.color(QPalette::Text);
         QString sBorderClr = txtClr.name(QColor::HexRgb);
 

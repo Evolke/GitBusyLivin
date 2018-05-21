@@ -57,6 +57,7 @@ bool MdiChild::init(QString sRepoPath)
         QString title(fi.fileName());
         if (m_qpRepo->is_bare()) title = "[" + title + "]";
         setWindowTitle(title);
+        m_sRepoName = title;
 
        /* m_qpRepo->get_history(m_pHistModel->getHistoryArray());
         m_pHistModel->historyUpdated();
@@ -74,12 +75,18 @@ bool MdiChild::init(QString sRepoPath)
         m_threads.insert("fetch", pFetchThread);
         GBL_PullThread *pPullThread = new GBL_PullThread(this);
         m_threads.insert("pull", pPullThread);
+        GBL_PushThread *pPushThread = new GBL_PushThread(this);
+        m_threads.insert("push", pPushThread);
+        GBL_CheckoutThread *pCheckoutThread = new GBL_CheckoutThread(this);
+        m_threads.insert("checkout", pCheckoutThread);
 
         connect(pHistThread, SIGNAL(historyUpdated(GBL_String*, GBL_History_Array*)), this, SLOT(historyUpdated(GBL_String*, GBL_History_Array*)));
         connect(pRefThread, SIGNAL(refsUpdated(GBL_String*, GBL_RefItem*)), this, SLOT(refsUpdated(GBL_String*, GBL_RefItem*)));
         connect(pStatusThread, SIGNAL(statusUpdated(GBL_String*, GBL_File_Array*,GBL_File_Array*)), this, SLOT(statusUpdated(GBL_String*, GBL_File_Array*,GBL_File_Array*)));
         connect(pFetchThread, SIGNAL(fetchFinished(GBL_String*)), this, SLOT(fetchFinished(GBL_String*)));
         connect(pPullThread, SIGNAL(pullFinished(GBL_String*)), this, SLOT(pullFinished(GBL_String*)));
+        connect(pPushThread, SIGNAL(pushFinished(GBL_String*)), this, SLOT(pushFinished(GBL_String*)));
+        connect(pCheckoutThread, SIGNAL(checkoutFinished(GBL_String*)), this, SLOT(checkoutFinished(GBL_String*)));
 
         updateHistory();
         updateReferences();
@@ -163,8 +170,21 @@ void MdiChild::pull(GBL_String sBranch)
 {
     GBL_PullThread *pPullThread = (GBL_PullThread*)m_threads["pull"];
     QString dir = currentPath();
-    pPullThread->pull(GBL_String(dir),sBranch
-                      );
+    pPullThread->pull(GBL_String(dir),sBranch);
+}
+
+void MdiChild::push(GBL_String sBranch)
+{
+    GBL_PushThread *pPushThread = (GBL_PushThread*)m_threads["push"];
+    QString dir = currentPath();
+    pPushThread->push(GBL_String(dir),sBranch);
+}
+
+void MdiChild::checkout(GBL_String sBranch)
+{
+    GBL_CheckoutThread *pCheckoutThread = (GBL_CheckoutThread*)m_threads["checkout"];
+    QString dir = currentPath();
+    pCheckoutThread->checkout(GBL_String(dir), sBranch);
 }
 
 void MdiChild::historyUpdated(GBL_String *psError, GBL_History_Array *pHistArr)
@@ -214,6 +234,22 @@ void MdiChild::pullFinished(GBL_String *psError)
     if (m_pMainWnd->currentMdiChild() == this)
     {
         m_pMainWnd->pullFinished(psError);
+    }
+}
+
+void MdiChild::pushFinished(GBL_String *psError)
+{
+    if (m_pMainWnd->currentMdiChild() == this)
+    {
+        m_pMainWnd->pushFinished(psError);
+    }
+}
+
+void MdiChild::checkoutFinished(GBL_String *psError)
+{
+    if (m_pMainWnd->currentMdiChild() == this)
+    {
+        m_pMainWnd->checkoutFinished(psError);
     }
 }
 

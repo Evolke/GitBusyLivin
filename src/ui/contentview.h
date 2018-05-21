@@ -12,6 +12,8 @@ struct GBL_Line_Item;
 struct GBL_File_Item;
 class QLabel;
 class QTextEdit;
+class UrlPixmap;
+class OptionsMenuButton;
 QT_END_NAMESPACE
 
 class ContentInfoTypeLabel : public QLabel
@@ -27,6 +29,7 @@ class ContentInfoWidget : public QFrame
     Q_OBJECT
 public:
     explicit ContentInfoWidget(QWidget *parent = 0);
+    ~ContentInfoWidget();
 
     void setFileItem(GBL_File_Item *pFileItem);
     void reset();
@@ -36,6 +39,7 @@ private:
     ContentInfoTypeLabel *m_pTypeLabel;
 
     QPixmap *m_pPixmap;
+    OptionsMenuButton *m_pOptionsBtn;
 };
 
 
@@ -64,6 +68,8 @@ public:
 signals:
 
 public slots:
+    void zoomIn();
+    void zoomOut();
 
 private:
     void cleanupContentArray();

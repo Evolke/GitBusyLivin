@@ -22,6 +22,7 @@ GBL_Repository::GBL_Repository(QObject *parent) : QObject(parent)
     m_pRepo = Q_NULLPTR;
     //m_pHist_Arr = Q_NULLPTR;
     m_iErrorCode = 0;
+    m_nCommitCount = 0;
     m_pConfig_Map = new GBL_Config_Map;
     m_pRefRoot = new GBL_RefItem(QString(),QString());
 }
@@ -253,8 +254,30 @@ bool GBL_Repository::init_repo(GBL_String path, bool bare)
  */
 bool GBL_Repository::clone_repo(GBL_String srcUrl, GBL_String dstPath)
 {
+    git_remote *pRemote = NULL;
+
     cleanup();
-    m_iErrorCode = git_clone(&m_pRepo, srcUrl.toConstChar(), dstPath.toConstChar(), NULL);
+    try
+    {
+        check_libgit_return(git_clone(&m_pRepo, srcUrl.toConstChar(), dstPath.toConstChar(), NULL));
+
+        //check to see if a remote exists
+        QStringList remotes;
+        get_remotes(remotes);
+        if (remotes.isEmpty())
+        {
+            if (open_repo(dstPath))
+            {
+                git_remote_create(&pRemote, m_pRepo, "origin", srcUrl.toConstChar());
+            }
+        }
+    }
+    catch(GBL_RepositoryException &e)
+    {
+
+    }
+
+    if (pRemote) git_remote_free(pRemote);
 
     return m_iErrorCode >= 0;
 }
@@ -327,19 +350,54 @@ bool GBL_Repository::get_head_branch(QString &branch)
     return m_iErrorCode >= 0;
 }
 
-bool GBL_Repository::push_remote(GBL_String sRemote, GBL_String sBranch)
+bool GBL_Repository::push_to_remote(GBL_String sRemote, GBL_String sBranch)
 {
     git_reference *pRef = NULL;
     git_remote *pRemote = NULL;
+    GBL_String sRefspec = "refs/heads/";
+    sRefspec += sBranch + ":refs/heads/" + sBranch;
+    char* refspec = new char[sRefspec.size()+1];
+    strcpy(refspec, sRefspec.toConstChar());
+    git_strarray refspecs = {
+        &refspec,
+        1,
+    };
+
     try
     {
-        //get_upstream_ref(sBranch, &pRef);
+        GBL_String sUpstreamBranch;
+        get_upstream_branch_name(sBranch, sUpstreamBranch);
+        if (sUpstreamBranch.isEmpty())
+        {
+            GBL_String sRemoteBranch = "origin/";
+            sRemoteBranch += sBranch;
+            set_upstream_branch(sBranch,sRemoteBranch);
+        }
+
         check_libgit_return(git_remote_lookup(&pRemote, m_pRepo, sRemote.toConstChar()));
+
+         // connect to remote
+         //check_libgit_return(git_remote_connect(pRemote, GIT_DIRECTION_PUSH, NULL, NULL, NULL));
+         //git_remote_get_push_refspecs(&refspecs,(const git_remote*)pRemote);
+         // add a push refspec
+         //check_libgit_return(git_remote_add_push(m_pRepo, sRemote.toConstChar(), sRefspec.toConstChar()));
+
+         // configure options
+         git_push_options options;
+         git_push_init_options( &options, GIT_PUSH_OPTIONS_VERSION );
+
+         // do the push
+         check_libgit_return(git_remote_push(pRemote, &refspecs, &options));
+
     }
     catch (GBL_RepositoryException &e)
     {
 
     }
+
+    //git_strarray_free(refspecs);
+    delete refspec;
+    if (pRemote) git_remote_free(pRemote);
 
     return m_iErrorCode >= 0;
 }
@@ -378,16 +436,18 @@ bool GBL_Repository::pull_remote(GBL_String sRemote, GBL_String sBranch)
                 check_libgit_return(git_reference_set_target(&pNewRef, pHeadRef, git_commit_id((const git_commit*)pRemoteObj), NULL));
                 //check_libgit_return(git_checkout_head(m_pRepo, &checkout_options));
             }
-
-            check_libgit_return(git_merge(m_pRepo, (const git_annotated_commit **)&pAnnCommit, 1, &merge_options, &checkout_options));
-            /*check_libgit_return(git_repository_index(&index, m_pRepo));
-
-            if (!git_index_has_conflicts(index))
+            else if (merge_analysis & GIT_MERGE_ANALYSIS_NORMAL)
             {
-                GBL_String msg("Merged branch ");
-                msg += sBranch;
-                commit_index(msg);
-            }*/
+                check_libgit_return(git_merge(m_pRepo, (const git_annotated_commit **)&pAnnCommit, 1, &merge_options, &checkout_options));
+                check_libgit_return(git_repository_index(&index, m_pRepo));
+
+                if (!git_index_has_conflicts(index))
+                {
+                    GBL_String msg("Merged branch ");
+                    msg += sBranch;
+                    commit_index(msg);
+                }
+            }
         }
         catch (GBL_RepositoryException &e)
         {
@@ -426,14 +486,82 @@ bool GBL_Repository::fetch_remote(GBL_String sRemote)
     return m_iErrorCode >= 0;
 }
 
-void GBL_Repository::get_upstream_ref(GBL_String sBranchName, git_reference **upStreamRef)
+bool GBL_Repository::checkout_branch(GBL_String sBranchName)
+{
+    git_object *pTreeObj = NULL;
+    git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
+    opts.checkout_strategy = GIT_CHECKOUT_SAFE;
+
+    try
+    {
+        check_libgit_return(git_revparse_single(&pTreeObj, m_pRepo, sBranchName.toConstChar()));
+        check_libgit_return(git_checkout_tree(m_pRepo, pTreeObj, &opts));
+
+        GBL_String sRef("refs/heads/");
+        sRef += sBranchName;
+        qDebug() << sRef;
+        check_libgit_return(git_repository_set_head(m_pRepo, sRef.toConstChar()));
+    }
+    catch(GBL_RepositoryException &e)
+    {
+
+    }
+
+    if (pTreeObj) git_object_free(pTreeObj);
+
+    return m_iErrorCode >= 0;
+}
+
+bool GBL_Repository::get_upstream_ref(GBL_String sBranchName, git_reference **upStreamRef)
 {
     git_reference *ref = NULL;
 
-    check_libgit_return(git_branch_lookup(&ref, m_pRepo, sBranchName.toConstChar(), GIT_BRANCH_LOCAL));
-    check_libgit_return(git_branch_upstream(upStreamRef,ref));
-
+    try
+    {
+        check_libgit_return(git_branch_lookup(&ref, m_pRepo, sBranchName.toConstChar(), GIT_BRANCH_LOCAL));
+        check_libgit_return(git_branch_upstream(upStreamRef,ref));
+    }
+    catch (GBL_Repository &e)
+    {
+    }
     if (ref) git_reference_free(ref);
+
+    return m_iErrorCode >= 0;
+}
+
+bool GBL_Repository::create_branch(GBL_String sBranchName, GBL_String sCommitOid)
+{
+    git_reference *pHeadRef = NULL, *pBranchRef = NULL;
+    git_commit *pBranchCommit = NULL;
+    git_oid commitOid;
+
+    try
+    {
+        if (sCommitOid.isEmpty())
+        {
+            check_libgit_return(git_repository_head(&pHeadRef, m_pRepo));
+            check_libgit_return(git_reference_peel((git_object**)&pBranchCommit, pHeadRef, GIT_OBJ_COMMIT));
+        }
+        else
+        {
+            check_libgit_return(git_oid_fromstr(&commitOid, sCommitOid.toConstChar()));
+            check_libgit_return(git_commit_lookup(&pBranchCommit, m_pRepo, (const git_oid*)&commitOid));
+        }
+
+        if (pBranchCommit)
+        {
+            check_libgit_return(git_branch_create(&pBranchRef, m_pRepo, sBranchName.toConstChar(), pBranchCommit,0));
+        }
+    }
+    catch (GBL_RepositoryException &e)
+    {
+
+    }
+
+    if (pHeadRef) git_reference_free(pHeadRef);
+    if (pBranchRef) git_reference_free(pBranchRef);
+    if (pBranchCommit) git_commit_free(pBranchCommit);
+    return m_iErrorCode >= 0;
 
 }
 
@@ -453,6 +581,27 @@ bool GBL_Repository::get_upstream_branch_name(GBL_String sBranchName, GBL_String
     }
 
     if (upStreamRef) git_reference_free(upStreamRef);
+
+    return m_iErrorCode >= 0;
+}
+
+bool GBL_Repository::set_upstream_branch(GBL_String sBranch, GBL_String sUpstreamBranch)
+{
+    git_reference *pBranchRef = NULL;
+    GBL_String sLocalBranch = "refs/heads/";
+    sLocalBranch += sBranch;
+    try
+    {
+        check_libgit_return(git_reference_lookup(&pBranchRef, m_pRepo, sLocalBranch.toConstChar()));
+        check_libgit_return(git_branch_set_upstream(pBranchRef, sUpstreamBranch.toConstChar()));
+
+    }
+    catch (GBL_RepositoryException &e)
+    {
+
+    }
+
+    if (pBranchRef) git_reference_free(pBranchRef);
 
     return m_iErrorCode >= 0;
 }
@@ -602,6 +751,7 @@ QStringList GBL_Repository::getBranchNames()
     return branches;
 }
 
+
 /**
  * @brief GBL_Repository::get_history
  * @param pHist_Arr
@@ -610,20 +760,21 @@ QStringList GBL_Repository::getBranchNames()
 bool GBL_Repository::get_history(GBL_History_Array *io_pHistArr)
 {
     git_revwalk *walker;
-    m_iErrorCode = git_revwalk_new(&walker, m_pRepo);
-    int nMaxRevs = 300;
-    int nCount = 0;
-    if (m_iErrorCode >= 0)
-    {
-        m_iErrorCode = git_revwalk_push_head(walker);
-        if (m_iErrorCode >= 0)
-        {
-            //cleanup_history();
-            //m_pHist_Arr = new GBL_History_Array;
-            git_oid oid;
-            const git_oid *poid;
+    git_oid oid;
+    const git_oid *poid;
 
-            while (!git_revwalk_next(&oid, walker) && nCount < nMaxRevs)
+    try
+    {
+        int nMaxRevs = 300;
+        m_nCommitCount = 0;
+
+        check_libgit_return(git_revwalk_new(&walker, m_pRepo));
+        check_libgit_return(git_revwalk_push_head(walker));
+        //check_libgit_return(git_revwalk_push_range(walker, "HEAD~300..HEAD"));
+
+        while (!git_revwalk_next(&oid, walker))
+        {
+            if (m_nCommitCount < nMaxRevs)
             {
                 git_commit *pCommit = nullptr, *pParentCommit = nullptr;
                 git_commit_lookup(&pCommit, m_pRepo, &oid);
@@ -659,13 +810,19 @@ bool GBL_Repository::get_history(GBL_History_Array *io_pHistArr)
 
                 // free the commit
                 git_commit_free(pCommit);
-                nCount++;
             }
 
-            //*pHist_Arr = m_pHist_Arr;
-            git_revwalk_free(walker);
+            m_nCommitCount++;
         }
+
     }
+    catch(GBL_RepositoryException &e)
+    {
+    }
+
+    qDebug() << "commit count:" << m_nCommitCount;
+
+    if (walker) git_revwalk_free(walker);
 
     return m_iErrorCode >= 0;
 }

@@ -6,6 +6,10 @@
 #include <QStyledItemDelegate>
 #include <QColor>
 
+QT_BEGIN_NAMESPACE
+class QMenu;
+QT_END_NAMESPACE
+
 class HistoryView : public QTableView
 {
     Q_OBJECT
@@ -22,8 +26,13 @@ private slots:
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseDoubleClickEvent(QMouseEvent *event)  {}
     virtual void mouseMoveEvent(QMouseEvent *event) {}
+    virtual void contextMenuEvent(QContextMenuEvent *event);
     //virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
- };
+
+private:
+    QMenu* m_pContextMenu;
+
+};
 
 class HistorySelectionModel : public QItemSelectionModel
 {
@@ -46,6 +55,7 @@ public:
 
 private:
     QVector<QColor> m_graphColors;
+
 };
 
 #endif // HISTORYVIEW_H

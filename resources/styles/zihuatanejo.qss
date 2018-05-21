@@ -28,6 +28,16 @@ QMenu:selected {
     color: #BBBBBB;
 }
 
+QMenu::item {
+    background-color: transparent;
+    color: #333;
+}
+
+QMenu::item:selected {
+    background: #666666;
+    color: #ddd;
+}
+
 QMenu::separator {
     height: 1px;
     background: #ccc;
@@ -230,6 +240,12 @@ QToolButton:hover {
 
 QToolButton:Checked {
     background-color: #aaa;
+}
+
+QToolButton::menu-arrow, QToolButton::menu-indicator {
+    image: url(:/images/dark_down_arrow.png);
+    subcontrol-origin: padding;
+    subcontrol-position: bottom right;
 }
 
 QStatusBar {

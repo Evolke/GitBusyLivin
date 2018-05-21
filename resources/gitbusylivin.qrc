@@ -45,5 +45,9 @@
         <file>content/about.html</file>
         <file>images/commit_diff_icon.svg</file>
         <file>images/commit_all_icon.svg</file>
+        <file>images/sizer_dark.png</file>
+        <file>images/sizer_light.png</file>
+        <file>images/default_author_icon.png</file>
+        <file>images/cog_icon.svg</file>
     </qresource>
 </RCC>

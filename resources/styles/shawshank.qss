@@ -34,6 +34,11 @@ QMenu:selected, QMenu::item:selected {
     color: #eee;
 }
 
+QMenu::item {
+    background: transparent;
+
+}
+
 QMenu::item:disabled {
     color: #999;
 }
@@ -62,6 +67,11 @@ QTableView {
 QTableView::item {
     border: 0;
     padding: 2px 0;
+    background-color: #333333;
+}
+
+QTableView::item:alternate {
+    background-color: #404040;
 }
 
 QTableView::item:selected {
@@ -222,6 +232,14 @@ QSplitter::handle:vertical {
     border-bottom: 1px solid #444;
 }
 
+QSplitter::handle:horizontal {
+    background-color: #333;
+    height: 1px;
+    border-left: 1px solid #444;
+    border-right: 1px solid #444;
+}
+
+
 QDockWidget, QDockWidget::title, QDockWidget::close-button, QDockWidget::float-button,
 QTabBar, QDialog, QLabel, QScrollArea, QWidget, QMdiArea {
     color:#999999;
@@ -305,6 +323,22 @@ QToolButton:hover {
 QToolButton:checked {
     background-color: #111;
     color: #ddd;
+}
+
+QPushButton::menu-indicator {
+    image: url(:/images/light_down_arrow.png);
+    subcontrol-origin: padding;
+    subcontrol-position: bottom right;
+}
+
+QToolButton::menu-button {
+    width: 0;
+}
+
+QToolButton::menu-arrow, QToolButton::menu-indicator {
+    image: url(:/images/light_down_arrow.png);
+    subcontrol-origin: padding;
+    subcontrol-position: bottom right;
 }
 
 QStatusBar {

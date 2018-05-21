@@ -14,7 +14,7 @@ GBL_Storage::GBL_Storage()
 QString GBL_Storage::getStoragePath()
 {
     QString sStoragePath;
-    QTextStream(&sStoragePath) << QDir::homePath() << QDir::separator() << ".gitbusylivin";
+    QTextStream(&sStoragePath) << QDir::homePath() << QDir::separator() << GBL_STORAGE_DIR;
 
     return sStoragePath;
 }
@@ -22,7 +22,7 @@ QString GBL_Storage::getStoragePath()
 QString GBL_Storage::getCachePath()
 {
     QString sCachePath;
-    QTextStream(&sCachePath) << getStoragePath() << QDir::separator() << "cache";
+    QTextStream(&sCachePath) << getStoragePath() << QDir::separator() << GBL_STORAGE_CACHE_DIR;
 
     return sCachePath;
 }
@@ -30,7 +30,7 @@ QString GBL_Storage::getCachePath()
 QString GBL_Storage::getThemesPath()
 {
     QString sThemesPath;
-    QTextStream(&sThemesPath) << getStoragePath() << QDir::separator() << "themes";
+    QTextStream(&sThemesPath) << getStoragePath() << QDir::separator() << GBL_STORAGE_THEMES_DIR;
 
     return sThemesPath;
 }
@@ -73,5 +73,55 @@ QStringList GBL_Storage::getThemes()
     }
     themes.sort();
     return themes;
+}
+
+QByteArray GBL_Storage::readBookmarks()
+{
+    QByteArray bookmarkData;
+
+    QString sPath = getStoragePath();
+    sPath += QDir::separator();
+    sPath += GBL_STORAGE_BOOKMARKS_FILE;
+    QFile file(sPath);
+    if (file.open(QFile::ReadOnly))
+    {
+        bookmarkData = file.readAll();
+    }
+
+    return bookmarkData;
+}
+
+bool GBL_Storage::saveBookmarks(QByteArray bookmarkData)
+{
+    bool bRet = false;
+
+    QString sPath = GBL_Storage::getStoragePath();
+    sPath += QDir::separator();
+    sPath += GBL_STORAGE_BOOKMARKS_FILE;
+
+    QFile file(sPath);
+    bool bWriteBookmarks = true;
+
+    if (file.exists())
+    {
+        file.open(QFile::ReadOnly);
+        QByteArray data = file.readAll();
+        if (data == bookmarkData)
+        {
+            bWriteBookmarks = false;
+        }
+        file.close();
+    }
+
+    if (bWriteBookmarks)
+    {
+        file.open(QFile::WriteOnly);
+        QTextStream jStream(&file);
+        jStream << bookmarkData;
+        file.close();
+        bRet = true;
+    }
+
+    return bRet;
 }
 

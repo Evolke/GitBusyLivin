@@ -178,6 +178,78 @@ void GBL_PullThread::run()
     quit();
 }
 
+
+GBL_PushThread::GBL_PushThread(QObject *parent) : GBL_Thread(GBL_String(""),parent)
+{
+}
+
+void GBL_PushThread::push(GBL_String sRepoPath, GBL_String sBranch)
+{
+    stop_thread();
+    if (!sRepoPath.isEmpty())
+    {
+        if (m_pRepo->open_repo(sRepoPath))
+        {
+            m_mutex.lock();
+            m_sRepoPath = sRepoPath;
+            m_sBranch = sBranch;
+            m_mutex.unlock();
+            start_thread();
+        }
+    }
+    else
+    {
+        start_thread();
+    }
+}
+
+void GBL_PushThread::run()
+{
+    bool bRet = m_pRepo->push_to_remote("origin", m_sBranch);
+    m_sError = !bRet ? m_pRepo->get_error_msg() : "";
+    emit pushFinished(&m_sError);
+
+    quit();
+}
+
+/**
+ * @brief GBL_CheckoutThread::GBL_CheckoutThread
+ * @param parent
+ */
+GBL_CheckoutThread::GBL_CheckoutThread(QObject *parent) : GBL_Thread(GBL_String(""),parent)
+{
+}
+
+void GBL_CheckoutThread::checkout(GBL_String sRepoPath, GBL_String sBranch)
+{
+    stop_thread();
+    if (!sRepoPath.isEmpty())
+    {
+        if (m_pRepo->open_repo(sRepoPath))
+        {
+            m_mutex.lock();
+            m_sRepoPath = sRepoPath;
+            m_sBranch = sBranch;
+            m_mutex.unlock();
+            start_thread();
+        }
+    }
+    else
+    {
+        start_thread();
+    }
+}
+
+void GBL_CheckoutThread::run()
+{
+    bool bRet = m_pRepo->checkout_branch(m_sBranch);
+    m_sError = !bRet ? m_pRepo->get_error_msg() : "";
+    emit checkoutFinished(&m_sError);
+
+    quit();
+}
+
+
 /**
  * @brief GBL_HistoryThread::GBL_HistoryThread
  * @param sRepoPath
@@ -378,12 +450,13 @@ GBL_ScanThread::~GBL_ScanThread()
 
 }
 
-void GBL_ScanThread::scan(GBL_String sRootPath, GBL_String sSearch)
+void GBL_ScanThread::scan(GBL_String sRootPath, GBL_String sSearch, int nSearchType)
 {
     stop_thread();
     m_mutex.lock();
     m_sRootPath = sRootPath;
     m_sSearch = sSearch;
+    m_nSearchType = nSearchType;
     m_mutex.unlock();
     start_thread();
 
@@ -396,23 +469,23 @@ void GBL_ScanThread::run()
     GBL_String sRepoPath;
     int dirSize = dirs.size();
     QString sOutput;
-    sOutput = "<h1>Search: "+m_sSearch+"</h1>";
+    bool bFound = false;
+    sOutput = "<h1>Search: "+m_sSearch.toHtmlEscaped()+"</h1>";
     for (int i = 0; i < dirSize; i++)
     {
+        bFound = false;
         if (isInterruptionRequested()) break;
 
         sRepoPath = m_sRootPath;
         sRepoPath += "/" + dirs[i];
 
         m_mutex.lock();
-        sOutput += "<h2>"+sRepoPath+"</h2>";
         m_mutex.unlock();
         emit scanUpdated(i,dirSize, &m_sOutput);
         if (m_pRepo->open_repo(sRepoPath))
         {
             GBL_File_Array fa;
             m_pRepo->get_tree_from_commit_oid("", &fa);
-            sOutput += "<table cellspacing='2'>";
             for (int j = 0; j < fa.size(); j++)
             {
                 if (isInterruptionRequested()) break;
@@ -421,9 +494,30 @@ void GBL_ScanThread::run()
                 QString content, filePath, blurb;
                 if (m_pRepo->get_blob_content(GBL_String(pFI->file_oid), content))
                 {
-                    int pos = content.indexOf(m_sSearch);
+                    int pos = -1;
+                    switch (m_nSearchType)
+                    {
+                        case SCAN_THREAD_SEARCH_TYPE_INSENSITIVE:
+                            pos = content.indexOf(m_sSearch, Qt::CaseInsensitive);
+                            break;
+                        case SCAN_THREAD_SEARCH_TYPE_SENSITIVE:
+                            pos = content.indexOf(m_sSearch, Qt::CaseInsensitive);
+                            break;
+                        case SCAN_THREAD_SEARCH_TYPE_REGEX:
+                            {
+                                QRegExp re(m_sSearch);
+                                pos = content.indexOf(re);
+                            }
+                            break;
+                    }
+
                     if (pos > -1 )
                     {
+                        if (!bFound)
+                        {
+                            bFound = true;
+                            sOutput += "<h2>"+sRepoPath+"</h2><table cellspacing='2'>";
+                        }
                         filePath = pFI->sub_dir;
                         filePath += pFI->file_name;
                         int start = pos >= 50 ? pos - 50 : 0;
@@ -434,12 +528,12 @@ void GBL_ScanThread::run()
 
                         sOutput += "<tr><td><b>";
                         sOutput += filePath + "</b></td><td>";
-                        sOutput += "<td>" + blurb;
+                        sOutput += "<td>" + blurb.toHtmlEscaped();
                         sOutput += "</td></tr>";
                     }
                 }
             }
-            sOutput += "</table>";
+            if (bFound) sOutput += "</table>";
             emit scanUpdated(i,dirSize, &m_sOutput);
         }
     }

@@ -5,6 +5,7 @@ GBL_String::GBL_String() : QString()
 
 }
 
+
 GBL_String::GBL_String(const QChar *unicode, int size) : QString(unicode, size)
 {
 

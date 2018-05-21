@@ -39,7 +39,10 @@ SOURCES += src/main.cpp\
     src/ui/contentview.cpp \
     src/ui/statusprogressbar.cpp \
     src/ui/scandialog.cpp \
-    src/ui/scanmdichild.cpp
+    src/ui/scanmdichild.cpp \
+    src/ui/optionsmenubutton.cpp \
+    src/ui/bookmarksdock.cpp \
+    src/ui/branchdialog.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -67,7 +70,10 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/contentview.h \
     src/ui/statusprogressbar.h \
     src/ui/scandialog.h \
-    src/ui/scanmdichild.h
+    src/ui/scanmdichild.h \
+    src/ui/optionsmenubutton.h \
+    src/ui/bookmarksdock.h \
+    src/ui/branchdialog.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc
@@ -106,8 +112,10 @@ macx {
     }
 }
 
+!macx {
 unix {
     LIBS += -lgit2
+}
 }
 
 RC_ICONS = resources/images/gitbusylivin.ico

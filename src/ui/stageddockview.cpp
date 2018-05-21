@@ -40,6 +40,8 @@ void StagedDockView::setFileArray(GBL_File_Array *pArr)
     StagedButtonBar *pBtnBar = pView->getButtonBar();
     StagedButton *pBtn = pBtnBar->getButton(COMMIT_BTN);
     pBtn->setDisabled(pArr->size() == 0);
+    pBtn = pBtnBar->getButton(PUSH_BTN);
+    pBtn->setDisabled(pArr->size() == 0);
     pBtn = pBtnBar->getButton(UNSTAGE_ALL_BTN);
     pBtn->setDisabled(pArr->size() == 0);
 }
@@ -205,6 +207,7 @@ StagedButtonBar::StagedButtonBar(QWidget *parent) : QFrame(parent)
     connect(m_pUnstageAllBtn,&StagedButton::clicked, pMain, &MainWindow::unstageAll);
     connect(m_pUnstageSelBtn,&StagedButton::clicked, pMain, &MainWindow::unstageSelected);
     connect(m_pCommitBtn,&StagedButton::clicked, pMain, &MainWindow::commit);
+    connect(m_pPushBtn,&StagedButton::clicked, pMain, &MainWindow::commit_push);
 
 
     mainLayout->setContentsMargins(0,0,0,0);

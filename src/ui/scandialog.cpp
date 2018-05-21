@@ -1,4 +1,6 @@
 #include "scandialog.h"
+#include "optionsmenubutton.h"
+#include "src/gbl/gbl_threads.h"
 
 #include <QDialogButtonBox>
 #include <QGridLayout>
@@ -8,6 +10,8 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QDir>
+#include <QMenu>
+#include <QActionGroup>
 
 ScanDialog::ScanDialog(QWidget *parent) : QDialog(parent)
 {
@@ -35,6 +39,26 @@ ScanDialog::ScanDialog(QWidget *parent) : QDialog(parent)
     QPushButton *pSrchBtn = m_pBtnBox->button(QDialogButtonBox::Ok);
     pSrchBtn->setText(tr("Search"));
     pSrchBtn->setDisabled(true);
+    m_pSearchOptionsBtn = new OptionsMenuButton(this);
+    QMenu *pMenu = m_pSearchOptionsBtn->getMenu();
+    QAction *pCIAct = new QAction(tr("Case Insensitive"),this);
+    pCIAct->setCheckable(true);
+    QAction *pCSAct = new QAction(tr("Case Sensitive"),this);
+    pCSAct->setCheckable(true);
+    QAction *pREAct = new QAction(tr("Regular Expression"),this);
+    pREAct->setCheckable(true);
+    connect(pCIAct, &QAction::triggered, this, &ScanDialog::searchTypeCaseInsensitive);
+    connect(pCSAct, &QAction::triggered, this, &ScanDialog::searchTypeCaseSensitive);
+    connect(pREAct, &QAction::triggered, this, &ScanDialog::searchTypeRegex);
+    m_pActGrp = new QActionGroup(this);
+    m_pActGrp->addAction(pCIAct);
+    m_pActGrp->addAction(pCSAct);
+    m_pActGrp->addAction(pREAct);
+    pCIAct->setChecked(true);
+    pMenu->addAction(pCIAct);
+    pMenu->addAction(pCSAct);
+    pMenu->addAction(pREAct);
+
     connect(m_pBtnBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(m_pBtnBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(pRootBtn,&QPushButton::clicked, this, &ScanDialog::clickedRootBrowse);
@@ -52,6 +76,7 @@ ScanDialog::ScanDialog(QWidget *parent) : QDialog(parent)
     //mainLayout->addWidget(m_pSrcValidateLabel,0,3);
     mainLayout->addWidget(pSearchLabel,1,0);
     mainLayout->addWidget(m_pSearchEdit,1,1);
+    mainLayout->addWidget(m_pSearchOptionsBtn,1,2);
     //mainLayout->addWidget(pDstBtn, 1,2);
     //m_pDstValidateLabel = new QLabel(EMPTY_FORMAT);
     //mainLayout->addWidget(m_pDstValidateLabel,1,3);
@@ -59,6 +84,8 @@ ScanDialog::ScanDialog(QWidget *parent) : QDialog(parent)
     setLayout(mainLayout);
 
     setWindowTitle(tr("Scan"));
+
+    m_nSearchType = SCAN_THREAD_SEARCH_TYPE_INSENSITIVE;
 }
 
 
@@ -83,6 +110,21 @@ void ScanDialog::searchEdited()
     validate();
 }
 
+void ScanDialog::searchTypeCaseInsensitive()
+{
+    m_nSearchType = SCAN_THREAD_SEARCH_TYPE_INSENSITIVE;
+}
+
+void ScanDialog::searchTypeCaseSensitive()
+{
+    m_nSearchType = SCAN_THREAD_SEARCH_TYPE_SENSITIVE;
+}
+
+void ScanDialog::searchTypeRegex()
+{
+    m_nSearchType = SCAN_THREAD_SEARCH_TYPE_REGEX;
+}
+
 void ScanDialog::validate()
 {
     QString sRoot = m_pRootEdit->text();
@@ -105,3 +147,4 @@ QString ScanDialog::getSearch()
 {
     return m_pSearchEdit->text();
 }
+

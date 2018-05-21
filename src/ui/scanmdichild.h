@@ -54,7 +54,7 @@ public:
     explicit ScanMdiChild(QWidget *parent = nullptr);
     ~ScanMdiChild();
 
-    void init(GBL_String sRoot, GBL_String sSearch);
+    void init(GBL_String sRoot, GBL_String sSearch, int nSearchType);
 
 signals:
 
@@ -67,6 +67,7 @@ public slots:
 private:
     GBL_ScanThread *m_pScanThread;
     ScanScrollArea *m_pScanScrollArea;
+    int m_nSearchType;
 };
 
 #endif // SCANMDICHILD_H

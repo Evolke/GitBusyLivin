@@ -15,6 +15,7 @@ class QSessionManager;
 class HistoryView;
 class GBL_HistoryModel;
 class GBL_Repository;
+class GBL_Storage;
 class QDockWidget;
 class QItemSelection;
 class QNetworkAccessManager;
@@ -51,6 +52,8 @@ public:
 
     GBL_Repository* getRepo() { return m_qpRepo; }
     QToolBar* getToolBar() { return m_pToolBar; }
+    GBL_Storage* getStorage() { return m_pStorage; }
+
     static MainWindow* getInstance() { return m_pSingleInst; }
     static void setInstance(MainWindow* pInst) { m_pSingleInst = pInst; }
 
@@ -61,6 +64,7 @@ public:
 
     MdiChild* currentMdiChild();
     GBL_Repository* getCurrentRepository();
+    void openRepo(QString &sPath);
 
 public slots:
     void stageAll();
@@ -68,6 +72,7 @@ public slots:
     void unstageAll();
     void unstageSelected();
     void commit();
+    void commit_push();
     void avatarDownloaded(QNetworkReply* pReply);
     void historySelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void commitTabChanged(int tabID);
@@ -76,7 +81,12 @@ public slots:
     void refsUpdated(GBL_String *psError, GBL_RefItem *pRefItem);
     void fetchFinished(GBL_String *psError);
     void pullFinished(GBL_String *psError);
+    void pushFinished(GBL_String *psError);
+    void checkoutFinished(GBL_String *psError);
     void cloneFinished(GBL_String* psError, GBL_String* psDst);
+    void openBookmarkDoubleClick(const QModelIndex &index);
+    void addBookmark();
+    void onCreateBranch();
 
 private slots:
     void about();
@@ -96,6 +106,7 @@ private slots:
     void historyFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void workingFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void stagedFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void branchComboChanged(const QString &text);
     void activateChild(QMdiSubWindow *window);
     QMdiSubWindow* findMdiChild(const QString &fileName) const;
     void closeEvent(QCloseEvent *event);
@@ -128,6 +139,7 @@ private:
     bool openRepoTab(QString &path);
     void updateBranchCombo();
     void updateReferences();
+    GBL_History_Item* getSelectedHistoryItem();
 
     GBL_Repository *m_qpRepo;
     QMap<QString, QDockWidget*> m_docks;
@@ -137,6 +149,7 @@ private:
     QToolBar *m_pToolBar;
     StatusProgressBar *m_pStatProg;
     ToolbarCombo *m_pBranchCombo;
+    GBL_Storage *m_pStorage;
     QNetworkAccessManager *m_pNetAM;
     QNetworkDiskCache *m_pNetCache;
     QString m_sTheme;
@@ -148,7 +161,7 @@ private:
     BadgeToolButton *m_pPullBtn, *m_pPushBtn;
 
     static MainWindow *m_pSingleInst;
-    int m_nMainTimer;
+    int m_nMainTimer, m_nCommitDetailsTimer, m_nAutoFetchInterval, m_nAutoFetchCount;
     QString m_sSelectedCode;
 
     QMdiArea *m_pMdiArea;
@@ -159,6 +172,7 @@ private:
 
     int m_nCommitTabID;
     MdiChild *m_pCurrentChild;
+    QString m_sCurrentBranch;
 };
 
 #endif // MAINWINDOW_H

@@ -28,8 +28,11 @@ public:
     void updateReferences();
     void fetch();
     void pull(GBL_String sBranch);
+    void push(GBL_String sBranch);
+    void checkout(GBL_String sBranch);
 
     QString currentPath() { return m_sRepoPath; }
+    QString repoName() { return m_sRepoName; }
 
 signals:
 
@@ -39,6 +42,8 @@ public slots:
     void refsUpdated(GBL_String *psError, GBL_RefItem *pRefItem);
     void fetchFinished(GBL_String *psError);
     void pullFinished(GBL_String *psError);
+    void pushFinished(GBL_String *psError);
+    void checkoutFinished(GBL_String *psError);
 
 private slots:
     virtual void resizeEvent(QResizeEvent *event);
@@ -47,7 +52,7 @@ private:
     void createHistoryTable();
 
     GBL_Repository *m_qpRepo;
-    QString m_sRepoPath;
+    QString m_sRepoPath, m_sRepoName;
     HistoryView *m_pHistView;
     GBL_HistoryModel *m_pHistModel;
     QMap<QString, GBL_Thread*> m_threads;

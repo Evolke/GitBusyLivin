@@ -26,13 +26,13 @@ ScanMdiChild::~ScanMdiChild()
     delete m_pScanThread;
 }
 
-void ScanMdiChild::init(GBL_String sRoot, GBL_String sSearch)
+void ScanMdiChild::init(GBL_String sRoot, GBL_String sSearch, int nSearchType)
 {
     GBL_String sTitle = "Scan - ";
     sTitle += sRoot;
     setWindowTitle(sTitle);
 
-    m_pScanThread->scan(sRoot, sSearch);
+    m_pScanThread->scan(sRoot, sSearch, nSearchType);
 }
 
 void ScanMdiChild::cancel()

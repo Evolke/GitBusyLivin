@@ -19,7 +19,7 @@ void BadgeToolButton::paintEvent(QPaintEvent *event)
     {
         QPainter p(this);
 
-        QSize badgeSize(15,15);
+        QSize badgeSize(17,13);
         QRect widgetRct = rect();
         QSize iconsz = iconSize();
         QRect rct;
@@ -49,13 +49,13 @@ void BadgeToolButton::paintEvent(QPaintEvent *event)
         QColor bkClr(200,0,0);//pal.color(QPalette::Background);
         //p.fillRect(rct, pal.background());
         p.setBrush(QBrush(bkClr));
-        p.drawEllipse(rct);
+        p.drawRoundedRect(rct,6,6);
         //triangle << QPoint(rct.left() + rct.width()/2,rct.top()) << rct.bottomLeft() << rct.bottomRight();
         //triangle << rct.topLeft() << rct.topRight() << QPoint(rct.left() + rct.width()/2,rct.bottom());
         //p.drawPolygon(triangle);
         int pointSize = 10;
 #ifdef Q_OS_WIN
-        pointSize = 7;
+        pointSize = 8;
 #endif
         QFont badgeFont("Arial", pointSize);
         badgeFont.setStretch(QFont::Condensed);

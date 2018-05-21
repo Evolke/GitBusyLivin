@@ -1,6 +1,12 @@
 #ifndef GBL_STORAGE_H
 #define GBL_STORAGE_H
 
+#define GBL_STORAGE_DIR ".gitbusylivin"
+#define GBL_STORAGE_CACHE_DIR "cache"
+#define GBL_STORAGE_THEMES_DIR "themes"
+#define GBL_STORAGE_BOOKMARKS_FILE "bookmarks.json"
+
+
 #include <QString>
 
 class GBL_Storage
@@ -12,7 +18,9 @@ public:
     static QString getCachePath();
     static QString getGravatarUrl(QString sEmail);
     static QString getThemesPath();
-    static QStringList getThemes();
+    QStringList getThemes();
+    QByteArray readBookmarks();
+    bool saveBookmarks(QByteArray bookmarkData);
 
 };
 
