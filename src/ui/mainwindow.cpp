@@ -57,8 +57,8 @@ MainWindow::MainWindow()
     m_pNetCache = NULL;
     m_nMainTimer = 0;
     m_nCommitDetailsTimer = 0;
-    m_nAutoFetchInterval = 15;
-    m_nAutoFetchInterval = 0;
+    m_nAutoFetchInterval = 10;
+    m_bAutoFetch = true;
     m_pCurrentChild = NULL;
     m_pStorage = new GBL_Storage();
 
@@ -67,6 +67,8 @@ MainWindow::MainWindow()
     setInstance(this);
 
     init();
+
+    m_nAutoFetchTimestamp = QDateTime::currentSecsSinceEpoch();
 }
 
 MainWindow::~MainWindow()
@@ -524,17 +526,13 @@ void MainWindow::timerEvent(QTimerEvent *event)
     }
     else if (event->timerId() == m_nMainTimer)
     {
+        qDebug() << "timer:secs:" << QDateTime::currentSecsSinceEpoch();
         MdiChild *pChild = currentMdiChild();
         if (pChild)
         {
-            if (m_nAutoFetchCount == m_nAutoFetchInterval)
+            if (m_bAutoFetch && (QDateTime::currentSecsSinceEpoch() >= (m_nAutoFetchTimestamp + m_nAutoFetchInterval*60)))
             {
                 fetchAction();
-                m_nAutoFetchCount = 0;
-            }
-            else
-            {
-                m_nAutoFetchCount++;
             }
         }
     }
@@ -1091,6 +1089,7 @@ void MainWindow::preferences()
 
     PrefsDialog prefsDlg(this);
     prefsDlg.setConfigMap(pConfigMap);
+    prefsDlg.setAutoFetch(m_bAutoFetch, m_nAutoFetchInterval);
     if (prefsDlg.exec() == QDialog::Accepted)
     {
         QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
@@ -1121,6 +1120,10 @@ void MainWindow::preferences()
         {
             m_qpRepo->set_global_config_info(&cfgMap);
         }
+
+        prefsDlg.getAutoFetch(m_bAutoFetch, m_nAutoFetchInterval);
+        settings.setValue("Repo/Autotfetch", m_bAutoFetch);
+        settings.setValue("Repo/AutofetchInterval",m_nAutoFetchInterval);
     }
     else
     {
@@ -1223,7 +1226,7 @@ void MainWindow::fetchAction()
         pChild->fetch();
         m_pStatProg->show();
     }
-
+    m_nAutoFetchTimestamp = QDateTime::currentSecsSinceEpoch();
 }
 
 void MainWindow::onCreateBranch()
@@ -1262,6 +1265,7 @@ void MainWindow::fetchFinished(GBL_String *psError)
     if (psError->isEmpty())
         updatePushPull();
     m_pStatProg->hide();
+
 }
 
 void MainWindow::pullFinished(GBL_String *psError)
@@ -1271,11 +1275,13 @@ void MainWindow::pullFinished(GBL_String *psError)
         MdiChild *pChild = currentMdiChild();
         if (pChild)
         {
+            resetDocks();
             pChild->updateHistory();
             updateReferences();
             updateBranchCombo();
             m_pStatProg->show();
         }
+        m_nAutoFetchTimestamp = QDateTime::currentSecsSinceEpoch();
     }
     else
     {
@@ -1742,6 +1748,8 @@ void MainWindow::readSettings()
 
     m_pToolBar->setToolButtonStyle(nTBStyle);
 
+    m_bAutoFetch = settings.value("Repo/Autofetch",true).toBool();
+    m_nAutoFetchInterval = settings.value("Repo/AutofetchInterval", 10).toInt();
    /**/
     UrlPixmap svgpix(NULL);
 
@@ -1810,7 +1818,7 @@ void MainWindow::readSettings()
     BookmarksDock *pBMDock = new BookmarksDock(tr("Bookmarks"),this);
     m_docks["bookmarks"] = pBMDock;
     m_pViewMenu->addAction(pBMDock->toggleViewAction());
-    pBMDock->setObjectName("MainWindow/Bookmarks/Dock ");
+    pBMDock->setObjectName("MainWindow/Bookmarks/Dock");
 
     addDockWidget(Qt::LeftDockWidgetArea, pBMDock);
 
@@ -1832,7 +1840,6 @@ void MainWindow::writeSettings()
 
     BookmarksDock *pDock = (BookmarksDock*)m_docks["bookmarks"];
     QJsonDocument *pDoc = pDock->getJDoc();
-
 
     QByteArray jsonData = pDoc->toJson();
     m_pStorage->saveBookmarks(jsonData);

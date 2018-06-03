@@ -161,7 +161,9 @@ private:
     BadgeToolButton *m_pPullBtn, *m_pPushBtn;
 
     static MainWindow *m_pSingleInst;
-    int m_nMainTimer, m_nCommitDetailsTimer, m_nAutoFetchInterval, m_nAutoFetchCount;
+    int m_nMainTimer, m_nCommitDetailsTimer, m_nAutoFetchInterval;
+    qint64 m_nAutoFetchTimestamp;
+    bool m_bAutoFetch;
     QString m_sSelectedCode;
 
     QMdiArea *m_pMdiArea;

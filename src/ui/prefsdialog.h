@@ -10,6 +10,7 @@ QT_BEGIN_NAMESPACE
     class QLineEdit;
     class QTreeWidgetItem;
     class QComboBox;
+    class QCheckBox;
 QT_END_NAMESPACE
 
 /**
@@ -23,11 +24,17 @@ public:
 
     QString getName();
     QString getEmail();
+    bool getAutoFetch();
+    int getAutoFetchInterval();
+
     void setName(QString sName);
     void setEmail(QString sEmail);
+    void setAutoFetch(bool bAutoFetch);
+    void setAutoFetchInterval(int nAutoFetchInterval);
 
 private:
-    QLineEdit *m_pNameEdit, *m_pEmailEdit;
+    QLineEdit *m_pNameEdit, *m_pEmailEdit, *m_pAutoFetchEdit;
+    QCheckBox *m_pAutoFetchCB;
 };
 
 class UIPrefsPage : public QWidget
@@ -54,6 +61,8 @@ public:
 
     void setConfigMap(GBL_Config_Map *pMap);
     void getConfigMap(GBL_Config_Map *pMap);
+    void setAutoFetch(bool bAutoFetch, int nAutoFetchInterval);
+    void getAutoFetch(bool &bAutoFetch, int &nAutoFetchInterval);
 
     int getUIToolbarButtonType();
 

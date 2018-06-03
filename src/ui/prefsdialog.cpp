@@ -7,6 +7,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QCheckBox>
 #include <QPushButton>
 #include <QTreeWidget>
 #include <QStackedWidget>
@@ -41,7 +42,7 @@ PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
     m_pTabs->setIconSize(QSize(16, 16));
     m_pTabs->setHeaderHidden(true);
     m_pTabs->setIndentation(0);
-
+    setContentsMargins(5,5,5,5);
     //m_pTabs->setMovement(QListView::Static);
     m_pTabs->setMaximumWidth(150);
     //m_pTabs->setSpacing(5);
@@ -52,9 +53,9 @@ PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
     m_pPages = new QStackedWidget(this);
     m_pPages->addWidget(new GeneralPrefsPage(this));
     m_pPages->addWidget(new UIPrefsPage(this));
-    mainLayout->addWidget(m_pTabs,0,0);
+    mainLayout->addWidget(m_pTabs,0,0,0,1);
     mainLayout->addWidget(m_pPages,0,1);
-    mainLayout->addWidget(pOkCancel,1,1,1,1, Qt::AlignBottom);
+    mainLayout->addWidget(pOkCancel,1,1, Qt::AlignBottom);
     mainLayout->setMargin(5);
     createTreeItems();
     //m_pTabs->setCurrentRow(0);
@@ -129,6 +130,19 @@ int PrefsDialog::getUIToolbarButtonType()
     return pTBBox->currentIndex();
 }
 
+void PrefsDialog::setAutoFetch(bool bAutoFetch, int nAutoFetchInterval)
+{
+    GeneralPrefsPage *pPage = (GeneralPrefsPage*)m_pPages->widget(0);
+    pPage->setAutoFetch(bAutoFetch);
+    pPage->setAutoFetchInterval(nAutoFetchInterval);
+}
+
+void PrefsDialog::getAutoFetch(bool &bAutoFetch, int &nAutoFetchInterval)
+{
+    GeneralPrefsPage *pPage = (GeneralPrefsPage*)m_pPages->widget(0);
+    bAutoFetch = pPage->getAutoFetch();
+    nAutoFetchInterval = pPage->getAutoFetchInterval();
+}
 /******************* GeneralPrefsPage ***************/
 GeneralPrefsPage::GeneralPrefsPage(QWidget *parent) : QWidget(parent)
 {
@@ -147,7 +161,22 @@ GeneralPrefsPage::GeneralPrefsPage(QWidget *parent) : QWidget(parent)
     pGGUBox->setLayout(pGGULayout);
     QVBoxLayout *mainLayout = new QVBoxLayout();
     mainLayout->addWidget(pGGUBox);
-    mainLayout->addSpacing(60);
+    m_pAutoFetchCB = new QCheckBox();
+    m_pAutoFetchCB->setTristate(false);
+    m_pAutoFetchCB->setMaximumWidth(20);
+    QLabel *pAutoFetch = new QLabel(tr("Auto Fetch"));
+    pAutoFetch->setMaximumWidth(80);
+    m_pAutoFetchEdit = new QLineEdit();
+    m_pAutoFetchEdit->setMaximumWidth(50);
+    m_pAutoFetchEdit->setValidator(new QIntValidator());
+    QLabel *pAFMins = new QLabel(tr("Minutes"));
+    QGridLayout *pAFLayout = new QGridLayout();
+    pAFLayout->addWidget(m_pAutoFetchCB,0,0);
+    pAFLayout->addWidget(pAutoFetch,0,1);
+    pAFLayout->addWidget(m_pAutoFetchEdit,0,2);
+    pAFLayout->addWidget(pAFMins,0,3);
+    mainLayout->addLayout(pAFLayout);
+    mainLayout->addSpacing(50);
     setLayout(mainLayout);
 }
 
@@ -169,6 +198,27 @@ QString GeneralPrefsPage::getEmail()
 void GeneralPrefsPage::setEmail(QString sEmail)
 {
     m_pEmailEdit->setText(sEmail);
+}
+
+bool GeneralPrefsPage::getAutoFetch()
+{
+    return m_pAutoFetchCB->checkState() == Qt::Checked;
+}
+
+void GeneralPrefsPage::setAutoFetch(bool bAutoFetch)
+{
+   Qt::CheckState cs = bAutoFetch ? Qt::Checked : Qt::Unchecked;
+   m_pAutoFetchCB->setCheckState(cs);
+}
+
+int GeneralPrefsPage::getAutoFetchInterval()
+{
+    return m_pAutoFetchEdit->text().toInt();
+}
+
+void GeneralPrefsPage::setAutoFetchInterval(int nAutoFetchInterval)
+{
+    m_pAutoFetchEdit->setText(QString::number(nAutoFetchInterval));
 }
 
 /******************* UIPrefsPage ***************/
