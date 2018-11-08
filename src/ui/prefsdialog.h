@@ -1,7 +1,7 @@
 #ifndef PREFSDIALOG_H
 #define PREFSDIALOG_H
 
-#include <QDialog>
+#include "gbldialog.h"
 #include "src/gbl/gbl_repository.h"
 
 QT_BEGIN_NAMESPACE
@@ -11,6 +11,7 @@ QT_BEGIN_NAMESPACE
     class QTreeWidgetItem;
     class QComboBox;
     class QCheckBox;
+    class QSpinBox;
 QT_END_NAMESPACE
 
 /**
@@ -20,7 +21,7 @@ class GeneralPrefsPage : public QWidget
 {
     Q_OBJECT
 public:
-    explicit GeneralPrefsPage(QWidget *parent = 0);
+    explicit GeneralPrefsPage(QWidget *parent = Q_NULLPTR);
 
     QString getName();
     QString getEmail();
@@ -33,7 +34,8 @@ public:
     void setAutoFetchInterval(int nAutoFetchInterval);
 
 private:
-    QLineEdit *m_pNameEdit, *m_pEmailEdit, *m_pAutoFetchEdit;
+    QLineEdit *m_pNameEdit, *m_pEmailEdit;
+    QSpinBox *m_pAutoFetchSB;
     QCheckBox *m_pAutoFetchCB;
 };
 
@@ -42,7 +44,7 @@ class UIPrefsPage : public QWidget
     Q_OBJECT
 
 public:
-    explicit UIPrefsPage(QWidget *parent = 0);
+    explicit UIPrefsPage(QWidget *parent = Q_NULLPTR);
 
     QComboBox* getToolbarCombo();
 
@@ -53,7 +55,7 @@ private:
 /**
  * @brief The PrefsDialog class
  */
-class PrefsDialog : public QDialog
+class PrefsDialog : public GBLDialog
 {
     Q_OBJECT
 public:
@@ -61,6 +63,7 @@ public:
 
     void setConfigMap(GBL_Config_Map *pMap);
     void getConfigMap(GBL_Config_Map *pMap);
+
     void setAutoFetch(bool bAutoFetch, int nAutoFetchInterval);
     void getAutoFetch(bool &bAutoFetch, int &nAutoFetchInterval);
 

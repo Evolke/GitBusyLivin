@@ -7,20 +7,26 @@
 #include <QDebug>
 #include <QIcon>
 #include <QToolBar>
+#include <QMenu>
+#include <QContextMenuEvent>
+
 
 ReferencesView::ReferencesView(QWidget *parent) : QTreeView(parent)
 {
     setHeaderHidden(true);
-    m_pBranchIcon = NULL;
-    m_pRemoteIcon = NULL;
-    m_pTagIcon = NULL;
-    m_pStashIcon = NULL;
+    m_pBranchIcon = Q_NULLPTR;
+    m_pRemoteIcon = Q_NULLPTR;
+    m_pTagIcon = Q_NULLPTR;
+    m_pStashIcon = Q_NULLPTR;
     resizeColumnToContents(0);
     resizeColumnToContents(1);
     resizeColumnToContents(2);
 
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+    m_pContextMenu = new QMenu(this);
+
 }
 
 ReferencesView::~ReferencesView()
@@ -33,7 +39,7 @@ ReferencesView::~ReferencesView()
 
 void ReferencesView::setRefIcons()
 {
-    GBL_RefsModel *pMod = (GBL_RefsModel*)model();
+    GBL_RefsModel *pMod = dynamic_cast<GBL_RefsModel*>(model());
     GBL_RefItem *pRef = pMod->getRefRoot();
 
     if (pRef && m_pBranchIcon && m_pRemoteIcon && m_pTagIcon && m_pStashIcon)
@@ -54,14 +60,14 @@ void ReferencesView::reset()
 {
     QTreeView::reset();
 
-    GBL_RefsModel *pMod = (GBL_RefsModel*)model();
+    GBL_RefsModel *pMod = dynamic_cast<GBL_RefsModel*>(model());
     pMod->reset();
     setRefIcons();
 }
 
 QStringList ReferencesView::getBranchNames()
 {
-    GBL_RefsModel *pMod = (GBL_RefsModel*)model();
+    GBL_RefsModel *pMod = dynamic_cast<GBL_RefsModel*>(model());
     GBL_RefItem *pRefRoot = pMod->getRefRoot();
 
     QStringList branches;
@@ -78,7 +84,7 @@ void ReferencesView::paintEvent(QPaintEvent *event)
 {
     if (!m_pBranchIcon && !m_pRemoteIcon && !m_pTagIcon && !m_pStashIcon)
     {
-        UrlPixmap svgpix(NULL);
+        UrlPixmap svgpix(Q_NULLPTR);
         MainWindow *pMain = MainWindow::getInstance();
         QPalette pal = pMain->getToolBar()->palette();
         QColor txtClr = pal.color(QPalette::Text);
@@ -101,4 +107,35 @@ void ReferencesView::paintEvent(QPaintEvent *event)
     }
 
     QTreeView::paintEvent(event);
+}
+
+void ReferencesView::contextMenuEvent(QContextMenuEvent *event)
+{
+    QTreeView::contextMenuEvent(event);
+
+    m_pContextMenu->clear();
+    MainWindow *pMain = MainWindow::getInstance();
+
+    QModelIndex mi = indexAt(event->pos());
+    qDebug() << "ReferencesView::contextMenuEvent:mi" << mi;
+    if (mi.isValid())
+    {
+        GBL_RefItem *pRefItem = static_cast<GBL_RefItem*>(mi.internalPointer());
+        if (pRefItem)
+        {
+            qDebug() << "GBL_RefItem::TYPE:" << pRefItem->getType();
+            switch (pRefItem->getType())
+            {
+                case GBL_RefItem::STASH:
+                    m_pContextMenu->addAction(tr("Apply Stash"),pMain, &MainWindow::onApplyStash);
+                    m_pContextMenu->addAction(tr("Delete Stash"),pMain, &MainWindow::onDeleteStash);
+                    break;
+            }
+
+
+            m_pContextMenu->exec(event->globalPos());
+
+        }
+
+    }
 }

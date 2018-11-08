@@ -49,5 +49,6 @@
         <file>images/sizer_light.png</file>
         <file>images/default_author_icon.png</file>
         <file>images/cog_icon.svg</file>
+        <file>images/stash_toolbar_icon.svg</file>
     </qresource>
 </RCC>

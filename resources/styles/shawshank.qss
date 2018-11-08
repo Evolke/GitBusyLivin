@@ -216,6 +216,52 @@ ToolbarCombo::drop-down {
     border: none;
 }
 
+QSpinBox {
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 3px 20px 3px 5px;
+    background: #444;
+}
+
+QSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+
+    width: 16px;
+    border-left-width: 1px;
+    border-color: #555;
+    border-style: solid;
+
+}
+
+QSpinBox::up-button:pressed, QSpinBox::down-button:pressed {
+    background-color: #222;
+}
+
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 16px;
+    border-left-width: 1;
+    border-top-width: 1;
+    border-color: #555;
+    border-style: solid;
+}
+
+
+QSpinBox::up-arrow {
+    image: url(:/images/light_up_arrow.png);
+    width: 8px;
+    height: 4px;
+}
+
+
+QSpinBox::down-arrow {
+    image: url(:/images/light_down_arrow.png);
+    width: 8px;
+    height: 4px;
+}
+
 QGroupBox {
     border: 1px solid #555;
     border-radius: 8px;

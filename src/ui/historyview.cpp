@@ -8,6 +8,7 @@
 #include <QMouseEvent>
 #include <QMenu>
 #include <QPalette>
+#include <QtMath>
 
 HistoryView::HistoryView(QWidget *parent) : QTableView(parent)
 {
@@ -30,7 +31,7 @@ HistoryView::~HistoryView()
 void HistoryView::reset()
 {
     QTableView::reset();
-    GBL_HistoryModel *pModel = (GBL_HistoryModel*)model();
+    GBL_HistoryModel *pModel = dynamic_cast<GBL_HistoryModel*>(model());
     pModel->reset();
 
 }
@@ -42,13 +43,12 @@ void HistoryView::resizeEvent(QResizeEvent *event)
     int nWidth = width();
 
     QScrollBar *pSB = verticalScrollBar();
-#ifdef Q_OS_WIN
     if (pSB && pSB->isVisible()) nWidth -= pSB->width();
-#endif
-    setColumnWidth(0, nWidth*.1);
-    setColumnWidth(1, nWidth*.5);
-    setColumnWidth(2, nWidth*.25);
-    setColumnWidth(3, nWidth*.148);
+
+    setColumnWidth(0, qFloor(nWidth*.1));
+    setColumnWidth(1, qFloor(nWidth*.5));
+    setColumnWidth(2, qFloor(nWidth*.25));
+    setColumnWidth(3, qFloor(nWidth*.148));
 
     GBL_HistoryModel *pModel = (GBL_HistoryModel*)model();
     pModel->layoutChanged();

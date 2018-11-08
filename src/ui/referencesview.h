@@ -3,8 +3,11 @@
 
 #include <QTreeView>
 
+QT_BEGIN_NAMESPACE
 class GBL_RefItem;
 class QIcon;
+class QMenu;
+QT_END_NAMESPACE
 
 class ReferencesView : public QTreeView
 {
@@ -22,8 +25,13 @@ signals:
 public slots:
     void paintEvent(QPaintEvent *event);
 
+private slots:
+    virtual void contextMenuEvent(QContextMenuEvent *event);
+
 private:
     QIcon  *m_pBranchIcon, *m_pRemoteIcon, *m_pTagIcon, *m_pStashIcon;
+    QMenu* m_pContextMenu;
+
 };
 
 #endif // REFERENCESVIEW_H

@@ -117,7 +117,7 @@ void GBL_Repository::check_libgit_return(int ret)
  */
 bool GBL_Repository::get_global_config_info(GBL_Config_Map **out)
 {
-    git_config *cfg = NULL;
+    git_config *cfg = Q_NULLPTR;
     git_buf buf = GIT_BUF_INIT;
     //const char *name, *email;
     try
@@ -140,14 +140,14 @@ bool GBL_Repository::get_global_config_info(GBL_Config_Map **out)
     *out = m_pConfig_Map;
 
     git_buf_free(&buf);
-    if (cfg != NULL) git_config_free(cfg);
+    if (cfg != Q_NULLPTR) git_config_free(cfg);
 
     return m_iErrorCode >= 0;
 }
 
 bool GBL_Repository::set_global_config_info(GBL_Config_Map *cfgMap)
 {
-    git_config *cfg = NULL;
+    git_config *cfg = Q_NULLPTR;
     git_buf buf = GIT_BUF_INIT;
     //const char *name, *email;
     try
@@ -197,10 +197,10 @@ bool GBL_Repository::init_repo(GBL_String path, bool bare)
     cleanup();
     /*const QByteArray l8b = path.toUtf8();
     const char* spath = l8b.constData();*/
-    git_signature *sig = NULL;
-    git_index *index = NULL;
+    git_signature *sig = Q_NULLPTR;
+    git_index *index = Q_NULLPTR;
     git_oid tree_id, commit_id;
-    git_tree *tree = NULL;
+    git_tree *tree = Q_NULLPTR;
     git_repository_init_options opts = GIT_REPOSITORY_INIT_OPTIONS_INIT;
 
     try
@@ -224,9 +224,9 @@ bool GBL_Repository::init_repo(GBL_String path, bool bare)
             check_libgit_return(git_repository_index(&index, m_pRepo));
             check_libgit_return(git_index_write_tree(&tree_id, index));
             git_index_free(index);
-            index = NULL;
+            index = Q_NULLPTR;
             check_libgit_return(git_tree_lookup(&tree, m_pRepo, &tree_id));
-            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, NULL, "Initial Commit", tree, 0));
+            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, Q_NULLPTR, "Initial Commit", tree, 0));
             git_tree_free(tree);
             git_signature_free(sig);
         }
@@ -237,9 +237,9 @@ bool GBL_Repository::init_repo(GBL_String path, bool bare)
     {
         Q_UNUSED(e);
 
-        if (index != NULL) git_index_free(index);
-        if (tree != NULL) git_tree_free(tree);
-        if (sig != NULL) git_signature_free(sig);
+        if (index != Q_NULLPTR) git_index_free(index);
+        if (tree != Q_NULLPTR) git_tree_free(tree);
+        if (sig != Q_NULLPTR) git_signature_free(sig);
 
         return false;
     }
@@ -254,12 +254,12 @@ bool GBL_Repository::init_repo(GBL_String path, bool bare)
  */
 bool GBL_Repository::clone_repo(GBL_String srcUrl, GBL_String dstPath)
 {
-    git_remote *pRemote = NULL;
+    git_remote *pRemote = Q_NULLPTR;
 
     cleanup();
     try
     {
-        check_libgit_return(git_clone(&m_pRepo, srcUrl.toConstChar(), dstPath.toConstChar(), NULL));
+        check_libgit_return(git_clone(&m_pRepo, srcUrl.toConstChar(), dstPath.toConstChar(), Q_NULLPTR));
 
         //check to see if a remote exists
         QStringList remotes;
@@ -292,7 +292,7 @@ bool GBL_Repository::open_repo(GBL_String path)
     cleanup();
     /*const QByteArray l8b = path.toUtf8();
     const char* spath = l8b.constData();*/
-    m_iErrorCode = git_repository_open_ext(&m_pRepo, path.toConstChar(),GIT_REPOSITORY_OPEN_NO_SEARCH,NULL);
+    m_iErrorCode = git_repository_open_ext(&m_pRepo, path.toConstChar(),GIT_REPOSITORY_OPEN_NO_SEARCH,Q_NULLPTR);
     return m_iErrorCode >= 0;
 }
 
@@ -319,8 +319,8 @@ bool GBL_Repository::get_remotes(QStringList &remote_list)
 
 bool GBL_Repository::get_head_branch(QString &branch)
 {
-    git_branch_iterator *pBIter = NULL;
-    git_reference *pRef = NULL;
+    git_branch_iterator *pBIter = Q_NULLPTR;
+    git_reference *pRef = Q_NULLPTR;
     git_branch_t branchType;
     const char *sBranchName;
 
@@ -352,8 +352,8 @@ bool GBL_Repository::get_head_branch(QString &branch)
 
 bool GBL_Repository::push_to_remote(GBL_String sRemote, GBL_String sBranch)
 {
-    git_reference *pRef = NULL;
-    git_remote *pRemote = NULL;
+    git_reference *pRef = Q_NULLPTR;
+    git_remote *pRemote = Q_NULLPTR;
     GBL_String sRefspec = "refs/heads/";
     sRefspec += sBranch + ":refs/heads/" + sBranch;
     char* refspec = new char[sRefspec.size()+1];
@@ -396,7 +396,7 @@ bool GBL_Repository::push_to_remote(GBL_String sRemote, GBL_String sBranch)
     }
 
     //git_strarray_free(refspecs);
-    delete refspec;
+    delete[] refspec;
     if (pRemote) git_remote_free(pRemote);
 
     return m_iErrorCode >= 0;
@@ -404,16 +404,16 @@ bool GBL_Repository::push_to_remote(GBL_String sRemote, GBL_String sBranch)
 
 bool GBL_Repository::pull_remote(GBL_String sRemote, GBL_String sBranch)
 {
-    git_annotated_commit *pAnnCommit = NULL;
-    git_reference *pRef = NULL, *pHeadRef = NULL, *pNewRef = NULL;
+    git_annotated_commit *pAnnCommit = Q_NULLPTR;
+    git_reference *pRef = Q_NULLPTR, *pHeadRef = Q_NULLPTR, *pNewRef = Q_NULLPTR;
     git_merge_analysis_t merge_analysis;
     git_merge_preference_t merge_preference;
-    git_object *pRemoteObj = NULL;
-    git_tree *pRemoteTreeObj = NULL;
+    git_object *pRemoteObj = Q_NULLPTR;
+    git_tree *pRemoteTreeObj = Q_NULLPTR;
     git_merge_options merge_options = GIT_MERGE_OPTIONS_INIT;
     git_checkout_options checkout_options = GIT_CHECKOUT_OPTIONS_INIT;
     checkout_options.checkout_strategy = GIT_CHECKOUT_SAFE;
-    git_index *index = NULL;
+    git_index *index = Q_NULLPTR;
 
     if (fetch_remote(sRemote))
     {
@@ -433,7 +433,7 @@ bool GBL_Repository::pull_remote(GBL_String sRemote, GBL_String sBranch)
                 check_libgit_return(git_repository_head(&pHeadRef, m_pRepo));
                 check_libgit_return(git_commit_tree(&pRemoteTreeObj,(git_commit*)pRemoteObj));
                 check_libgit_return(git_checkout_tree(m_pRepo, (git_object*)pRemoteTreeObj, &checkout_options));
-                check_libgit_return(git_reference_set_target(&pNewRef, pHeadRef, git_commit_id((const git_commit*)pRemoteObj), NULL));
+                check_libgit_return(git_reference_set_target(&pNewRef, pHeadRef, git_commit_id((const git_commit*)pRemoteObj), Q_NULLPTR));
                 //check_libgit_return(git_checkout_head(m_pRepo, &checkout_options));
             }
             else if (merge_analysis & GIT_MERGE_ANALYSIS_NORMAL)
@@ -514,7 +514,7 @@ bool GBL_Repository::checkout_branch(GBL_String sBranchName)
 
 bool GBL_Repository::get_upstream_ref(GBL_String sBranchName, git_reference **upStreamRef)
 {
-    git_reference *ref = NULL;
+    git_reference *ref = Q_NULLPTR;
 
     try
     {
@@ -531,8 +531,8 @@ bool GBL_Repository::get_upstream_ref(GBL_String sBranchName, git_reference **up
 
 bool GBL_Repository::create_branch(GBL_String sBranchName, GBL_String sCommitOid)
 {
-    git_reference *pHeadRef = NULL, *pBranchRef = NULL;
-    git_commit *pBranchCommit = NULL;
+    git_reference *pHeadRef = Q_NULLPTR, *pBranchRef = Q_NULLPTR;
+    git_commit *pBranchCommit = Q_NULLPTR;
     git_oid commitOid;
 
     try
@@ -565,9 +565,52 @@ bool GBL_Repository::create_branch(GBL_String sBranchName, GBL_String sCommitOid
 
 }
 
+bool GBL_Repository::create_stash(GBL_String sStashMessage)
+{
+    git_oid stash_id;
+    git_signature *sig = Q_NULLPTR;
+
+    try
+    {
+        check_libgit_return(git_signature_default(&sig, m_pRepo));
+        check_libgit_return(git_stash_save(&stash_id,m_pRepo,sig,sStashMessage.toConstChar(),GIT_STASH_DEFAULT));
+
+    } catch (GBL_RepositoryException &e)
+    {
+
+    }
+
+    if (sig) git_signature_free(sig);
+
+    return m_iErrorCode >= 0;
+}
+bool GBL_Repository::apply_stash(size_t index)
+{
+    try
+    {
+        check_libgit_return(git_stash_apply(m_pRepo, index, Q_NULLPTR));
+    }
+    catch (GBL_RepositoryException &e)
+    {
+
+    }
+    return m_iErrorCode >= 0;
+}
+bool GBL_Repository::delete_stash(size_t index)
+{
+    try
+    {
+        check_libgit_return(git_stash_drop(m_pRepo, index));
+    }
+    catch (GBL_RepositoryException &e)
+    {
+    }
+    return m_iErrorCode >= 0;
+}
+
 bool GBL_Repository::get_upstream_branch_name(GBL_String sBranchName, GBL_String &sUpstreamBranchName)
 {
-    git_reference *ref = NULL, *upStreamRef = NULL;
+    git_reference *ref = Q_NULLPTR, *upStreamRef = Q_NULLPTR;
     const char *sUpStreamName;
 
     try
@@ -587,7 +630,7 @@ bool GBL_Repository::get_upstream_branch_name(GBL_String sBranchName, GBL_String
 
 bool GBL_Repository::set_upstream_branch(GBL_String sBranch, GBL_String sUpstreamBranch)
 {
-    git_reference *pBranchRef = NULL;
+    git_reference *pBranchRef = Q_NULLPTR;
     GBL_String sLocalBranch = "refs/heads/";
     sLocalBranch += sBranch;
     try
@@ -608,9 +651,9 @@ bool GBL_Repository::set_upstream_branch(GBL_String sBranch, GBL_String sUpstrea
 
 bool GBL_Repository::get_ahead_behind_count(GBL_String sBranchName, int &ahead, int &behind)
 {
-    git_reference *ref = NULL, *upStreamRef = NULL;
+    git_reference *ref = Q_NULLPTR, *upStreamRef = Q_NULLPTR;
     const char *sUpStreamName;
-    git_remote *remote = NULL;
+    git_remote *remote = Q_NULLPTR;
     git_remote_callbacks callbacks = GIT_REMOTE_CALLBACKS_INIT;
 
     git_oid local_oid, upstream_oid;
@@ -662,12 +705,15 @@ bool GBL_Repository::get_ahead_behind_count(GBL_String sBranchName, int &ahead, 
 void GBL_Repository::init_ref_items()
 {
     GBL_RefItem *pChildRef = new GBL_RefItem(QString("heads"),QString(),m_pRefRoot);
+    pChildRef->setType(GBL_RefItem::LOCAL);
     pChildRef->setName(tr("Branches"));
     m_pRefRoot->addChild(pChildRef);
     pChildRef = new GBL_RefItem(QString("remotes"),QString(),m_pRefRoot);
+    pChildRef->setType(GBL_RefItem::REMOTE);
     pChildRef->setName(tr("Remotes"));
     m_pRefRoot->addChild(pChildRef);
     pChildRef = new GBL_RefItem(QString("tags"),QString(),m_pRefRoot);
+    pChildRef->setType(GBL_RefItem::TAG_PARENT);
     pChildRef->setName(tr("Tags"));
     m_pRefRoot->addChild(pChildRef);
     pChildRef = new GBL_RefItem(QString("stashes"),QString(),m_pRefRoot);
@@ -686,7 +732,8 @@ bool GBL_Repository:: fill_references()
     init_ref_items();
 
     QString sRef;
-    for (int i=0; i < refs.count; i++)
+    GBL_RefItem::TYPE eType;
+    for (size_t i=0; i < refs.count; i++)
     {
         //qDebug() << refs.strings[i];
        sRef = refs.strings[i];
@@ -698,12 +745,32 @@ bool GBL_Repository:: fill_references()
            {
                QString sReference;
                QString sKey = refPieces.at(i);
+
+               switch(pRef->getType())
+               {
+                    case GBL_RefItem::LOCAL:
+                    case GBL_RefItem::LOCAL_BRANCH:
+                        eType = GBL_RefItem::LOCAL_BRANCH;
+                        break;
+
+                    case GBL_RefItem::REMOTE:
+                    case GBL_RefItem::REMOTE_BRANCH:
+                        eType = GBL_RefItem::REMOTE_BRANCH;
+                        break;
+
+                    case GBL_RefItem::TAG_PARENT:
+                    case GBL_RefItem::TAG:
+                        eType = GBL_RefItem::TAG;
+                        break;
+               }
                GBL_RefItem *pChildRef;
                pChildRef = pRef->findChild(sKey);
                if (!pChildRef)
                {
                    if (i == refPieces.size()-1) sReference = sRef;
                    pChildRef = new GBL_RefItem(sKey,sReference, pRef);
+
+                   pChildRef->setType(eType);
                    pRef->addChild(pChildRef);
                }
                pRef = pChildRef;
@@ -734,6 +801,7 @@ int GBL_Repository::stash_cb(size_t index, const char *message, const int *stash
     GBL_RefItem *pRef = (GBL_RefItem*)payload;
     GBL_RefItem *pChildRef = new GBL_RefItem(QString::number(*stash_id),QString(),pRef);
     pChildRef->setName(message);
+    pChildRef->setType(GBL_RefItem::STASH);
     pRef->addChild(pChildRef);
 
     return 0;
@@ -939,11 +1007,11 @@ bool GBL_Repository::index_unstage(QStringList *pList)
 
 bool GBL_Repository::commit_index(GBL_String sMessage)
 {
-    git_index *index = NULL;
-    git_signature *sig = NULL;
+    git_index *index = Q_NULLPTR;
+    git_signature *sig = Q_NULLPTR;
     git_oid tree_id, commit_id, head_id;
-    git_tree *tree = NULL;
-    git_commit *parent = NULL;
+    git_tree *tree = Q_NULLPTR;
+    git_commit *parent = Q_NULLPTR;
 
     try
     {
@@ -1563,6 +1631,7 @@ GBL_RefItem& GBL_RefItem::operator=(GBL_RefItem &ref)
     m_sKey = ref.getKey();
     m_sName = ref.getName();
     m_sRef = ref.getRef();
+    m_eType = ref.getType();
 
     for (int i=0; i < ref.getChildCount(); i++)
     {

@@ -27,7 +27,7 @@ BookmarksDock::BookmarksDock(const QString &title, QWidget *parent, Qt::WindowFl
 void BookmarksDock::addBookmark(QString sName,QString sPath)
 {
     BookmarkTreeView *pTreeView = m_pBmSa->getTreeView();
-    BookmarksModel *pModel = (BookmarksModel*)pTreeView->model();
+    BookmarksModel *pModel = dynamic_cast<BookmarksModel*>(pTreeView->model());
 
     pModel->addBookmark(sName,sPath);
 }
@@ -37,7 +37,7 @@ void BookmarksDock::deleteBookmark()
     if (QMessageBox::question(this, tr("Delete Bookmark?"), tr("Are you sure you want to delete the bookmark?")) == QMessageBox::Yes)
     {
         BookmarkTreeView *pTreeView = m_pBmSa->getTreeView();
-        BookmarksModel *pModel = (BookmarksModel*)pTreeView->model();
+        BookmarksModel *pModel = dynamic_cast<BookmarksModel*>(pTreeView->model());
 
         QModelIndexList mil = pTreeView->selectionModel()->selectedRows();
         for (int i=0; i < mil.size(); i++)

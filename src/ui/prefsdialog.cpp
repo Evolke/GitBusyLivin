@@ -7,13 +7,14 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QCheckBox>
 #include <QPushButton>
 #include <QTreeWidget>
 #include <QStackedWidget>
 #include <QDebug>
 #include <QComboBox>
 #include <QGroupBox>
+#include <QCheckBox>
+#include <QSpinBox>
 #include <QToolBar>
 
 
@@ -21,28 +22,16 @@
  * @brief PrefsDialog::PrefsDialog
  * @param parent
  */
-PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
+PrefsDialog::PrefsDialog(QWidget *parent) : GBLDialog(parent)
 {
-    int nWidth = 600;
-    int nHeight = 300;
-    if (parent != NULL)
-        setGeometry(parent->x() + parent->width()/2 - nWidth/2,
-            parent->y() + parent->height()/2 - nHeight/2,
-            nWidth, nHeight);
-    else
-        resize(nWidth, nHeight);
-
-    QDialogButtonBox *pOkCancel = new QDialogButtonBox(QDialogButtonBox::Ok
-                                         | QDialogButtonBox::Cancel);
-    connect(pOkCancel, &QDialogButtonBox::accepted, this, &QDialog::accept);
-    connect(pOkCancel, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    init(600,300,parent);
 
     QGridLayout *mainLayout = new QGridLayout(this);
     m_pTabs = new QTreeWidget(this);
     m_pTabs->setIconSize(QSize(16, 16));
     m_pTabs->setHeaderHidden(true);
     m_pTabs->setIndentation(0);
-    setContentsMargins(5,5,5,5);
+
     //m_pTabs->setMovement(QListView::Static);
     m_pTabs->setMaximumWidth(150);
     //m_pTabs->setSpacing(5);
@@ -53,9 +42,9 @@ PrefsDialog::PrefsDialog(QWidget *parent) : QDialog(parent)
     m_pPages = new QStackedWidget(this);
     m_pPages->addWidget(new GeneralPrefsPage(this));
     m_pPages->addWidget(new UIPrefsPage(this));
-    mainLayout->addWidget(m_pTabs,0,0,0,1);
+    mainLayout->addWidget(m_pTabs,0,0);
     mainLayout->addWidget(m_pPages,0,1);
-    mainLayout->addWidget(pOkCancel,1,1, Qt::AlignBottom);
+    mainLayout->addWidget(m_pBtnBox,1,1,1,1, Qt::AlignBottom);
     mainLayout->setMargin(5);
     createTreeItems();
     //m_pTabs->setCurrentRow(0);
@@ -73,7 +62,7 @@ void PrefsDialog::changePage(QTreeWidgetItem *current, QTreeWidgetItem *previous
 
 void PrefsDialog::changeTheme(const QString &text)
 {
-    MainWindow *pMain = (MainWindow*)parentWidget();
+    MainWindow *pMain = dynamic_cast<MainWindow*>(parentWidget());
     pMain->setTheme(text);
 }
 
@@ -83,7 +72,7 @@ void PrefsDialog::changeTheme(const QString &text)
 void PrefsDialog::createTreeItems()
 {
     QTreeWidgetItem *configButton = new QTreeWidgetItem(m_pTabs);
-    UrlPixmap svgPm(NULL);
+    UrlPixmap svgPm(Q_NULLPTR);
     QColor txtClr = parentWidget()->palette().color(QPalette::Text);
     QString sBorderClr = txtClr.name(QColor::HexRgb);
     //qDebug() << sBorderClr;
@@ -108,41 +97,42 @@ void PrefsDialog::createTreeItems()
 
 void PrefsDialog::setConfigMap(GBL_Config_Map *pMap)
 {
-    GeneralPrefsPage *pPage = (GeneralPrefsPage*)m_pPages->widget(0);
+    GeneralPrefsPage *pPage = dynamic_cast<GeneralPrefsPage*>(m_pPages->widget(0));
     pPage->setName(pMap->value("global.user.name"));
     pPage->setEmail(pMap->value("global.user.email"));
 }
 
 void PrefsDialog::getConfigMap(GBL_Config_Map *pMap)
 {
-    GeneralPrefsPage *pPage = (GeneralPrefsPage*)m_pPages->widget(0);
+    GeneralPrefsPage *pPage = dynamic_cast<GeneralPrefsPage*>(m_pPages->widget(0));
 
     pMap->insert("user.name", pPage->getName());
     pMap->insert("user.email", pPage->getEmail());
 }
 
-int PrefsDialog::getUIToolbarButtonType()
-{
-    UIPrefsPage *pPage = (UIPrefsPage*)m_pPages->widget(1);
-
-    QComboBox *pTBBox = pPage->getToolbarCombo();
-
-    return pTBBox->currentIndex();
-}
-
 void PrefsDialog::setAutoFetch(bool bAutoFetch, int nAutoFetchInterval)
 {
-    GeneralPrefsPage *pPage = (GeneralPrefsPage*)m_pPages->widget(0);
+    GeneralPrefsPage *pPage = dynamic_cast<GeneralPrefsPage*>(m_pPages->widget(0));
     pPage->setAutoFetch(bAutoFetch);
     pPage->setAutoFetchInterval(nAutoFetchInterval);
 }
 
 void PrefsDialog::getAutoFetch(bool &bAutoFetch, int &nAutoFetchInterval)
 {
-    GeneralPrefsPage *pPage = (GeneralPrefsPage*)m_pPages->widget(0);
+    GeneralPrefsPage *pPage = dynamic_cast<GeneralPrefsPage*>(m_pPages->widget(0));
     bAutoFetch = pPage->getAutoFetch();
     nAutoFetchInterval = pPage->getAutoFetchInterval();
 }
+
+int PrefsDialog::getUIToolbarButtonType()
+{
+    UIPrefsPage *pPage = dynamic_cast<UIPrefsPage*>(m_pPages->widget(1));
+
+    QComboBox *pTBBox = pPage->getToolbarCombo();
+
+    return pTBBox->currentIndex();
+}
+
 /******************* GeneralPrefsPage ***************/
 GeneralPrefsPage::GeneralPrefsPage(QWidget *parent) : QWidget(parent)
 {
@@ -151,6 +141,12 @@ GeneralPrefsPage::GeneralPrefsPage(QWidget *parent) : QWidget(parent)
     m_pNameEdit = new QLineEdit();
     QLabel *pEmailLabel = new QLabel(tr("Email Address:"));
     m_pEmailEdit = new QLineEdit();
+    QLabel *pAutoFetchLabel = new QLabel(tr("Auto Fetch Interval:"));
+    m_pAutoFetchCB = new QCheckBox();
+    m_pAutoFetchCB->setMaximumWidth(20);
+    m_pAutoFetchSB = new QSpinBox();
+    m_pAutoFetchSB->setMaximumWidth(80);
+    m_pAutoFetchSB->setRange(1,100);
 
     QGroupBox *pGGUBox = new QGroupBox(tr("Goblal Git User"));
     QGridLayout *pGGULayout = new QGridLayout();
@@ -161,22 +157,14 @@ GeneralPrefsPage::GeneralPrefsPage(QWidget *parent) : QWidget(parent)
     pGGUBox->setLayout(pGGULayout);
     QVBoxLayout *mainLayout = new QVBoxLayout();
     mainLayout->addWidget(pGGUBox);
-    m_pAutoFetchCB = new QCheckBox();
-    m_pAutoFetchCB->setTristate(false);
-    m_pAutoFetchCB->setMaximumWidth(20);
-    QLabel *pAutoFetch = new QLabel(tr("Auto Fetch"));
-    pAutoFetch->setMaximumWidth(80);
-    m_pAutoFetchEdit = new QLineEdit();
-    m_pAutoFetchEdit->setMaximumWidth(50);
-    m_pAutoFetchEdit->setValidator(new QIntValidator());
-    QLabel *pAFMins = new QLabel(tr("Minutes"));
-    QGridLayout *pAFLayout = new QGridLayout();
-    pAFLayout->addWidget(m_pAutoFetchCB,0,0);
-    pAFLayout->addWidget(pAutoFetch,0,1);
-    pAFLayout->addWidget(m_pAutoFetchEdit,0,2);
-    pAFLayout->addWidget(pAFMins,0,3);
+    QHBoxLayout *pAFLayout = new QHBoxLayout();
+    pAFLayout->addWidget(m_pAutoFetchCB);
+    pAFLayout->addWidget(pAutoFetchLabel);
+    pAFLayout->addWidget(m_pAutoFetchSB);
+    pAFLayout->addSpacing(180);
     mainLayout->addLayout(pAFLayout);
-    mainLayout->addSpacing(50);
+    mainLayout->addSpacing(60);
+
     setLayout(mainLayout);
 }
 
@@ -202,25 +190,23 @@ void GeneralPrefsPage::setEmail(QString sEmail)
 
 bool GeneralPrefsPage::getAutoFetch()
 {
-    return m_pAutoFetchCB->checkState() == Qt::Checked;
+    return m_pAutoFetchCB->isChecked();
 }
 
 void GeneralPrefsPage::setAutoFetch(bool bAutoFetch)
 {
-   Qt::CheckState cs = bAutoFetch ? Qt::Checked : Qt::Unchecked;
-   m_pAutoFetchCB->setCheckState(cs);
+    m_pAutoFetchCB->setChecked(bAutoFetch);
 }
 
 int GeneralPrefsPage::getAutoFetchInterval()
 {
-    return m_pAutoFetchEdit->text().toInt();
+    return m_pAutoFetchSB->value();
 }
 
 void GeneralPrefsPage::setAutoFetchInterval(int nAutoFetchInterval)
 {
-    m_pAutoFetchEdit->setText(QString::number(nAutoFetchInterval));
+    m_pAutoFetchSB->setValue(nAutoFetchInterval);
 }
-
 /******************* UIPrefsPage ***************/
 UIPrefsPage::UIPrefsPage(QWidget *parent) : QWidget(parent)
 {

@@ -303,6 +303,53 @@ ToolbarCombo::drop-down {
     border: none;
 }
 
+QSpinBox {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 3px 20px 3px 5px;
+    background: #ddd;
+    color: #333;
+}
+
+QSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+
+    width: 16px;
+    border-left-width: 1px;
+    border-color: #ccc;
+    border-style: solid;
+
+}
+
+QSpinBox::up-button:pressed, QSpinBox::down-button:pressed {
+    background-color: #eee;
+}
+
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 16px;
+    border-left-width: 1;
+    border-top-width: 1;
+    border-color: #ccc;
+    border-style: solid;
+}
+
+
+QSpinBox::up-arrow {
+    image: url(:/images/dark_up_arrow.png);
+    width: 8px;
+    height: 4px;
+}
+
+
+QSpinBox::down-arrow {
+    image: url(:/images/dark_down_arrow.png);
+    width: 8px;
+    height: 4px;
+}
+
 QGroupBox {
     border: 1px solid #555;
     border-radius: 8px;
@@ -400,6 +447,19 @@ QTabBar::tab {
     background-color: #CCCCCC;
     border: 1px solid #555;
     padding: 5px;
+}
+
+QProgressBar {
+    border: 1px solid #888888;
+    /*border-radius: 5px;*/
+    background: #cccccc;
+    outline: none;
+}
+
+QProgressBar::chunk {
+    background-color: #080;
+    width: 10px;
+    margin: 0;
 }
 
 ContentfView {

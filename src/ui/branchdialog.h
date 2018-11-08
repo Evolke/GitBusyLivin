@@ -1,14 +1,15 @@
 #ifndef BRANCHDIALOG_H
 #define BRANCHDIALOG_H
 
-#include <QDialog>
-#include <QDialogButtonBox>
+#include "gbldialog.h"
 
+QT_BEGIN_NAMESPACE
 class QLineEdit;
 class QPushButton;
+class QDialogButtonBox;
 QT_END_NAMESPACE
 
-class BranchDialog : public QDialog
+class BranchDialog : public GBLDialog
 {
     Q_OBJECT
 public:
@@ -22,9 +23,7 @@ public slots:
     void nameEdited();
 
 private:
-    QDialogButtonBox *m_pBtnBox;
     QLineEdit *m_pBrnchEdit;
-    QPushButton *m_pOkBtn;
 
 };
 

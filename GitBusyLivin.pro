@@ -42,7 +42,9 @@ SOURCES += src/main.cpp\
     src/ui/scanmdichild.cpp \
     src/ui/optionsmenubutton.cpp \
     src/ui/bookmarksdock.cpp \
-    src/ui/branchdialog.cpp
+    src/ui/branchdialog.cpp \
+    src/ui/gbldialog.cpp \
+    src/ui/stashdialog.cpp
 
 HEADERS  += src/ui/mainwindow.h \
     src/gbl/gbl_repository.h \
@@ -73,7 +75,9 @@ HEADERS  += src/ui/mainwindow.h \
     src/ui/scanmdichild.h \
     src/ui/optionsmenubutton.h \
     src/ui/bookmarksdock.h \
-    src/ui/branchdialog.h
+    src/ui/branchdialog.h \
+    src/ui/gbldialog.h \
+    src/ui/stashdialog.h
 
 RESOURCES += \
     resources/gitbusylivin.qrc

@@ -4,33 +4,18 @@
 #include <QGridLayout>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QDialogButtonBox>
 
 
-BranchDialog::BranchDialog(QWidget *parent) : QDialog(parent)
+BranchDialog::BranchDialog(QWidget *parent) : GBLDialog(parent)
 {
-    int nWidth = 500;
-    int nHeight = 200;
-    if (parent != NULL)
-    {
-        setGeometry(parent->x() + parent->width()/2 - nWidth/2,
-            parent->y() + parent->height()/2 - nHeight/2,
-            nWidth, nHeight);
-    }
-    else
-    {
-        resize(nWidth, nHeight);
-    }
+    init(500,100, parent);
 
     QLabel *pBrnchLabel = new QLabel(tr("Branch Name:"));
     m_pBrnchEdit = new QLineEdit();
-    m_pBtnBox = new QDialogButtonBox(QDialogButtonBox::Ok
-                                         | QDialogButtonBox::Cancel);
 
-    m_pOkBtn = m_pBtnBox->button(QDialogButtonBox::Ok);
     m_pOkBtn->setText(tr("Create"));
     m_pOkBtn->setDisabled(true);
-    connect(m_pBtnBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
-    connect(m_pBtnBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(m_pBrnchEdit, &QLineEdit::editingFinished, this, &BranchDialog::nameEdited);
     QGridLayout *mainLayout = new QGridLayout(this);
     //flay->addRow(pSrcLabel, pSrcEdit);

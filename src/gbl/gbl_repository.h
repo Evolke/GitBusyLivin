@@ -86,10 +86,12 @@ class GBL_RepositoryException : QException
 class GBL_RefItem
 {
 public:
-    explicit GBL_RefItem(QString sKey, QString sRef, GBL_RefItem *pParent = NULL);
+    explicit GBL_RefItem(QString sKey, QString sRef, GBL_RefItem *pParent = Q_NULLPTR);
     ~GBL_RefItem();
 
     void cleanup();
+
+    enum TYPE { LOCAL=1, LOCAL_BRANCH=2, REMOTE=3, REMOTE_BRANCH=4, TAG_PARENT=5, TAG=6, STASH=7 };
 
     void addChild(GBL_RefItem *pRef);
     GBL_RefItem* findChild(QString sKey);
@@ -105,6 +107,8 @@ public:
     void setName(QString sName) { m_sName = sName; }
     QIcon* getIcon() { return m_pIcon; }
     void setIcon(QIcon *pIcon) { m_pIcon = pIcon; }
+    TYPE getType() { return m_eType; }
+    void setType(TYPE eType) { m_eType = eType; }
 
     GBL_RefItem &operator=(GBL_RefItem &);
 
@@ -115,6 +119,7 @@ private:
     GBL_Ref_Children m_refChildren;
     GBL_RefItem *m_pParentRef;
     QIcon *m_pIcon;
+    TYPE m_eType;
 };
 
 
@@ -156,6 +161,9 @@ public:
     bool pull_remote(GBL_String sRemote, GBL_String sBranch);
     bool push_to_remote(GBL_String sRemote, GBL_String sBranch);
     bool checkout_branch(GBL_String sBranchName);
+    bool create_stash(GBL_String sStashMessage);
+    bool apply_stash(size_t index);
+    bool delete_stash(size_t index);
 
     bool fill_references();
     bool fill_stashes();

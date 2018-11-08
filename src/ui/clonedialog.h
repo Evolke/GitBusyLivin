@@ -1,7 +1,7 @@
 #ifndef CLONEDIALOG_H
 #define CLONEDIALOG_H
 
-#include <QDialog>
+#include "gbldialog.h"
 
 QT_BEGIN_NAMESPACE
 class QDialogButtonBox;
@@ -11,7 +11,7 @@ class QLabel;
 class QPushButton;
 QT_END_NAMESPACE
 
-class CloneDialog : public QDialog
+class CloneDialog : public GBLDialog
 {
     Q_OBJECT
 public:
@@ -33,10 +33,8 @@ private slots:
 private:
     void validate();
 
-    QDialogButtonBox *m_pBtnBox;
     QLineEdit *m_pSrcEdit, *m_pDstEdit;
     QLabel *m_pSrcValidateLabel, *m_pDstValidateLabel;
-    QPushButton *m_pOkBtn;
     GBL_Repository *m_pRepo;
 };
 

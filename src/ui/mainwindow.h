@@ -87,6 +87,8 @@ public slots:
     void openBookmarkDoubleClick(const QModelIndex &index);
     void addBookmark();
     void onCreateBranch();
+    void onApplyStash();
+    void onDeleteStash();
 
 private slots:
     void about();
@@ -100,6 +102,7 @@ private slots:
     void pushAction();
     void pullAction();
     void fetchAction();
+    void stashAction();
     void sslVersion();
     void libgit2Version();
     void progressTest();

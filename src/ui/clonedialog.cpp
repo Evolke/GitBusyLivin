@@ -18,22 +18,9 @@
  * @brief CloneDialog::CloneDialog
  * @param parent
  */
-CloneDialog::CloneDialog(QWidget *parent) : QDialog(parent)
+CloneDialog::CloneDialog(QWidget *parent) : GBLDialog(parent)
 {
-    int nWidth = 500;
-    int nHeight = 200;
-    if (parent != NULL)
-    {
-        setGeometry(parent->x() + parent->width()/2 - nWidth/2,
-            parent->y() + parent->height()/2 - nHeight/2,
-            nWidth, nHeight);
-        m_pRepo = ((MainWindow*)parent)->getRepo();
-    }
-    else
-    {
-        m_pRepo = NULL;
-        resize(nWidth, nHeight);
-    }
+    init(500,200,parent);
 
     QLabel *pSrcLabel = new QLabel(tr("Source:"));
     m_pSrcEdit = new QLineEdit();
@@ -41,14 +28,8 @@ CloneDialog::CloneDialog(QWidget *parent) : QDialog(parent)
     m_pDstEdit = new QLineEdit();
     QPushButton *pSrcBtn = new QPushButton(tr("..."));
     QPushButton *pDstBtn = new QPushButton(tr("..."));
-    m_pBtnBox = new QDialogButtonBox(QDialogButtonBox::Ok
-                                         | QDialogButtonBox::Cancel);
-
-    m_pOkBtn = m_pBtnBox->button(QDialogButtonBox::Ok);
     m_pOkBtn->setText(tr("Clone"));
     m_pOkBtn->setDisabled(true);
-    connect(m_pBtnBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
-    connect(m_pBtnBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(pSrcBtn,&QPushButton::clicked, this, &CloneDialog::clickedSourceBrowse);
     connect(pDstBtn,&QPushButton::clicked, this, &CloneDialog::clickedDestinationBrowse);
     connect(m_pSrcEdit, &QLineEdit::editingFinished, this, &CloneDialog::sourceEdited);
