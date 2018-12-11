@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=GitBusyLivin
+Type=Application
+Icon=gitbusylivin
+Exec=gitbusylivin
+Comment=A Qt git client using libgit2
+Categories=Development;IDE;
+Keywords=Git;
+StartupNotify=true
+Terminal=false
