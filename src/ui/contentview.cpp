@@ -114,7 +114,7 @@ void ContentView::setDiffFromLines(GBL_File_Item *pFileItem)
     QString sHtml("<html><body style=\'margin:0;padding:0;\'><table cellpadding=\'2\' cellspacing=\'0\' >");
     for (int i = 0; i < m_Content_arr.size(); i++)
     {
-        GBL_Line_Item *pLI = (GBL_Line_Item*)m_Content_arr.at(i);
+        GBL_Line_Item *pLI = dynamic_cast<GBL_Line_Item*>(m_Content_arr.at(i));
         htmlContent = pLI->content.toHtmlEscaped();
         sHtml += "<tr>";
         sHtml += "<td ";

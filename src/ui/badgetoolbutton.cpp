@@ -29,7 +29,7 @@ void BadgeToolButton::paintEvent(QPaintEvent *event)
             iconAreaWidth += 8;
         }
 
-        int badgeLeft = iconAreaWidth/2 - badgeSize.width()/2;
+        int badgeLeft = 0;//iconAreaWidth/2 - badgeSize.width()/2;
         switch (m_nArrowType)
         {
             case 1:

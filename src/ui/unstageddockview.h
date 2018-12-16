@@ -17,7 +17,7 @@ class UnstagedButton : public QToolButton
 {
     Q_OBJECT
 public:
-    explicit UnstagedButton(const QString &text, QWidget *parent = Q_NULLPTR, int nMinWidthWithText=0);
+    explicit UnstagedButton(const QString &text, QWidget *parent = Q_NULLPTR);
 
 private slots:
     virtual void resizeEvent(QResizeEvent *event);

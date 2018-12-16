@@ -377,7 +377,7 @@ bool GBL_Repository::push_to_remote(GBL_String sRemote, GBL_String sBranch)
         check_libgit_return(git_remote_lookup(&pRemote, m_pRepo, sRemote.toConstChar()));
 
          // connect to remote
-         //check_libgit_return(git_remote_connect(pRemote, GIT_DIRECTION_PUSH, NULL, NULL, NULL));
+         //check_libgit_return(git_remote_connect(pRemote, GIT_DIRECTION_PUSH, Q_NULLPTR, Q_NULLPTR, Q_NULLPTR));
          //git_remote_get_push_refspecs(&refspecs,(const git_remote*)pRemote);
          // add a push refspec
          //check_libgit_return(git_remote_add_push(m_pRepo, sRemote.toConstChar(), sRefspec.toConstChar()));
@@ -467,14 +467,14 @@ bool GBL_Repository::pull_remote(GBL_String sRemote, GBL_String sBranch)
 
 bool GBL_Repository::fetch_remote(GBL_String sRemote)
 {
-    git_remote *remote = NULL;
+    git_remote *remote = Q_NULLPTR;
     git_fetch_options options = GIT_FETCH_OPTIONS_INIT;
 
     try
     {
         check_libgit_return(git_remote_lookup(&remote, m_pRepo, sRemote.toConstChar()));
 
-        check_libgit_return(git_remote_fetch(remote,NULL,&options,NULL));
+        check_libgit_return(git_remote_fetch(remote,Q_NULLPTR,&options,Q_NULLPTR));
     }
     catch (GBL_RepositoryException &e)
     {
@@ -488,7 +488,7 @@ bool GBL_Repository::fetch_remote(GBL_String sRemote)
 
 bool GBL_Repository::checkout_branch(GBL_String sBranchName)
 {
-    git_object *pTreeObj = NULL;
+    git_object *pTreeObj = Q_NULLPTR;
     git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
     opts.checkout_strategy = GIT_CHECKOUT_SAFE;
 
@@ -540,12 +540,12 @@ bool GBL_Repository::create_branch(GBL_String sBranchName, GBL_String sCommitOid
         if (sCommitOid.isEmpty())
         {
             check_libgit_return(git_repository_head(&pHeadRef, m_pRepo));
-            check_libgit_return(git_reference_peel((git_object**)&pBranchCommit, pHeadRef, GIT_OBJ_COMMIT));
+            check_libgit_return(git_reference_peel(reinterpret_cast<git_object**>(&pBranchCommit), pHeadRef, GIT_OBJ_COMMIT));
         }
         else
         {
             check_libgit_return(git_oid_fromstr(&commitOid, sCommitOid.toConstChar()));
-            check_libgit_return(git_commit_lookup(&pBranchCommit, m_pRepo, (const git_oid*)&commitOid));
+            check_libgit_return(git_commit_lookup(&pBranchCommit, m_pRepo, const_cast<git_oid*>(&commitOid)));
         }
 
         if (pBranchCommit)
@@ -677,7 +677,7 @@ bool GBL_Repository::get_ahead_behind_count(GBL_String sBranchName, int &ahead, 
         int nRemote = git_reference_name_to_id(&upstream_oid, m_pRepo, sRemoteRef.toConstChar());
 
         check_libgit_return(git_remote_lookup(&remote, m_pRepo, sRemote.toConstChar()));
-        //check_libgit_return(git_remote_connect(remote, GIT_DIRECTION_FETCH, &callbacks, NULL, NULL));
+        //check_libgit_return(git_remote_connect(remote, GIT_DIRECTION_FETCH, &callbacks, Q_NULLPTR, Q_NULLPTR));
         git_graph_ahead_behind(&iAhead, &iBehind, m_pRepo, &local_oid, &upstream_oid);
         ahead = iAhead;
         behind = iBehind;
@@ -897,7 +897,7 @@ bool GBL_Repository::get_history(GBL_History_Array *io_pHistArr)
 
 bool GBL_Repository::add_to_index(QStringList *pList)
 {
-    git_index *index = NULL;
+    git_index *index = Q_NULLPTR;
     git_strarray array = {0};
 
     try
@@ -916,7 +916,7 @@ bool GBL_Repository::add_to_index(QStringList *pList)
             array.strings[i] = (char*)g_temp_balist.at(i).data();
         }
 
-        git_index_add_all(index,&array,0, (git_index_matched_path_cb)staged_cb,NULL);
+        git_index_add_all(index,&array,0, (git_index_matched_path_cb)staged_cb,Q_NULLPTR);
         git_index_write(index);
     }
     catch(GBL_RepositoryException &e)
@@ -938,7 +938,7 @@ int GBL_Repository::staged_cb(const char *path, const char *matched_pathspec, vo
 
 bool GBL_Repository::remove_from_index(QStringList *pList)
 {
-    git_index *index = NULL;
+    git_index *index = Q_NULLPTR;
     git_strarray array = {0};
 
     try
@@ -957,7 +957,7 @@ bool GBL_Repository::remove_from_index(QStringList *pList)
             array.strings[i] = (char*)g_temp_balist.at(i).data();
         }
 
-        git_index_remove_all(index, &array, NULL, NULL);
+        git_index_remove_all(index, &array, Q_NULLPTR, Q_NULLPTR);
         git_index_write(index);
     }
     catch(GBL_RepositoryException &e)
@@ -973,8 +973,8 @@ bool GBL_Repository::remove_from_index(QStringList *pList)
 bool GBL_Repository::index_unstage(QStringList *pList)
 {
     git_strarray farr = {0};
-    git_reference *head = NULL;
-    git_object *head_obj = NULL;
+    git_reference *head = Q_NULLPTR;
+    git_object *head_obj = Q_NULLPTR;
 
     farr.count = pList->size();
     farr.strings = (char**)::malloc(sizeof(char*) * farr.count);
@@ -1028,7 +1028,7 @@ bool GBL_Repository::commit_index(GBL_String sMessage)
         }
         else
         {
-            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, NULL, sMessage.toConstChar(), tree, 0));
+            check_libgit_return(git_commit_create_v(&commit_id, m_pRepo, "HEAD", sig, sig, Q_NULLPTR, sMessage.toConstChar(), tree, 0));
         }
     }
     catch(GBL_RepositoryException &e)
@@ -1057,8 +1057,8 @@ bool GBL_Repository::get_tree_from_commit_oid(GBL_String oid_str, GBL_File_Array
    const char* str;
    if (oid_str.isEmpty())
    {
-       git_reference *head_ref = NULL;
-       git_object *head_obj = NULL;
+       git_reference *head_ref = Q_NULLPTR;
+       git_object *head_obj = Q_NULLPTR;
        try
        {
            check_libgit_return(git_reference_dwim(&head_ref,m_pRepo, "HEAD"));
@@ -1079,8 +1079,8 @@ bool GBL_Repository::get_tree_from_commit_oid(GBL_String oid_str, GBL_File_Array
    }
    if (m_iErrorCode >= 0)
    {
-        git_tree *pTree = NULL;
-        git_commit *pCommit = NULL;
+        git_tree *pTree = Q_NULLPTR;
+        git_commit *pCommit = Q_NULLPTR;
         m_iErrorCode = git_commit_lookup(&pCommit, m_pRepo, &oid);
         if (m_iErrorCode >= 0)
         {
@@ -1100,7 +1100,7 @@ bool GBL_Repository::get_tree_from_commit_oid(GBL_String oid_str, GBL_File_Array
 bool GBL_Repository::get_blob_content(GBL_String oid_str, QString& content)
 {
     const char* str = oid_str.toConstChar();
-    git_blob *blob = NULL;
+    git_blob *blob = Q_NULLPTR;
     git_oid oid;
 
     try
@@ -1129,7 +1129,7 @@ bool GBL_Repository::get_blob_content(GBL_String oid_str, QString& content)
  */
 void GBL_Repository::tree_walk(const git_oid *pTroid, GBL_File_Array *pHistFileArr)
 {
-    git_tree *pTree = NULL;
+    git_tree *pTree = Q_NULLPTR;
     m_iErrorCode = git_tree_lookup(&pTree, m_pRepo, pTroid);
     if (m_iErrorCode >= 0)
     {
@@ -1137,7 +1137,7 @@ void GBL_Repository::tree_walk(const git_oid *pTroid, GBL_File_Array *pHistFileA
         twp.file_arr = pHistFileArr;
         twp.repo = this;
 
-        m_iErrorCode = git_tree_walk(pTree, GIT_TREEWALK_POST, (git_treewalk_cb)tree_walk_callback, &twp);
+        m_iErrorCode = git_tree_walk(pTree, GIT_TREEWALK_POST, reinterpret_cast<git_treewalk_cb>(tree_walk_callback), &twp);
         git_tree_free(pTree);
     }
 }
@@ -1156,7 +1156,7 @@ int GBL_Repository::tree_walk_callback(const char *root, const git_tree_entry *e
     git_otype type = git_tree_entry_type(entry);
     //qDebug() << "type:" << type;
 
-    GBL_Tree_Walk_Payload *ptwp = (GBL_Tree_Walk_Payload*)payload;
+    GBL_Tree_Walk_Payload *ptwp = reinterpret_cast<GBL_Tree_Walk_Payload*>(payload);
     GBL_File_Array *pHistFileArr = ptwp->file_arr;
 
     if (type == GIT_OBJ_BLOB)
@@ -1217,8 +1217,8 @@ bool GBL_Repository::get_commit_to_parent_diff_lines(GBL_String oid_str, MainWin
 bool GBL_Repository::get_commit_to_parent_diff(GBL_String oid_str, git_diff_format_t format, git_diff_line_cb callback, void *payload, char *path)
 {
     git_oid oid;
-    git_tree *pTree = NULL, *pParentTree = NULL;
-    git_commit *pCommit = NULL, *pParentCommit = NULL;
+    git_tree *pTree = Q_NULLPTR, *pParentTree = Q_NULLPTR;
+    git_commit *pCommit = Q_NULLPTR, *pParentCommit = Q_NULLPTR;
     int nParentCount;
     git_diff_options diffopts = GIT_DIFF_OPTIONS_INIT;
     if (path)
@@ -1227,7 +1227,7 @@ bool GBL_Repository::get_commit_to_parent_diff(GBL_String oid_str, git_diff_form
         diffopts.pathspec.count = 1;
     }
 
-    git_diff *pDiff = NULL;
+    git_diff *pDiff = Q_NULLPTR;
 
     const char* str = oid_str.toConstChar();
     m_iErrorCode = git_oid_fromstr(&oid, str);
@@ -1253,7 +1253,7 @@ bool GBL_Repository::get_commit_to_parent_diff(GBL_String oid_str, git_diff_form
            }
            else
            {
-               git_diff_tree_to_tree(&pDiff, m_pRepo, NULL, pTree, &diffopts);
+               git_diff_tree_to_tree(&pDiff, m_pRepo, Q_NULLPTR, pTree, &diffopts);
                git_diff_print(pDiff, format, callback, payload);
                git_diff_free(pDiff);
 
@@ -1274,7 +1274,7 @@ bool GBL_Repository::get_commit_to_parent_diff(GBL_String oid_str, git_diff_form
  */
 bool GBL_Repository::get_index_to_work_diff(MainWindow *pMain, QStringList *pList)
 {
-    git_diff *diff = NULL;
+    git_diff *diff = Q_NULLPTR;
     git_diff_options diffopts = GIT_DIFF_OPTIONS_INIT;
     if (pList && pList->size())
     {
@@ -1288,7 +1288,7 @@ bool GBL_Repository::get_index_to_work_diff(MainWindow *pMain, QStringList *pLis
             QString path = pList->at(i);
             QByteArray baPath = path.toUtf8();
             g_temp_balist.append(baPath);
-            diffopts.pathspec.strings[i] = (char*)g_temp_balist.at(i).data();
+            diffopts.pathspec.strings[i] = const_cast<char*>(g_temp_balist.at(i).data());
         }
 
         //diffopts.pathspec.count = pList->size();
@@ -1296,7 +1296,7 @@ bool GBL_Repository::get_index_to_work_diff(MainWindow *pMain, QStringList *pLis
 
     try
     {
-        check_libgit_return(git_diff_index_to_workdir(&diff, m_pRepo, NULL, &diffopts));
+        check_libgit_return(git_diff_index_to_workdir(&diff, m_pRepo, Q_NULLPTR, &diffopts));
         check_libgit_return(git_diff_print(diff, GIT_DIFF_FORMAT_PATCH, diff_print_lines_callback, pMain));
     }
     catch(GBL_RepositoryException &e)
@@ -1310,9 +1310,9 @@ bool GBL_Repository::get_index_to_work_diff(MainWindow *pMain, QStringList *pLis
 
 bool GBL_Repository::get_index_to_head_diff(MainWindow *pMain, QStringList *pList)
 {
-    git_object *obj = NULL;
-    git_diff *diff = NULL;
-    git_tree *tree = NULL;
+    git_object *obj = Q_NULLPTR;
+    git_diff *diff = Q_NULLPTR;
+    git_tree *tree = Q_NULLPTR;
     git_diff_options diffopts = GIT_DIFF_OPTIONS_INIT;
     if (pList && pList->size())
     {
@@ -1326,7 +1326,7 @@ bool GBL_Repository::get_index_to_head_diff(MainWindow *pMain, QStringList *pLis
             QString path = pList->at(i);
             QByteArray baPath = path.toUtf8();
             g_temp_balist.append(baPath);
-            diffopts.pathspec.strings[i] = (char*)g_temp_balist.at(i).data();
+            diffopts.pathspec.strings[i] = const_cast<char*>(g_temp_balist.at(i).data());
         }
 
         //diffopts.pathspec.count = pList->size();
@@ -1336,7 +1336,7 @@ bool GBL_Repository::get_index_to_head_diff(MainWindow *pMain, QStringList *pLis
     {
         check_libgit_return(git_revparse_single(&obj, m_pRepo, "HEAD^{tree}"));
         check_libgit_return(git_tree_lookup(&tree, m_pRepo, git_object_id(obj)));
-        check_libgit_return(git_diff_tree_to_index(&diff, m_pRepo, tree, NULL, &diffopts));
+        check_libgit_return(git_diff_tree_to_index(&diff, m_pRepo, tree, Q_NULLPTR, &diffopts));
         check_libgit_return(git_diff_print(diff, GIT_DIFF_FORMAT_PATCH, diff_print_lines_callback, pMain));
     }
     catch(GBL_RepositoryException &e)
@@ -1365,7 +1365,7 @@ int GBL_Repository::diff_print_files_callback(const git_diff_delta *pDelta, cons
     Q_UNUSED(pHunk);
     Q_UNUSED(pLine);
 
-    GBL_File_Array *pFileArr = (GBL_File_Array*)payload;
+    GBL_File_Array *pFileArr = reinterpret_cast<GBL_File_Array*>(payload);
 
     GBL_File_Item *pFItem = new GBL_File_Item;
     QFileInfo fi(pDelta->new_file.path);
@@ -1458,7 +1458,7 @@ int GBL_Repository::diff_print_lines_callback(const git_diff_delta *pDelta, cons
         li.line_change_type = pLine->origin;
         li.new_line_num = pLine->new_lineno;
         li.old_line_num = pLine->old_lineno;
-        MainWindow *pMain = (MainWindow*)payload;
+        MainWindow *pMain = reinterpret_cast<MainWindow*>(payload);
         pMain->addToDiffView(&li);
 
     }
@@ -1555,7 +1555,7 @@ GBL_RefItem::GBL_RefItem(QString sKey, QString sRef, GBL_RefItem *pParent)
     m_sName = sKey;
     m_sRef = sRef;
     m_pParentRef = pParent;
-    m_pIcon = NULL;
+    m_pIcon = Q_NULLPTR;
 }
 
 GBL_RefItem::~GBL_RefItem()
@@ -1588,7 +1588,7 @@ GBL_RefItem* GBL_RefItem::findChild(QString sKey)
         if (pRef->getKey() == sKey) return pRef;
     }
 
-    return NULL;
+    return Q_NULLPTR;
 }
 
 GBL_RefItem* GBL_RefItem::getChildAt(int index)
@@ -1598,7 +1598,7 @@ GBL_RefItem* GBL_RefItem::getChildAt(int index)
         return m_refChildren.at(index);
     }
 
-    return NULL;
+    return Q_NULLPTR;
 }
 
 QStringList GBL_RefItem::getChildrenKeys()

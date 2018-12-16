@@ -31,7 +31,7 @@ class StagedButton : public QToolButton
 {
     Q_OBJECT
 public:
-    explicit StagedButton(const QString &text, QWidget *parent = Q_NULLPTR, int nMinWidthWithText=0);
+    explicit StagedButton(const QString &text, QWidget *parent = Q_NULLPTR);
 
 signals:
 
@@ -47,7 +47,7 @@ class StagedButtonBar : public QFrame
 {
     Q_OBJECT
 public:
-    explicit StagedButtonBar(QWidget *parent = 0);
+    explicit StagedButtonBar(QWidget *parent = Q_NULLPTR);
 
     StagedButton* getButton(int nBtnID);
 
@@ -65,7 +65,7 @@ class StagedCommitView : public QScrollArea
 {
     Q_OBJECT
 public:
-    explicit StagedCommitView(QWidget *parent = 0);
+    explicit StagedCommitView(QWidget *parent = Q_NULLPTR);
 
     StagedButtonBar* getButtonBar() { return m_pBtnBar; }
     QString getCommitMessage();
@@ -87,7 +87,7 @@ class StagedDockView : public QSplitter
 {
     Q_OBJECT
 public:
-    explicit StagedDockView(QWidget *parent = 0);
+    explicit StagedDockView(QWidget *parent = Q_NULLPTR);
 
     void setFileArray(GBL_File_Array *pArr);
     GBL_File_Array* getFileArray();

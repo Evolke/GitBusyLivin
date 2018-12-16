@@ -1444,7 +1444,8 @@ void MainWindow::init()
     connect(m_pMdiArea,&QMdiArea::subWindowActivated,this,&MainWindow::activateChild);
     m_pToolBar = addToolBar(tr(GBL_APP_NAME));
     m_pToolBar->setObjectName("MainWindow/Toolbar");
-    m_pToolBar->setIconSize(QSize(TOOLBAR_ICON_SIZE,TOOLBAR_ICON_SIZE));
+    m_pToolBar->setIconSize(QSize(TOOLBAR_ICON_SIZE, TOOLBAR_ICON_SIZE));
+    m_pToolBar->layout()->setMargin(10);
     //m_pToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     createActions();
     //createHistoryTable();

@@ -28,9 +28,12 @@ private slots:
     virtual void mouseMoveEvent(QMouseEvent *event) {}
     virtual void contextMenuEvent(QContextMenuEvent *event);
     //virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void headerResized();
 
 private:
     QMenu* m_pContextMenu;
+    bool m_bPreAutoSizeHdr;
+    bool m_bAutoSizeHdr;
 
 };
 

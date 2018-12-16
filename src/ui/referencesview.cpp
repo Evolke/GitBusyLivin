@@ -130,6 +130,9 @@ void ReferencesView::contextMenuEvent(QContextMenuEvent *event)
                     m_pContextMenu->addAction(tr("Apply Stash"),pMain, &MainWindow::onApplyStash);
                     m_pContextMenu->addAction(tr("Delete Stash"),pMain, &MainWindow::onDeleteStash);
                     break;
+
+                 default:
+                    return;
             }
 
 
@@ -137,5 +140,27 @@ void ReferencesView::contextMenuEvent(QContextMenuEvent *event)
 
         }
 
+    }
+}
+
+void ReferencesView::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    QTreeView::mouseDoubleClickEvent(event);
+
+    QModelIndex mi = indexAt(event->pos());
+    if (mi.isValid())
+    {
+        GBL_RefItem *pRefItem = static_cast<GBL_RefItem*>(mi.internalPointer());
+        if (pRefItem)
+        {
+            switch (pRefItem->getType())
+            {
+                case GBL_RefItem::REMOTE_BRANCH:
+                    break;
+
+                default:
+                    return;
+            }
+        }
     }
 }

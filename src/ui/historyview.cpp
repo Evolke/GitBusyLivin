@@ -9,6 +9,7 @@
 #include <QMenu>
 #include <QPalette>
 #include <QtMath>
+#include <QHeaderView>
 
 HistoryView::HistoryView(QWidget *parent) : QTableView(parent)
 {
@@ -20,6 +21,11 @@ HistoryView::HistoryView(QWidget *parent) : QTableView(parent)
 
     MainWindow *pMain = MainWindow::getInstance();
     m_pContextMenu->addAction(tr("Create Branch..."),pMain, &MainWindow::onCreateBranch);
+    m_bAutoSizeHdr = true;
+    m_bPreAutoSizeHdr = false;
+    setWordWrap(false);
+
+    connect(horizontalHeader(), &QHeaderView::sectionResized,this, &HistoryView::headerResized);
 
 }
 
@@ -40,18 +46,25 @@ void HistoryView::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event);
 
-    int nWidth = width();
+    if (m_bAutoSizeHdr)
+    {
+        m_bPreAutoSizeHdr = true;
 
-    QScrollBar *pSB = verticalScrollBar();
-    if (pSB && pSB->isVisible()) nWidth -= pSB->width();
+        int nWidth = width();
 
-    setColumnWidth(0, qFloor(nWidth*.1));
-    setColumnWidth(1, qFloor(nWidth*.5));
-    setColumnWidth(2, qFloor(nWidth*.25));
-    setColumnWidth(3, qFloor(nWidth*.148));
+        QScrollBar *pSB = verticalScrollBar();
+        if (pSB && pSB->isVisible()) nWidth -= pSB->width();
 
-    GBL_HistoryModel *pModel = (GBL_HistoryModel*)model();
-    pModel->layoutChanged();
+        setColumnWidth(0, qFloor(nWidth*.1));
+        setColumnWidth(1, qFloor(nWidth*.5));
+        setColumnWidth(2, qFloor(nWidth*.25));
+        setColumnWidth(3, qFloor(nWidth*.148));
+
+        GBL_HistoryModel *pModel = dynamic_cast<GBL_HistoryModel*>(model());
+        pModel->layoutChanged();
+        m_bPreAutoSizeHdr = false;
+
+    }
 }
 
 void HistoryView::mousePressEvent(QMouseEvent *event)
@@ -96,7 +109,13 @@ void HistoryView::contextMenuEvent(QContextMenuEvent *event)
     }
 }*/
 
-
+void HistoryView::headerResized()
+{
+    if (!m_bPreAutoSizeHdr)
+    {
+        m_bAutoSizeHdr = false;
+    }
+}
 
 HistorySelectionModel::HistorySelectionModel(QAbstractItemModel *model, QObject *parent) :  QItemSelectionModel(model, parent)
 {
@@ -115,7 +134,7 @@ void HistoryDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
     painter->setRenderHint(QPainter::Antialiasing, true);
     if (index.column() == 0)
     {
-        HistoryView *pView = (HistoryView*)parent();
+        HistoryView *pView = dynamic_cast<HistoryView*>(parent());
         //int nRow = index.row();
         QStyle *pStyle = pView->style();
         QSize szCir(7,7);

@@ -13,7 +13,7 @@ AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags f) : QDialog(parent, f
 {
     int nWidth = 500;
     int nHeight = 400;
-    if (parent != NULL)
+    if (parent != Q_NULLPTR)
         setGeometry(parent->x() + parent->width()/2 - nWidth/2,
             parent->y() + parent->height()/2 - nHeight/2,
             nWidth, nHeight);

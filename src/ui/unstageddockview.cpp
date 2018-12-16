@@ -10,6 +10,8 @@
 #include <QDebug>
 #include <QItemSelection>
 
+#define BTN_HEIGHT 20
+
 UnstagedDockView::UnstagedDockView(QWidget *parent) : QScrollArea(parent)
 {
     setViewportMargins(0,0,0,0);
@@ -64,8 +66,8 @@ UnstagedButtonBar::UnstagedButtonBar(QWidget *parent) : QFrame(parent)
 {
 
     setContentsMargins(0,0,0,0);
-    m_pAddAllBtn = new UnstagedButton(tr("Add All"),this, 60);
-    m_pAddSelBtn = new UnstagedButton(tr("Add Selected"),this, 90);
+    m_pAddAllBtn = new UnstagedButton(tr("Add All"),this);
+    m_pAddSelBtn = new UnstagedButton(tr("Add Selected"),this);
 
     UrlPixmap svgpix(NULL);
     MainWindow *pMain = MainWindow::getInstance();
@@ -84,12 +86,10 @@ UnstagedButtonBar::UnstagedButtonBar(QWidget *parent) : QFrame(parent)
     m_pAddAllBtn->setIcon(QIcon(*svgpix.getSmallPixmap(16)));
     connect(m_pAddAllBtn,&UnstagedButton::clicked, pMain, &MainWindow::stageAll);
 
-    m_pAddAllBtn->setMaximumSize(100,20);
     m_pAddSelBtn->setDisabled(true);
     svgpix.loadSVGResource(":/images/add_sel_icon.svg", sBorderClr, QSize(16,16));
     m_pAddSelBtn->setIcon(QIcon(*svgpix.getSmallPixmap(16)));
 
-    m_pAddSelBtn->setMaximumSize(120,20);
     connect(m_pAddSelBtn,&UnstagedButton::clicked, pMain, &MainWindow::stageSelected);
 
 
@@ -104,7 +104,7 @@ UnstagedButtonBar::UnstagedButtonBar(QWidget *parent) : QFrame(parent)
 
 UnstagedButton* UnstagedButtonBar::getButton(int nBtnID)
 {
-    UnstagedButton *pRet = NULL;
+    UnstagedButton *pRet = Q_NULLPTR;
 
     switch (nBtnID)
     {
@@ -125,13 +125,19 @@ void UnstagedButtonBar::reset()
     m_pAddSelBtn->setDisabled(true);
 }
 
-UnstagedButton::UnstagedButton(const QString &text, QWidget *parent, int nMinWidthWithText) : QToolButton(parent)
+UnstagedButton::UnstagedButton(const QString &text, QWidget *parent) : QToolButton(parent)
 {
-    m_nMinWidthWithText = nMinWidthWithText;
+
+    QFontMetrics fm = fontMetrics();
+    m_nMinWidthWithText = fm.width(text) + 20;
+
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 
     setText(text);
     setToolTip(text);
+
+    setMaximumSize(m_nMinWidthWithText + 10, BTN_HEIGHT);
+
 }
 
 void UnstagedButton::resizeEvent(QResizeEvent *event)

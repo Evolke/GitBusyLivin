@@ -11,10 +11,20 @@
 #include <QDebug>
 #include <QScrollBar>
 #include <QToolBar>
+#include <QFontMetrics>
 
 #define COMMIT_MIN_WIDTH 330
 #define COMMIT_MIN_HEIGHT 60
 #define DEFAULT_COMMIT_MESSAGE "no commit message"
+
+#define COMMIT_BTN_WIDTH_W_TEXT 70
+#define PUSH_BTN_WIDTH_W_TEXT 90
+#define UNSTAGE_ALL_BTN_WIDTH_W_TEXT 80
+#define UNSTAGE_SEL_BTN_WIDTH_W_TEXT 115
+#define BTN_HEIGHT 20
+
+
+
 
 StagedDockView::StagedDockView(QWidget *parent) : QSplitter(Qt::Vertical,parent)
 {
@@ -33,10 +43,10 @@ StagedDockView::StagedDockView(QWidget *parent) : QSplitter(Qt::Vertical,parent)
 
 void StagedDockView::setFileArray(GBL_File_Array *pArr)
 {
-    GBL_FileModel *pMod = (GBL_FileModel*)m_pFileView->model();
+    GBL_FileModel *pMod = dynamic_cast<GBL_FileModel*>(m_pFileView->model());
     pMod->setFileArray(pArr);
 
-    StagedCommitView *pView = (StagedCommitView*)widget(1);
+    StagedCommitView *pView = dynamic_cast<StagedCommitView*>(widget(1));
     StagedButtonBar *pBtnBar = pView->getButtonBar();
     StagedButton *pBtn = pBtnBar->getButton(COMMIT_BTN);
     pBtn->setDisabled(pArr->size() == 0);
@@ -48,7 +58,7 @@ void StagedDockView::setFileArray(GBL_File_Array *pArr)
 
 GBL_File_Array* StagedDockView::getFileArray()
 {
-    GBL_FileModel *pMod = (GBL_FileModel*)m_pFileView->model();
+    GBL_FileModel *pMod = dynamic_cast<GBL_FileModel*>(m_pFileView->model());
     return pMod->getFileArray();
 }
 
@@ -60,7 +70,7 @@ void StagedDockView::reset()
 
 void StagedDockView::stagedFileSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
-    StagedCommitView *pView = (StagedCommitView*)widget(1);
+    StagedCommitView *pView = dynamic_cast<StagedCommitView*>(widget(1));
     StagedButtonBar *pBtnBar = pView->getButtonBar();
 
     StagedButton *pBtn = pBtnBar->getButton(UNSTAGE_SELECTED_BTN);
@@ -158,24 +168,20 @@ StagedButtonBar::StagedButtonBar(QWidget *parent) : QFrame(parent)
 {
     setContentsMargins(0,0,0,0);
     setMaximumHeight(30);
-    m_pCommitBtn = new StagedButton(tr("Commit"), this, 55);
+    m_pCommitBtn = new StagedButton(tr("Commit"), this);
     m_pCommitBtn->setDisabled(true);
-    m_pCommitBtn->setMaximumSize(68,20);
     //mainLayout->addWidget(m_pCommitBtn,1,0,1,1,Qt::AlignBottom);
-    m_pPushBtn = new StagedButton(tr("Commit/Push"), this, 85);
+    m_pPushBtn = new StagedButton(tr("Commit/Push"), this);
     m_pPushBtn->setDisabled(true);
-    m_pPushBtn->setMaximumSize(95,20);
     //mainLayout->addWidget(m_pPushBtn,1,1,1,1,Qt::AlignBottom);
-    m_pUnstageAllBtn = new StagedButton(tr("Unstage All"), this, 80);
+    m_pUnstageAllBtn = new StagedButton(tr("Unstage All"), this);
     m_pUnstageAllBtn->setDisabled(true);
-    m_pUnstageAllBtn->setMaximumSize(90,20);
 
     //mainLayout->addWidget(m_pUnstageAllBtn,1,2,1,1,Qt::AlignBottom);
-    m_pUnstageSelBtn = new StagedButton(tr("Unstage Selected"), this, 115);
+    m_pUnstageSelBtn = new StagedButton(tr("Unstage Selected"), this);
     m_pUnstageSelBtn->setDisabled(true);
-    m_pUnstageSelBtn->setMaximumSize(125,20);
 
-    UrlPixmap svgpix(NULL);
+    UrlPixmap svgpix(Q_NULLPTR);
     MainWindow *pMain = MainWindow::getInstance();
     QToolBar *pToolBar = pMain->getToolBar();
     /*QStyleOptionToolBar option;
@@ -220,7 +226,7 @@ StagedButtonBar::StagedButtonBar(QWidget *parent) : QFrame(parent)
 
 StagedButton* StagedButtonBar::getButton(int nBtnID)
 {
-    StagedButton *pRet = NULL;
+    StagedButton *pRet = Q_NULLPTR;
 
     switch (nBtnID)
     {
@@ -250,13 +256,20 @@ void StagedButtonBar::reset()
     m_pUnstageSelBtn->setDisabled(true);
 }
 
-StagedButton::StagedButton(const QString &text, QWidget *parent, int nMinWidthWithText) : QToolButton(parent)
+
+
+
+StagedButton::StagedButton(const QString &text, QWidget *parent) : QToolButton(parent)
 {
-    m_nMinWidthWithText = nMinWidthWithText;
+    QFontMetrics fm = fontMetrics();
+
+    m_nMinWidthWithText = fm.width(text) + 20;
 
     setText(text);
     setToolTip(text);
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+
+    setMaximumSize(m_nMinWidthWithText + 10, BTN_HEIGHT);
 }
 
 

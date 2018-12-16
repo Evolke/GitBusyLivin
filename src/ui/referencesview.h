@@ -27,6 +27,7 @@ public slots:
 
 private slots:
     virtual void contextMenuEvent(QContextMenuEvent *event);
+    virtual void mouseDoubleClickEvent(QMouseEvent *event);
 
 private:
     QIcon  *m_pBranchIcon, *m_pRemoteIcon, *m_pTagIcon, *m_pStashIcon;
